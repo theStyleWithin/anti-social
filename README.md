@@ -2,6 +2,8 @@
 
 **Social media with nobody on it.**
 
+> get offline
+
 Sign up. Post your hottest takes. Post your nudes. Post your 3 a.m. thoughts about
 whether a hot dog is a sandwich.
 
