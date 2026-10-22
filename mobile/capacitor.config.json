@@ -1,0 +1,6 @@
+{
+  "appId": "com.antisocial.app",
+  "appName": "Anti-Social",
+  "webDir": "../www",
+  "android": { "allowMixedContent": false }
+}

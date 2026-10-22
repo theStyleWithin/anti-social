@@ -29,17 +29,37 @@ Anti-Social never touches the internet. The page ships with a rule that blocks
 every network request (`connect-src 'none'`), so it *can't* phone home even if it wanted to.
 You can download this folder and double-click `index.html` with Wi-Fi off. It works.
 
-## Run it
+## Get the apps
 
-It's a PWA with no build step and no dependencies.
+| Platform | File |
+|---|---|
+| Windows | `Anti-Social-*-win-x64.exe` (installer) or the portable `.exe` |
+| Linux | `.AppImage` (any distro) or `.deb` (Debian/Ubuntu) |
+| Android | `.apk` (sideload: allow "install unknown apps") |
+
+The Android app has no internet permission at all. It could not go online if it tried.
+
+## Build it yourself
+
+The web app lives in `www/` (plain HTML/CSS/JS, no dependencies). Open `www/index.html` in a
+browser and it works.
 
 ```sh
-python3 -m http.server 8080
-# open http://localhost:8080
+# desktop (Windows / Linux)
+cd desktop && npm install && npm start        # run
+cd desktop && npm run dist                    # build installers into desktop/dist
+
+# android (needs JDK 17 + Android SDK)
+cd mobile && npm install && npx cap sync android
+cd android && ./gradlew assembleDebug
 ```
 
-Or put the folder on GitHub Pages / any static host, then "Install app" or
-"Add to Home Screen". Same code on web, mobile and desktop.
+Or let GitHub build everything: run the **Build apps** workflow, or push a tag like `v0.1.0`
+to publish a release with every installer attached.
+
+## Future
+
+A hosted web version. Currently skipped because hosting costs money and nobody is here anyway.
 
 ## Privacy policy
 
