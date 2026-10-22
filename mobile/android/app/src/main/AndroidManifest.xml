@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <application
         android:allowBackup="true"
@@ -24,6 +25,8 @@
 
         </activity>
 
+        <receiver android:name="androidx.profileinstaller.ProfileInstallReceiver" tools:node="remove" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -36,4 +39,7 @@
     </application>
 
     <!-- Deliberately no INTERNET permission: this app cannot go online. -->
+
+    <!-- Pulled in by a library we do not need; strip it so the app asks for nothing. -->
+    <uses-permission android:name="android.permission.DUMP" tools:node="remove" />
 </manifest>
