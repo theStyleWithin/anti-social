@@ -33,7 +33,7 @@ You can download this folder and double-click `index.html` with Wi-Fi off. It wo
 
 | Platform | File |
 |---|---|
-| Windows | `Anti-Social-*-win-x64.exe` (installer) or the portable `.exe` |
+| Windows | `Anti-Social-Setup-*.exe` (installer) or `Anti-Social-*-portable.exe` (no install) |
 | Linux | `.AppImage` (any distro) or `.deb` (Debian/Ubuntu) |
 | Android | `.apk` (sideload: allow "install unknown apps") |
 

@@ -51,8 +51,12 @@
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Anti-Social-Setup-${version}-win-${arch}.${ext}"
     },
-    "publish": null
+    "publish": null,
+    "portable": {
+      "artifactName": "Anti-Social-${version}-win-${arch}-portable.${ext}"
+    }
   }
 }
