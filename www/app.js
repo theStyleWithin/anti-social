@@ -384,10 +384,8 @@ function settingsView(acct) {
     h('div', { class: 'settings' },
       h('section', {}, h('h3', {}, 'Display'), h('p', {}, 'Pick a theme. Nobody will see it.'),
         h('div', { class: 'btnrow' }, themeBtn('auto', 'Auto'), themeBtn('light', 'Light'), themeBtn('dark', 'Dark'))),
-      h('section', {}, h('h3', {}, 'Install'), h('p', {}, 'Put Anti-Social on your home screen or desktop. It works offline, because there is nothing to connect to.'),
-        installPrompt
-          ? h('button', { class: 'btn primary', onclick: async () => { installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; render(true); } }, 'Install app')
-          : h('p', { class: 'fine', style: 'padding:0' }, 'Use your browser menu: "Install app" or "Add to Home Screen".')),
+      installPrompt && h('section', {}, h('h3', {}, 'Install'), h('p', {}, 'Put Anti-Social on your home screen or desktop. It works offline, because there is nothing to connect to.'),
+        h('button', { class: 'btn primary', onclick: async () => { installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; render(true); } }, 'Install app')),
       h('section', {}, h('h3', {}, 'Your data'), h('p', {}, 'It lives in this browser, on this device, and nowhere else. Clearing site data deletes it. There is no recovery because there is no one to recover it.'),
         h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: exportData }, 'Export everything (JSON)'))),
       h('section', {}, h('h3', {}, 'Account'),
