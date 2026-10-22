@@ -4,7 +4,7 @@
   --muted: #536471;
   --line: #eff3f4;
   --hover: rgba(15, 20, 25, 0.04);
-  --accent: #1d9bf0;
+  --accent: #8b5cf6;
   --accent-fg: #ffffff;
   --danger: #f4212e;
   --like: #f91880;
@@ -142,7 +142,7 @@ svg { width: 1.25em; height: 1.25em; fill: none; stroke: currentColor; stroke-wi
 .empty-note { padding: 14px 16px; color: var(--muted); border-bottom: 1px solid var(--line); text-align: center; font-size: 14px; }
 
 /* ---------- profile ---------- */
-.banner { height: 150px; background: linear-gradient(135deg, var(--accent), #7856ff); opacity: 0.55; }
+.banner { height: 150px; background: linear-gradient(135deg, var(--accent), #f59e0b); opacity: 0.55; }
 .pinfo { padding: 0 16px 12px; border-bottom: 1px solid var(--line); }
 .pinfo .top { display: flex; justify-content: space-between; align-items: flex-start; }
 .pinfo .top .avatar { margin-top: -56px; }
@@ -192,3 +192,10 @@ svg { width: 1.25em; height: 1.25em; fill: none; stroke: currentColor; stroke-wi
 .settings p { margin: 0 0 12px; color: var(--muted); }
 .settings .btnrow { display: flex; flex-wrap: wrap; gap: 8px; }
 .toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: var(--accent); color: var(--accent-fg); padding: 10px 18px; border-radius: 8px; z-index: 100; max-width: 90vw; }
+
+.topbar input[type="search"] { flex: 1; min-width: 0; background: var(--card); border: 0; border-radius: 999px; padding: 10px 16px; outline: 0; }
+.nav .me .who { display: none; line-height: 1.2; }
+@media (min-width: 1000px) { .nav .me .who { display: block; } }
+
+.nav .postbtn span { display: none; }
+@media (min-width: 1000px) { .nav .postbtn span { display: inline; margin-left: 8px; } }
