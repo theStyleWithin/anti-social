@@ -104,7 +104,6 @@ const db = {
 let renderId = 0;
 let authMode = { mode: 'pick' };
 let profileTab = 'posts';
-let exploreQuery = '';
 let installPrompt = null;
 let session = ls('as.session');
 
@@ -311,21 +310,33 @@ function homeView(acct, ctx) {
   ];
 }
 
-function exploreView(acct, ctx) {
-  const q = exploreQuery.trim().toLowerCase();
-  const hits = q ? ctx.posts.filter(p => p.text.toLowerCase().includes(q)).sort((a, b) => b.createdAt - a.createdAt) : [];
-  const input = h('input', { type: 'search', placeholder: 'Search your own posts', value: exploreQuery, 'aria-label': 'Search your own posts' });
-  input.addEventListener('input', () => {
-    exploreQuery = input.value;
-    clearTimeout(input._t);
-    input._t = setTimeout(() => render(true).then(() => $('.topbar input')?.focus()), 200);
+const SEARCH_JOKES = [
+  'Searched 0 users. Found 0 users.',
+  'Have you tried going outside? People are there.',
+  'Your people are not on here. That is why they are your people.',
+  'Checked the server. There is no server.',
+  'Narrowed it down to nobody.',
+  'Asked the algorithm. The algorithm left.',
+  'Result: just you, wearing a different hat.',
+  'Try searching for someone you actually know. Then text them.',
+];
+let searchAttempts = 0;
+
+function exploreView() {
+  const line = h('p', { class: 'search-line' }, 'Searching for people...');
+  const tries = h('div', { class: 'search-tries' });
+  const again = h('button', { class: 'btn' }, 'Search again');
+  again.addEventListener('click', () => {
+    searchAttempts++;
+    line.textContent = SEARCH_JOKES[(searchAttempts - 1) % SEARCH_JOKES.length];
+    tries.textContent = plural(searchAttempts, 'attempt') + ', 0 people';
   });
   return [
-    h('div', { class: 'topbar' }, icon('search'), input),
-    q
-      ? (hits.length ? hits.map(p => postEl(p, acct, ctx)) : emptyState('No results', `Nothing matches "${exploreQuery}". The whole internet is you.`))
-      : [h('div', { class: 'card', style: 'margin:16px' }, h('h3', {}, 'Trending'), h('p', {}, 'Nothing is trending. Nobody is here to trend.')),
-         h('div', { class: 'card', style: 'margin:16px' }, h('h3', {}, 'Who to follow'), h('p', {}, 'No one. There is no one.'))],
+    topbar('Explore'),
+    h('div', { class: 'empty search-empty' },
+      h('div', { class: 'stuck', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': '0', 'aria-label': 'Searching for people' }, h('span', {})),
+      h('h2', {}, 'Nobody found'),
+      line, tries, again),
   ];
 }
 
@@ -520,7 +531,7 @@ function shell(acct, route, main) {
         h('div', { class: 'who' }, h('b', {}, acct.name), h('div', { class: 'muted' }, '@' + acct.handle)))),
     h('main', { class: 'main' }, main),
     h('aside', { class: 'side' },
-      h('div', { class: 'search' }, icon('search'), h('span', {}, 'Search is in Explore. It only finds you.')),
+      h('div', { class: 'search' }, icon('search'), h('span', {}, 'Search for people in Explore. Good luck.')),
       h('div', { class: 'card' }, h('h3', {}, "What's happening"), h('p', {}, 'Nothing. Nobody is here.')),
       h('div', { class: 'card' }, h('h3', {}, 'Who to follow'), h('p', {}, 'No one. There is no one.')),
       h('p', { class: 'fine' }, 'No servers · No tracking · No audience · Terms: TOUCH GRASS')));
@@ -542,7 +553,7 @@ async function render(keepScroll = false) {
     const [, r = '', arg] = location.hash.split('/');
     const route = { notifications: 'notifications', explore: 'explore', profile: 'profile', settings: 'settings', post: 'post' }[r] || 'home';
     const main = {
-      home: () => homeView(acct, ctx), explore: () => exploreView(acct, ctx), notifications: notificationsView,
+      home: () => homeView(acct, ctx), explore: exploreView, notifications: notificationsView,
       profile: () => profileView(acct, ctx), settings: () => settingsView(acct), post: () => postView(acct, ctx, arg),
     }[route]();
     document.title = route === 'home' ? 'Home / Anti-Social' : route[0].toUpperCase() + route.slice(1) + ' / Anti-Social';

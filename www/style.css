@@ -199,3 +199,11 @@ svg { width: 1.25em; height: 1.25em; fill: none; stroke: currentColor; stroke-wi
 
 .nav .postbtn span { display: none; }
 @media (min-width: 1000px) { .nav .postbtn span { display: inline; margin-left: 8px; } }
+
+.search-empty { padding-top: 72px; }
+.stuck { width: 220px; height: 8px; margin: 0 auto 28px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.stuck span { display: block; width: 4%; height: 100%; background: var(--accent); border-radius: 999px; animation: stuck 2.4s ease-in-out infinite; }
+@keyframes stuck { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(3%); } }
+@media (prefers-reduced-motion: reduce) { .stuck span { animation: none; } }
+.search-line { margin: 10px auto 0 !important; max-width: 340px; min-height: 2.7em; }
+.search-tries { color: var(--muted); font-size: 13px; margin: 6px 0 18px; min-height: 1.35em; }

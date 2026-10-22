@@ -18,7 +18,7 @@ is a flat, unblinking **0**.
 - Like, repost and reply to your own posts
 - A profile with **0 followers** and **0 views** on everything
 - A notifications tab that is, and always will be, empty
-- Search (it only finds you)
+- A search-for-people page that never finds anyone
 - Light, dark or auto theme
 - Export everything as JSON, or nuke it all
 - Installable on phone, tablet and desktop. Works offline. Obviously.
