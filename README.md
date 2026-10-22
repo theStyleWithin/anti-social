@@ -21,6 +21,12 @@ is a flat, unblinking **0**.
 - Export everything as JSON, or nuke it all
 - Installable on phone, tablet and desktop. Works offline. Obviously.
 
+## Always offline
+
+Anti-Social never touches the internet. The page ships with a rule that blocks
+every network request (`connect-src 'none'`), so it *can't* phone home even if it wanted to.
+You can download this folder and double-click `index.html` with Wi-Fi off. It works.
+
 ## Run it
 
 It's a PWA with no build step and no dependencies.
