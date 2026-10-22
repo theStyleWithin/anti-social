@@ -1,7 +1,8 @@
 name: Build apps
 
-# Run it by hand (Actions tab -> Build apps -> Run workflow) or push a tag like v0.1.0
-# to also publish a GitHub Release with every installer attached.
+# Run it by hand (Actions tab -> Build apps -> Run workflow). It builds every installer
+# and publishes them as a GitHub Release named after the version in desktop/package.json.
+# Pushing a v* tag does the same.
 on:
   workflow_dispatch:
   push:
@@ -61,18 +62,21 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
-      - run: cp mobile/android/app/build/outputs/apk/debug/app-debug.apk Anti-Social-0.1.0-android.apk
+      - name: Name the APK
+        run: |
+          VERSION=$(node -p "require('./desktop/package.json').version")
+          cp mobile/android/app/build/outputs/apk/debug/app-debug.apk "Anti-Social-$VERSION-android.apk"
       - uses: actions/upload-artifact@v4
         with:
           name: android
-          path: Anti-Social-0.1.0-android.apk
+          path: Anti-Social-*-android.apk
           if-no-files-found: error
 
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
     needs: [desktop, android]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           path: out
@@ -81,6 +85,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "$GITHUB_REF_NAME" out/* --repo "$GITHUB_REPOSITORY" \
-            --title "$GITHUB_REF_NAME: nobody is here" \
-            --notes "Windows installer + portable exe, Linux AppImage + deb, Android APK. Terms of Use: TOUCH GRASS."
+          VERSION=$(node -p "require('./desktop/package.json').version")
+          TAG="v$VERSION"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" out/* --clobber
+          else
+            gh release create "$TAG" out/* --target "$GITHUB_SHA" \
+              --title "$TAG: nobody is here" \
+              --notes "Windows installer + portable exe, Linux AppImage + deb, Android APK. Terms of Use: TOUCH GRASS."
+          fi

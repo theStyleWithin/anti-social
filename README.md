@@ -54,8 +54,8 @@ cd mobile && npm install && npx cap sync android
 cd android && ./gradlew assembleDebug
 ```
 
-Or let GitHub build everything: run the **Build apps** workflow, or push a tag like `v0.1.0`
-to publish a release with every installer attached.
+Or let GitHub build everything: run the **Build apps** workflow (Actions tab) and it publishes a
+release with every installer attached.
 
 ## Future
 
