@@ -57,13 +57,25 @@ jobs:
         run: |
           npm ci
           npx cap sync android
-      - name: Create a signing key for this build
+      - name: Set up the signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
-          PASS=$(openssl rand -hex 16)
-          keytool -genkeypair -keystore "$RUNNER_TEMP/anti-social.jks" -alias antisocial \
-            -keyalg RSA -keysize 2048 -validity 10000 -storepass "$PASS" -keypass "$PASS" \
-            -dname "CN=Anti-Social, O=Anti-Social, C=US"
+          if [ -n "$KEYSTORE_B64" ]; then
+            # Your permanent key (repo secrets): updates install over old versions.
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/anti-social.jks"
+            PASS="$KEYSTORE_PASSWORD"
+          else
+            # No secret set: throwaway key. Fine for testing, but each build has a different
+            # signature, so Android will not update an installed copy.
+            PASS=$(openssl rand -hex 16)
+            keytool -genkeypair -keystore "$RUNNER_TEMP/anti-social.jks" -alias antisocial \
+              -keyalg RSA -keysize 2048 -validity 10000 -storepass "$PASS" -keypass "$PASS" \
+              -dname "CN=Anti-Social, O=Anti-Social, C=US"
+          fi
           echo "AS_KEYSTORE=$RUNNER_TEMP/anti-social.jks" >> "$GITHUB_ENV"
+          echo "::add-mask::$PASS"
           echo "AS_KEYSTORE_PASSWORD=$PASS" >> "$GITHUB_ENV"
       - name: Build release APK
         working-directory: mobile/android
