@@ -8,14 +8,14 @@
 
 Anti-Social v0.4.0 is feature complete. It is a finished app, not a work in progress.
 
-**Tested by the developer** (Android and Linux were tried by hand on v0.3.1; Populated mode and the storage limit arrived in v0.4.0 and are covered by automated tests):
-- **Android:** installed and used on a real phone, including account switching.
+**Tested by the developer** (v0.4.0, by hand on Android and Linux, plus automated tests):
+- **Android:** installed and used on a real phone, including account switching, Populated mode and the storage limit.
 - **Features:** sign-up with and without a passcode, posting with images, likes, reposts and replies, avatar and banner images, the empty notifications tab, the Explore page that never finds anyone, themes, export and delete.
 - **Vault and duress PIN:** checked end to end. Data on disk is unreadable, it comes back after you unlock, a wrong passcode is rejected, and the duress PIN erases everything.
-- **Linux desktop:** installed and used on a real Linux desktop, including account switching.
+- **Linux desktop:** installed and used on a real Linux desktop, including account switching, Populated mode and the storage limit.
 - **Windows desktop:** built and packaged, but **not tested on a real Windows machine**, because the developer runs Linux. **Windows testers wanted:** please try the installer or portable `.exe` and report what you find by opening an issue on this repo. Windows may show a "protected your PC" warning because the app isn't signed with a paid certificate: choose More info, then Run anyway.
 
-The v0.2.2 Android APK was scanned on VirusTotal with 0 detections. Check the SHA-256 on the release page against any file you download.
+The v0.4.0 Android APK was scanned on VirusTotal with 0 detections. Check the SHA-256 on the release page against any file you download.
 
 Sign up. Post your hottest takes. Post your nudes. Post your 3 a.m. thoughts about
 whether a hot dog is a sandwich.
