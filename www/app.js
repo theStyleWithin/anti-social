@@ -690,41 +690,60 @@ async function removeDuress(acct) {
   toast('Duress PIN removed.'); render(true);
 }
 
+let settingsTab = 'general';
+
 function settingsView(acct) {
   const theme = ls('as.theme') || 'auto';
   const themeBtn = (v, label) => h('button', { class: 'btn' + (theme === v ? ' primary' : ''), onclick: () => { ls('as.theme', v === 'auto' ? null : v); applyTheme(); render(true); } }, label);
+
+  const general = [
+    h('section', {}, h('h3', {}, 'Display'), h('p', {}, 'Pick a theme. Nobody will see it.'),
+      h('div', { class: 'btnrow' }, themeBtn('auto', 'Auto'), themeBtn('light', 'Light'), themeBtn('dark', 'Dark'))),
+    installPrompt && h('section', {}, h('h3', {}, 'Install'), h('p', {}, 'Put Anti-Social on your home screen or desktop. It works offline, because there is nothing to connect to.'),
+      h('button', { class: 'btn primary', onclick: async () => { installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; render(true); } }, 'Install app')),
+    h('section', {}, h('h3', {}, 'Your data'), h('p', {}, 'It lives on this device and nowhere else. Clearing the app or site data deletes it. There is no recovery because there is no one to recover it.'),
+      h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: () => exportData(acct) }, 'Export my data (JSON)'))),
+    h('section', {}, h('h3', {}, 'Account'),
+      h('div', { class: 'btnrow' },
+        h('button', { class: 'btn', onclick: logout }, 'Switch account'),
+        h('button', { class: 'btn danger', onclick: () => deleteAccount(acct) }, 'Delete this account'),
+        h('button', { class: 'btn danger', onclick: wipeEverything }, 'Delete all data on this device'))),
+    h('section', {}, h('h3', {}, 'Terms of Use'), h('p', {}, 'TOUCH GRASS.'),
+      h('p', { class: 'fine', style: 'padding:0' }, 'No servers. No tracking. No audience. Go outside.')),
+  ];
+
+  const security = acct.vault
+    ? [
+      h('section', {}, h('h3', {}, 'Passcode: on'),
+        h('p', {}, 'Your posts, images and profile are encrypted with your passcode (AES-256). The passcode is never stored, and there is no recovery.'),
+        h('div', { class: 'btnrow' },
+          h('button', { class: 'btn', onclick: () => { lockVault(); render(); } }, 'Lock now'),
+          h('button', { class: 'btn', onclick: () => passcodeModal(acct) }, 'Change passcode'),
+          h('button', { class: 'btn', onclick: () => removeVaultModal(acct) }, 'Remove passcode'))),
+      h('section', {}, h('h3', {}, 'Auto-lock'), h('p', {}, 'Lock automatically after I leave the app:'),
+        h('div', { class: 'btnrow' }, LOCK_CHOICES.map(([v, label]) =>
+          h('button', { class: 'btn' + (lockAfter() === v ? ' primary' : ''), onclick: () => { ls('as.lockAfter', v); render(true); } }, label)))),
+      h('section', {}, h('h3', {}, 'Duress PIN: ' + (acct.duress ? 'on' : 'off')),
+        h('p', {}, 'A second PIN that looks like a normal unlock but secretly erases everything. Know the law where you live: destroying data you are legally required to keep can be a crime.'),
+        h('div', { class: 'btnrow' },
+          h('button', { class: 'btn', onclick: () => duressModal(acct) }, acct.duress ? 'Change duress PIN' : 'Set duress PIN'),
+          acct.duress && h('button', { class: 'btn', onclick: () => removeDuress(acct) }, 'Remove it'))),
+    ]
+    : [
+      h('section', {}, h('h3', {}, 'Passcode: off'),
+        h('p', {}, 'You skipped the passcode, and that is fine. Your posts and profile are stored unencrypted on this device and the app opens straight away. You can add a passcode any time.'),
+        h('button', { class: 'btn primary', onclick: () => passcodeModal(acct) }, 'Set a passcode')),
+      h('section', {}, h('h3', {}, 'What a passcode adds'),
+        h('p', { style: 'margin-bottom:4px' }, 'Posts, images, avatar, banner and profile locked with AES-256 encryption.'),
+        h('p', { style: 'margin-bottom:4px' }, 'The app locks itself when you leave it.'),
+        h('p', {}, 'Optional duress PIN: a second PIN that secretly erases everything. No recovery if you forget the passcode.')),
+    ];
+
+  const tab = (k, label) => h('button', { role: 'tab', 'aria-selected': String(settingsTab === k), class: settingsTab === k ? 'active' : '', onclick: () => { settingsTab = k; render(true); } }, label);
   return [
     topbar('Settings'),
-    h('div', { class: 'settings' },
-      h('section', {}, h('h3', {}, 'Display'), h('p', {}, 'Pick a theme. Nobody will see it.'),
-        h('div', { class: 'btnrow' }, themeBtn('auto', 'Auto'), themeBtn('light', 'Light'), themeBtn('dark', 'Dark'))),
-      installPrompt && h('section', {}, h('h3', {}, 'Install'), h('p', {}, 'Put Anti-Social on your home screen or desktop. It works offline, because there is nothing to connect to.'),
-        h('button', { class: 'btn primary', onclick: async () => { installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; render(true); } }, 'Install app')),
-      h('section', {}, h('h3', {}, 'Vault'),
-        acct.vault
-          ? [h('p', {}, 'Your posts, images and profile are encrypted with your passcode (AES-256). The passcode is never stored, and there is no recovery.'),
-             h('div', { class: 'btnrow' },
-               h('button', { class: 'btn', onclick: () => { lockVault(); render(); } }, 'Lock now'),
-               h('button', { class: 'btn', onclick: () => passcodeModal(acct) }, 'Change passcode'),
-               h('button', { class: 'btn', onclick: () => removeVaultModal(acct) }, 'Remove passcode')),
-             h('p', { style: 'margin:14px 0 4px' }, h('b', {}, 'Duress PIN: '), acct.duress ? 'on.' : 'off.', ' A second PIN that looks like a normal unlock but secretly erases everything. Know the law where you live: destroying data you are legally required to keep can be a crime.'),
-             h('div', { class: 'btnrow' },
-               h('button', { class: 'btn', onclick: () => duressModal(acct) }, acct.duress ? 'Change duress PIN' : 'Set duress PIN'),
-               acct.duress && h('button', { class: 'btn', onclick: () => removeDuress(acct) }, 'Remove it')),
-             h('p', { style: 'margin:14px 0 8px' }, 'Lock automatically after I leave the app:'),
-             h('div', { class: 'btnrow' }, LOCK_CHOICES.map(([v, label]) =>
-               h('button', { class: 'btn' + (lockAfter() === v ? ' primary' : ''), onclick: () => { ls('as.lockAfter', v); render(true); } }, label)))]
-          : [h('p', {}, 'No passcode: your posts and profile are stored unencrypted on this device, and the app opens straight away. That is fine for many people. Set up the vault to lock everything behind a passcode, with a duress PIN option.'),
-             h('button', { class: 'btn primary', onclick: () => passcodeModal(acct) }, 'Set up vault')]),
-      h('section', {}, h('h3', {}, 'Your data'), h('p', {}, 'It lives in this browser, on this device, and nowhere else. Clearing site data deletes it. There is no recovery because there is no one to recover it.'),
-        h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: () => exportData(acct) }, 'Export my data (JSON)'))),
-      h('section', {}, h('h3', {}, 'Account'),
-        h('div', { class: 'btnrow' },
-          h('button', { class: 'btn', onclick: logout }, 'Switch account'),
-          h('button', { class: 'btn danger', onclick: () => deleteAccount(acct) }, 'Delete this account'),
-          h('button', { class: 'btn danger', onclick: wipeEverything }, 'Delete all data on this device'))),
-      h('section', {}, h('h3', {}, 'Terms of Use'), h('p', {}, 'TOUCH GRASS.'),
-        h('p', { class: 'fine', style: 'padding:0' }, 'No servers. No tracking. No audience. Go outside.'))),
+    h('div', { class: 'tabs', role: 'tablist' }, tab('general', 'General'), tab('security', 'Privacy & Security')),
+    h('div', { class: 'settings' }, settingsTab === 'security' ? security : general),
   ];
 }
 
@@ -865,6 +884,7 @@ async function authView() {
         // No passcode: a plain local account. Nothing is encrypted and the app opens straight away.
         const id = uid();
         await db.put('accounts', { id, name: name.value.trim(), handle: hd, bio: '', color: colorFor(hd), createdAt: Date.now(), salt: null, hash: null });
+        toast('No passcode set. Add one any time in Settings, Privacy & Security.');
         return loginAs({ id });
       }
       if (pass.value.length < MIN_PASSCODE) { err.textContent = `Passcode: at least ${MIN_PASSCODE} characters, or leave both boxes empty for none.`; return; }
@@ -947,7 +967,7 @@ async function render(keepScroll = false) {
     const route = { notifications: 'notifications', explore: 'explore', profile: 'profile', settings: 'settings', post: 'post' }[r] || 'home';
     const main = {
       home: () => homeView(acct, ctx), explore: exploreView, notifications: notificationsView,
-      profile: () => profileView(acct, ctx), settings: () => settingsView(acct), post: () => postView(acct, ctx, arg),
+      profile: () => profileView(acct, ctx), settings: () => { if (arg === 'security') settingsTab = 'security'; return settingsView(acct); }, post: () => postView(acct, ctx, arg),
     }[route]();
     document.title = route === 'home' ? 'Home / Anti-Social' : route[0].toUpperCase() + route.slice(1) + ' / Anti-Social';
     root.replaceChildren(shell(acct, route, main));

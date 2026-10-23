@@ -71,7 +71,7 @@ There is nothing to leak: no server, no accounts anywhere but your device, no ne
 **The vault (optional).** Leave the passcode blank when you sign up and nothing is encrypted; you can add or remove it any time in Settings. If you do set one, your passcode is stretched with PBKDF2 (600,000 rounds) into an AES-256-GCM key that lives only in memory.
 Posts, images and the profile are stored as ciphertext; only the handle is readable. The passcode and key are never
 saved. The app locks when you leave it (you choose how soon). **There is no recovery.** Forget the passcode and the
-posts are gone for everyone, including the developer. Old accounts from v0.1.0 can be upgraded in Settings.
+posts are gone for everyone, including the developer. Old accounts from v0.1.0 can be upgraded in Settings, Privacy & Security.
 
 **The duress PIN.** Set one in Settings. Typing it at the unlock screen looks like any failed attempt but erases every
 account and post on the device, including the vault salt, so leftover scraps can't be unlocked either. No confirmation, no
