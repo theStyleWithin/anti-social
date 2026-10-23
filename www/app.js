@@ -247,6 +247,7 @@ let authMode = { mode: 'pick' };
 let profileTab = 'posts';
 let installPrompt = null;
 let session = ls('as.session');
+let currentAcct = null;
 
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; });
 
@@ -383,6 +384,7 @@ function mediaGrid(images) {
 
 function topbar(title, { back = false, sub = '', action = null } = {}) {
   return h('div', { class: 'topbar' },
+    !back && currentAcct && h('button', { class: 'tb-me', 'aria-haspopup': 'menu', 'aria-label': 'Accounts', onclick: e => openAccountMenu(e.currentTarget, currentAcct) }, avatar(currentAcct, 'sm')),
     back && h('button', { class: 'back', 'aria-label': 'Back', onclick: () => history.length > 1 ? history.back() : go('/') }, icon('back')),
     h('div', {}, h('h1', {}, title), sub && h('div', { class: 'sub' }, sub)),
     action && h('div', { class: 'tbact' }, action));
@@ -804,7 +806,8 @@ async function openAccountMenu(anchor, acct) {
   document.body.append(pop);
   const r = anchor.getBoundingClientRect();
   pop.style.left = Math.max(8, Math.min(r.left, innerWidth - pop.offsetWidth - 8)) + 'px';
-  pop.style.bottom = (innerHeight - r.top + 8) + 'px';
+  if (r.top < innerHeight / 2) pop.style.top = (r.bottom + 8) + 'px';
+  else pop.style.bottom = (innerHeight - r.top + 8) + 'px';
   document.addEventListener('mousedown', outside, true);
   document.addEventListener('keydown', esc, true);
 }
@@ -1022,6 +1025,7 @@ async function render(keepScroll = false) {
   try {
     const acct = session && await loadAccount(session);
     if (my !== renderId) return;
+    if (!acct || acct.locked) currentAcct = null;
     if (acct?.locked) {
       if (authMode.mode !== 'unlock' || authMode.account?.id !== acct.id) authMode = { mode: 'unlock', account: acct };
       document.title = 'Anti-Social';
@@ -1031,6 +1035,7 @@ async function render(keepScroll = false) {
     if (!acct) { session = null; ls('as.session', null); document.title = 'Anti-Social'; root.replaceChildren(await authView()); return; }
     const posts = await loadPosts(acct);
     if (my !== renderId) return;
+    currentAcct = acct;
     if (posts.bad) console.warn(`${posts.bad} post(s) could not be decrypted`);
     const ctx = { posts, byId: new Map(posts.map(p => [p.id, p])), replyCount: new Map() };
     for (const p of posts) if (p.parentId) ctx.replyCount.set(p.parentId, (ctx.replyCount.get(p.parentId) || 0) + 1);

@@ -6,7 +6,7 @@
 
 ## Status: full featured and complete
 
-Anti-Social v0.3.0 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.3.1 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer:**
 - **Android:** installed and used on a real phone.
@@ -34,7 +34,7 @@ is a flat, unblinking **0**.
 - A search-for-people page that never finds anyone
 - **Encrypted vault (optional):** set a passcode and every post, image and your whole profile is locked (AES-256). Reopen the app, enter the passcode, and it is all there. Skip the passcode and the app just opens
 - **Duress PIN** (needs the vault): a second PIN that looks like a normal unlock but silently erases everything
-- Multiple accounts: click your account at the bottom left (or Settings on a phone) to switch or add one, with a joke about it
+- Multiple accounts: click your account at the bottom left on desktop, or your avatar at the top left on a phone, to switch or add one, with a joke about it
 - Avatar and banner images
 - Light, dark or auto theme
 - Export everything as JSON, or nuke it all
