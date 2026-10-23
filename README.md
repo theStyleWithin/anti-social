@@ -8,8 +8,8 @@
 
 Anti-Social v0.5.0 is feature complete. It is a finished app, not a work in progress.
 
-**Tested by the developer** (Android and Linux by hand through v0.4.0; Characters, new in v0.5.0, is covered by automated tests and a run of the Linux desktop app):
-- **Android:** installed and used on a real phone, including account switching, Populated mode and the storage limit.
+**Tested by the developer** (Android by hand through v0.5.0, including Characters; Linux by hand through v0.4.0, with v0.5.0 covered by automated tests and a run of the desktop app):
+- **Android:** installed and used on a real phone, including account switching, Populated mode, the storage limit and Characters.
 - **Features:** sign-up with and without a passcode, posting with images, likes, reposts and replies, avatar and banner images, the empty notifications tab, the Explore page that never finds anyone, themes, export and delete.
 - **Vault and duress PIN:** checked end to end. Data on disk is unreadable, it comes back after you unlock, a wrong passcode is rejected, and the duress PIN erases everything.
 - **Linux desktop:** installed and used on a real Linux desktop, including account switching, Populated mode and the storage limit.
