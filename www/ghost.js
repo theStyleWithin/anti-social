@@ -137,14 +137,104 @@ const Ghost = (() => {
     r => `New favorite thing: ${pick(r, SOUNDS)} while I ${pick(r, ['drink ' + 'tea', 'fold laundry', 'water the plants', 'stare at the ceiling', 'do absolutely nothing'])}.`,
   ];
 
+  /* ---------- voices: posting styles you can give a person ---------- */
+  const PLANTS = ['monstera', 'fern', 'pothos', 'basil', 'cactus', 'snake plant', 'spider plant', 'rubber plant'];
+  const STYLES = {
+    cozy: { label: 'Cozy', t: [
+      r => `Blanket, ${pick(r, DRINKS)}, and ${pick(r, SOUNDS)}. This is the whole plan.`,
+      r => `Today feels like ${pick(r, ['a warm sweater', 'a quiet library', 'soup on a cold day', 'a nap in the sun'])}.`,
+      r => `Lit a candle, made ${pick(r, DRINKS)}, and ignored all my problems for an hour.`,
+      r => `Nothing beats ${pick(r, SOUNDS)} on a ${pick(r, DAYS)} evening.`,
+      r => `Slow morning. ${cap(pick(r, DRINKS))} and no plans.`,
+      r => `Small joys: ${pick(r, ['clean sheets', 'a warm mug', 'a good playlist', 'a quiet street', 'fresh bread'])}.`,
+      r => `${cap(pick(r, WEATHER))} day, soft socks, and ${pick(r, FOODS)}. Perfect.`,
+      r => `Reminder: it is okay to rest.`,
+    ] },
+    grumpy: { label: 'Grumpy', t: [
+      r => `${cap(pick(r, COMPLAINTS))} is being difficult again.`,
+      r => `Why is ${pick(r, ['the line', 'the wifi', 'the printer', 'the bus'])} always slowest when I am in a hurry.`,
+      r => `I did not ask for ${pick(r, ['a meeting', 'a surprise', 'this much noise', 'another update', 'small talk'])}.`,
+      r => `${pick(r, DAYS)}. Unimpressed.`,
+      r => `Hot take: ${pick(r, OPINIONS)}. Do not argue with me.`,
+      r => `Everything is fine. I am just ${pick(r, ['tired', 'annoyed', 'hungry', 'unimpressed'])}.`,
+      r => `If one more ${pick(r, ['notification', 'pop-up', 'loud chewer', 'cheerful stranger'])} happens today, I am leaving.`,
+      r => `Still waiting for ${pick(r, ['the bus', 'my coffee', 'a reply', 'the kettle', 'sleep'])}.`,
+    ] },
+    plants: { label: 'Plant-obsessed', t: [
+      r => `The ${pick(r, PLANTS)} grew a new ${pick(r, ['leaf', 'shoot', 'bud'])} ${pick(r, TIMES)}. I cried a little.`,
+      r => `Repotted the ${pick(r, PLANTS)}. ${pick(r, ['It survived.', 'Dirt everywhere.', 'Worth it.', 'Both of us are stressed.'])}`,
+      r => `Watering schedule: ${pick(r, ['optimistic', 'a lie', 'whenever I remember', 'ruthless'])}.`,
+      r => `Plant count: ${3 + Math.floor(r() * 40)}. ${pick(r, ['Zero regrets.', 'Send help.', 'Window space: gone.'])}`,
+      r => `My ${pick(r, PLANTS)} is leaning toward the window and honestly, same.`,
+      r => `Sunlight, soil, and patience. That is the whole post.`,
+      r => `Propagated a cutting ${pick(r, TIMES)}. Now we wait.`,
+      r => `Gave the ${pick(r, PLANTS)} a pep talk today. It seemed receptive.`,
+    ] },
+    gamer: { label: 'Gamer', t: [
+      r => `Played ${pick(r, ['one more level', 'one more round', 'just one more run'])} and it is ${pick(r, ['3am', 'sunrise', 'suspiciously late'])}.`,
+      r => `Finally beat the boss ${pick(r, TIMES)}. ${pick(r, ['My hands are shaking.', 'Worth every try.', 'Never again.', 'Immediate nap.'])}`,
+      r => `Backlog: ${12 + Math.floor(r() * 200)} games. Currently playing: ${pick(r, ['the first one again', 'a cozy farm game', 'a puzzle game', 'something retro'])}.`,
+      r => `Cozy games are just chores with better music.`,
+      r => `Reminder: it is okay to save the game and go outside.`,
+      r => `${cap(pick(r, ['retro', 'pixel', 'cozy', 'puzzle']))} games hit different when it is raining.`,
+      r => `Update: I am still bad at this game and loving it.`,
+      r => `Speedrunning ${pick(r, ['my morning routine', 'laundry', 'the dishes'])}. Current record: ${5 + Math.floor(r() * 50)} minutes.`,
+    ] },
+    foodie: { label: 'Foodie', t: [
+      r => `Made ${pick(r, FOODS)}. ${cap(pick(r, ADJ))}. Would eat again.`,
+      r => `${cap(pick(r, ['crispy', 'cheesy', 'spicy', 'buttery', 'garlicky']))} ${pick(r, FOODS)} is the answer. I forget the question.`,
+      r => `Taste test: ${pick(r, DRINKS)} with ${pick(r, FOODS)}. ${pick(r, ['Surprisingly good.', 'Do not recommend.', 'A masterpiece.', 'Fine, honestly.'])}`,
+      r => `The best meal is the one someone else made.`,
+      r => `Sunday meal prep: ${pick(r, FOODS)}, ${pick(r, FOODS)}, and a tragic amount of rice.`,
+      r => `Rating ${pick(r, FOODS)}: ${3 + Math.floor(r() * 3)}/5. ${pick(r, ['Needs salt.', 'No notes.', 'Seconds were had.'])}`,
+      r => `Bread update: ${pick(r, ['it rose', 'it did not rise', 'it is a brick but a tasty brick'])}.`,
+      r => `Dinner idea: ${pick(r, FOODS)}. Nobody asked, but here we are.`,
+    ] },
+    philosopher: { label: 'Philosopher', t: [
+      r => `If ${pick(r, ['a tree falls in a forest', 'a post is made to no one', 'a sandwich is cut diagonally'])}, does it ${pick(r, ['make a sound', 'taste better', 'matter'])}?`,
+      r => `Is ${pick(r, ['a hot dog', 'soup', 'cereal', 'a pancake'])} a ${pick(r, ['sandwich', 'drink', 'salad', 'cake'])}? Asking seriously.`,
+      r => `${cap(pick(r, THOUGHTS))}. Think about that.`,
+      r => `Maybe ${pick(r, ['time is a flat circle', 'naps are the real meaning of life', 'the point is the snacks', 'being bored is underrated'])}.`,
+      r => `Today I wondered ${pick(r, ['why we say "after dark"', 'where socks go', 'who invented waiting', 'what clouds think about'])}. No answers yet.`,
+      r => `The unexamined ${pick(r, ['sandwich', 'nap', 'inbox', 'playlist'])} is not worth having.`,
+      r => `Everything is temporary, including this cup of ${pick(r, DRINKS)}.`,
+      r => `Question of the day: ${pick(r, ['what is a weekend, really', 'is this fine', 'does anyone know what day it is', 'why is it called a building if it is already built'])}?`,
+    ] },
+    minimal: { label: 'Minimalist', t: [
+      r => `${pick(r, FEELINGS)}.`,
+      r => `${cap(pick(r, WEATHER))}.`,
+      r => `${cap(pick(r, DRINKS))}.`,
+      r => `${pick(r, DAYS)}.`,
+      r => `${cap(pick(r, ['yes', 'no', 'maybe', 'fine', 'later', 'tomorrow', 'ok']))}.`,
+      r => `${cap(pick(r, FOODS))}.`,
+      r => `${cap(pick(r, TOPICS))}.`,
+      r => `Nap time.`,
+    ] },
+    hype: { label: 'Hype', t: [
+      r => `YES. ${cap(pick(r, ACTIVITIES))} is DONE and I feel UNSTOPPABLE.`,
+      r => `Today's vibe: ${pick(r, FEELINGS).toUpperCase()}!!`,
+      r => `You can do ${pick(r, ['the thing', 'one small thing', 'anything with snacks', 'this'])}! I believe in you!`,
+      r => `New day, new ${pick(r, ['snack', 'plan', 'playlist', 'chance'])}! Let's go!`,
+      r => `Just finished ${pick(r, ACTIVITIES)} and I am BEAMING.`,
+      r => `Everything is going to be fine, and also here is ${pick(r, ['a snack', 'a nap', 'a playlist'])}!`,
+      r => `Big energy for ${pick(r, DAYS)}! Let's do it!`,
+      r => `If today is a ${pick(r, ['3/10', '5/10', '7/10'])}, tomorrow is a fresh start!`,
+    ] },
+  };
+  const STYLE_LIST = Object.entries(STYLES).map(([id, v]) => ({ id, label: v.label }));
+
   /* ---------- people ---------- */
-  function timing(seed, i) {
+  // `cast` is an optional Map from person id ("seed.index") to what the user changed or created.
+  // Without it everything below is exactly what it always was.
+  const HEX = /^#[0-9a-f]{6}$/i;
+  function timing(seed, i, ov) {
     const r = rng(seed, 't', i);
-    const period = (2 + r() * 34) * HOUR;
-    return { period, phase: r() * period };
+    const rp = r(), rph = r();
+    const period = ov && ov.every > 0 ? Math.min(168, Math.max(1, ov.every)) * HOUR : (2 + rp * 34) * HOUR;
+    return { period, phase: rph * period };
   }
 
-  function person(seed, i) {
+  function baseperson(seed, i) {
     const r = rng(seed, 'p', i);
     const first = firstName(r), last = lastName(r);
     const f = first.toLowerCase(), l = last.toLowerCase();
@@ -164,7 +254,30 @@ const Ghost = (() => {
       following: 30 + Math.floor(r() * 900),
       joined: new Date(Date.UTC(year, month, 1)).toLocaleDateString(undefined, { month: 'long', year: 'numeric', timeZone: 'UTC' }),
       baseline: 40 + Math.floor(r() * 2400),
+      avatarImg: null, bannerImg: null, edited: false, custom: false, style: null, every: null,
     };
+  }
+
+  function person(seed, i, cast) {
+    const p = baseperson(seed, i);
+    const ov = cast && cast.get(p.id);
+    if (!ov) return p;
+    const num = v => Number.isFinite(v) && v >= 0 ? Math.min(999999999, Math.floor(v)) : null;
+    if (ov.name) p.name = String(ov.name).slice(0, 40);
+    if (ov.handle) p.handle = String(ov.handle).toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 15) || p.handle;
+    if (ov.bio != null) p.bio = String(ov.bio).slice(0, 160);
+    if (ov.joined) p.joined = String(ov.joined).slice(0, 30);
+    if (HEX.test(ov.color || '')) p.color = ov.color;
+    if (HEX.test(ov.bannerColor || '')) p.banner = `linear-gradient(135deg, ${ov.bannerColor}, color-mix(in srgb, ${ov.bannerColor} 55%, #8b5cf6))`;
+    if (typeof ov.avatarImg === 'string' && ov.avatarImg.startsWith('data:image/')) p.avatarImg = ov.avatarImg;
+    if (typeof ov.bannerImg === 'string' && ov.bannerImg.startsWith('data:image/')) p.bannerImg = ov.bannerImg;
+    if (num(ov.followers) != null) p.followers = num(ov.followers);
+    if (num(ov.following) != null) p.following = num(ov.following);
+    p.style = STYLES[ov.style] ? ov.style : null;
+    p.every = ov.every > 0 ? ov.every : null;
+    p.custom = !!ov.injected;
+    p.edited = !ov.injected;
+    return p;
   }
 
   /* ---------- posts ---------- */
@@ -186,32 +299,48 @@ const Ghost = (() => {
     return text;
   }
 
-  function post(seed, i, m) {
+  function post(seed, i, m, cast) {
     const r = rng(seed, 'q', i, m);
-    const { period, phase } = timing(seed, i);
+    const ov = cast && cast.get(`${seed}.${i}`);
+    const { period, phase } = timing(seed, i, ov);
+    const ts = Math.round(phase + m * period);
     const likes = Math.floor(Math.pow(10, r() * 2.6));
+    // A restyle only changes posts from the moment it was made onward; older posts stay as they were.
+    const live = ov && ts >= (ov.since || 0);
+    const lines = live && Array.isArray(ov.lines) ? ov.lines.filter(Boolean) : [];
+    const style = live && STYLES[ov.style] ? STYLES[ov.style] : null;
+    // The order of the draws below matters: the default branch must stay identical to every earlier version.
+    let text, withImage;
+    if (lines.length) { text = String(lines[((m % lines.length) + lines.length) % lines.length]).slice(0, 280); withImage = false; }
+    else if (style) { text = pick(r, style.t)(r); withImage = r() < 0.16; }
+    else { text = decorate(r, pick(r, TEMPLATES)(r)); withImage = r() < 0.16; }
     return {
-      id: `g:${seed}.${i}.${m}`, seed, i, m,
-      ts: Math.round(phase + m * period),
-      text: decorate(r, pick(r, TEMPLATES)(r)),
-      image: r() < 0.16 ? image(seed, i, m) : null,
+      id: `g:${seed}.${i}.${m}`, seed, i, m, ts, text,
+      image: withImage ? image(seed, i, m) : null,
       likes, reposts: Math.floor(likes * r() * 0.2), views: Math.floor(likes * (8 + r() * 40)),
     };
   }
 
-  // Newest posts from the first POP accounts, merged by time. Pure function of (seed, now, count).
-  function feed(seed, now, count) {
-    let windowH = Math.max(2, (count * 1.6 * 19) / POP);
+  // Newest posts merged by time. The crowd is the first POP accounts; injected characters join in if asked.
+  // Pure function of (seed, now, count, cast, options).
+  function feed(seed, now, count, opts = {}) {
+    const { cast = null, crowd = true, chars = false } = opts;
+    const accts = [];
+    if (crowd) for (let i = 0; i < POP; i++) accts.push({ seed, i });
+    if (chars && cast) for (const rec of cast.values()) if (rec.injected) accts.push({ seed: rec.seed, i: 0 });
+    if (!accts.length) return [];
+    let windowH = Math.max(2, (count * 1.6 * 19) / accts.length);
     for (let tries = 0; tries < 8; tries++) {
       const out = [];
       const since = now - windowH * HOUR;
-      for (let i = 0; i < POP; i++) {
-        const { period, phase } = timing(seed, i);
-        for (let m = Math.floor((now - phase) / period); phase + m * period >= since; m--) out.push({ i, m, ts: Math.round(phase + m * period) });
+      for (const a of accts) {
+        const { period, phase } = timing(a.seed, a.i, cast && cast.get(`${a.seed}.${a.i}`));
+        let guard = 0;
+        for (let m = Math.floor((now - phase) / period); phase + m * period >= since && guard < 1500; m--, guard++) out.push({ a, m, ts: Math.round(phase + m * period) });
       }
       if (out.length >= count || tries === 7) {
-        out.sort((a, b) => b.ts - a.ts || a.i - b.i);
-        return out.slice(0, count).map(p => post(seed, p.i, p.m));
+        out.sort((x, y) => y.ts - x.ts || x.a.i - y.a.i || (x.a.seed < y.a.seed ? -1 : 1));
+        return out.slice(0, count).map(p => post(p.a.seed, p.a.i, p.m, cast));
       }
       windowH *= 2;
     }
@@ -219,19 +348,26 @@ const Ghost = (() => {
   }
 
   // One account's latest posts, newest first.
-  function profilePosts(seed, i, now, count) {
-    const { period, phase } = timing(seed, i);
+  function profilePosts(seed, i, now, count, cast) {
+    const { period, phase } = timing(seed, i, cast && cast.get(`${seed}.${i}`));
     const m0 = Math.floor((now - phase) / period);
-    return Array.from({ length: count }, (_, k) => post(seed, i, m0 - k));
+    return Array.from({ length: count }, (_, k) => post(seed, i, m0 - k, cast));
   }
 
   /* ---------- the rest of the world ---------- */
-  function suggestions(seed, now, n) {
+  function suggestions(seed, now, n, opts = {}) {
+    const { cast = null, crowd = true, chars = false } = opts;
+    const pool = [];
+    if (crowd) for (let i = 0; i < POP; i++) pool.push({ seed, i });
+    if (chars && cast) for (const rec of cast.values()) if (rec.injected) pool.push({ seed: rec.seed, i: 0 });
     const day = Math.floor(now / (24 * HOUR));
     const r = rng(seed, 'who', day);
     const out = [];
-    while (out.length < n) { const i = Math.floor(r() * POP); if (!out.includes(i)) out.push(i); }
-    return out.map(i => person(seed, i));
+    while (out.length < Math.min(n, pool.length)) {
+      const k = Math.floor(r() * pool.length);
+      if (!out.includes(k)) out.push(k);
+    }
+    return out.map(k => person(pool[k].seed, pool[k].i, cast));
   }
   function trending(seed, now, n) {
     const hour = Math.floor(now / HOUR);
@@ -251,9 +387,10 @@ const Ghost = (() => {
     const m = /^([\w-]{1,16})\.(\d+)$/.exec(ref || '');
     return m ? { seed: m[1], i: Number(m[2]) } : null;
   }
+  const newCharacterSeed = () => 'c-' + Array.from(crypto.getRandomValues(new Uint8Array(5)), b => (b % 36).toString(36)).join('');
   const newSeed = () => Array.from(crypto.getRandomValues(new Uint8Array(4)), b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
   const cleanSeed = s => (s || '').trim().replace(/[^\w-]/g, '').slice(0, 16);
 
-  return { POP, WORLD, person, post, feed, profilePosts, suggestions, trending, discover, parsePostId, parsePersonRef, newSeed, cleanSeed, rng, hash32 };
+  return { POP, WORLD, STYLES: STYLE_LIST, person, baseperson, post, feed, profilePosts, suggestions, trending, discover, parsePostId, parsePersonRef, newSeed, newCharacterSeed, cleanSeed, rng, hash32 };
 })();
 if (typeof module !== 'undefined') module.exports = Ghost;

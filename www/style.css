@@ -267,3 +267,13 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 .settings input[type=number][aria-label="Storage limit"] { width: 110px; padding: 8px 12px; background: transparent; border: 1px solid var(--line); border-radius: 999px; }
 .settings select { padding: 8px 12px; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 999px; }
+
+.person-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.person-row .suggest-who { flex: 1; min-width: 0; }
+.person-row .btn { padding: 6px 16px; }
+.badge { font-size: 12px; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mp select, .mp input[type=number], .mp input[type=color] { width: 100%; padding: 10px 12px; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; }
+.mp input[type=color] { padding: 2px; height: 42px; }
+.mp textarea { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--line); border-radius: 6px; outline: 0; }
+.modal { max-height: 92vh; overflow-y: auto; }

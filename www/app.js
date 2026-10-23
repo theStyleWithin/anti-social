@@ -482,7 +482,7 @@ function postEl(p, acct, ctx, { detail = false } = {}) {
   const replies = ctx.replyCount.get(p.id) || 0;
   const parent = p.parentId && ctx.byId.get(p.parentId);
   const gp = Ghost.parsePostId(p.parentId);
-  const gParent = gp && Ghost.person(gp.seed, gp.i).handle;
+  const gParent = gp && GW.person(gp.seed, gp.i).handle;
   const refresh = () => render(true);
   const patch = async fields => { await savePost(acct, { ...p, ...fields }); refresh(); };
   const remove = async () => {
@@ -544,7 +544,20 @@ function emptyState(title, text) {
 }
 
 /* ---------- populated mode ---------- */
-const populated = () => ls('as.populated') === '1';
+const crowdOn = () => ls('as.populated') === '1';     // the generated crowd
+const castOn = () => ls('as.cast') === '1';            // the characters you made
+const populated = () => crowdOn() || castOn();
+let castMap = new Map();                                // person id -> what you changed or created (set on every render)
+const MAX_CAST = 60;
+const people = n => n === 1 ? '1 person' : `${n.toLocaleString()} people`;
+const poolOpts = () => ({ cast: castMap, crowd: crowdOn(), chars: castOn() });
+const GW = {
+  person: (seed, i) => Ghost.person(seed, i, castMap),
+  post: (seed, i, m) => Ghost.post(seed, i, m, castMap),
+  profilePosts: (seed, i, now, n) => Ghost.profilePosts(seed, i, now, n, castMap),
+  feed: (seed, now, n) => Ghost.feed(seed, now, n, poolOpts()),
+  suggestions: (seed, now, n) => Ghost.suggestions(seed, now, n, poolOpts()),
+};
 function worldSeed() {
   let s = ls('as.seed');
   if (!s) { s = Ghost.newSeed(); ls('as.seed', s); }
@@ -568,10 +581,10 @@ async function setReaction(acct, ctx, target, field) {
   render(true);
 }
 
-const ghostAvatar = (p, size = '') => avatar({ name: p.name, handle: p.handle, color: p.color }, size);
+const ghostAvatar = (p, size = '') => avatar({ name: p.name, handle: p.handle, color: p.color, avatarImg: p.avatarImg }, size);
 
 function ghostPostEl(g, acct, ctx, { detail = false } = {}) {
-  const who = Ghost.person(g.seed, g.i);
+  const who = GW.person(g.seed, g.i);
   const rx = ctx.reactions.get(g.id) || {};
   const replies = ctx.replyCount.get(g.id) || 0;     // only your own replies exist
   const reposts = g.reposts + (rx.reposted ? 1 : 0), likes = g.likes + (rx.liked ? 1 : 0);
@@ -609,22 +622,26 @@ function ghostPostEl(g, acct, ctx, { detail = false } = {}) {
 function ghostProfileView(acct, ctx, ref) {
   const pr = Ghost.parsePersonRef(ref);
   if (!pr) return [topbar('Profile', { back: true }), emptyState('Nobody here', 'That is not a person this world knows about.')];
-  const who = Ghost.person(pr.seed, pr.i);
+  const who = GW.person(pr.seed, pr.i);
   const rx = ctx.reactions.get('u:' + who.id) || {};
-  const list = Ghost.profilePosts(pr.seed, pr.i, Date.now(), ghostPostCount);
+  const list = GW.profilePosts(pr.seed, pr.i, Date.now(), ghostPostCount);
   return [
     topbar(who.name, { back: true, sub: fmt(who.baseline + list[0].m % 50) + ' posts' }),
-    h('div', { class: 'gen-tag', role: 'note' }, h('b', {}, 'Procedurally generated'), ` · seed ${pr.seed} · account ${pr.i.toLocaleString()} of ${Ghost.WORLD.toLocaleString()}`),
-    (() => { const b = h('div', { class: 'banner ghost' }); b.style.background = who.banner; return b; })(),
+    who.custom
+      ? h('div', { class: 'gen-tag', role: 'note' }, h('b', {}, 'Custom character'), ' · made by you')
+      : h('div', { class: 'gen-tag', role: 'note' }, h('b', {}, 'Procedurally generated'), (who.edited ? ' · edited by you' : '') + ` · seed ${pr.seed} · account ${pr.i.toLocaleString()} of ${Ghost.WORLD.toLocaleString()}`),
+    (() => { const b = h('div', { class: 'banner ghost' }); b.style.background = who.banner; paintImage(b, who.bannerImg); return b; })(),
     h('div', { class: 'pinfo' },
       h('div', { class: 'top' },
         h('div', { class: 'avwrap' }, ghostAvatar(who, 'lg')),
-        h('button', { class: 'btn' + (rx.followed ? '' : ' primary'), 'aria-pressed': String(!!rx.followed), onclick: () => setReaction(acct, ctx, 'u:' + who.id, 'followed') }, rx.followed ? 'Following' : 'Follow')),
+        h('div', { class: 'btnrow', style: 'margin-top:12px' },
+          h('button', { class: 'btn', onclick: () => personEditor(acct, who.id) }, 'Edit this person'),
+          h('button', { class: 'btn' + (rx.followed ? '' : ' primary'), 'aria-pressed': String(!!rx.followed), onclick: () => setReaction(acct, ctx, 'u:' + who.id, 'followed') }, rx.followed ? 'Following' : 'Follow'))),
       h('h2', {}, who.name),
       h('div', { class: 'muted' }, '@' + who.handle),
       h('div', { class: 'bio' }, who.bio),
       h('div', { class: 'meta' }, 'Joined ' + who.joined),
-      pr.i >= Ghost.POP && h('div', { class: 'meta' }, 'Far from the busy part of the world. Discovered by you.'),
+      !who.custom && pr.i >= Ghost.POP && h('div', { class: 'meta' }, 'Far from the busy part of the world. Discovered by you.'),
       h('div', { class: 'follow' }, h('span', {}, h('b', {}, fmt(who.following)), ' Following'), h('span', {}, h('b', {}, fmt(who.followers + (rx.followed ? 1 : 0))), ' Followers'))),
     h('div', { class: 'tabs', role: 'tablist' }, h('button', { role: 'tab', 'aria-selected': 'true', class: 'active' }, 'Posts')),
     list.map(g => ghostPostEl(g, acct, ctx)),
@@ -647,8 +664,9 @@ function homeView(acct, ctx) {
     composer(acct, { placeholder: "What's happening?", onDone: () => render(true) }),
   ];
   if (pop && homeTab === 'foryou') {
-    const crowd = Ghost.feed(worldSeed(), Date.now(), feedCount);
+    const crowd = GW.feed(worldSeed(), Date.now(), feedCount);
     const cutoff = crowd.length ? crowd[crowd.length - 1].ts : 0;
+    if (!crowd.length) return [...head, emptyState('Nobody here yet', crowdOn() ? 'Nothing to show.' : 'Your cast is empty. Add characters in Settings, Characters, or turn on Populated mode for a whole crowd.')];
     const items = [
       ...crowd.map(g => ({ ts: g.ts, el: () => ghostPostEl(g, acct, ctx) })),
       ...top.filter(p => p.createdAt >= cutoff).map(p => ({ ts: p.createdAt, el: () => postEl(p, acct, ctx) })),
@@ -679,19 +697,19 @@ let searchAttempts = 0;
 
 function exploreCrowdView(acct, ctx) {
   const seed = worldSeed(), now = Date.now();
-  const trends = Ghost.trending(seed, now, 5), who = Ghost.suggestions(seed, now, 4);
+  const trends = Ghost.trending(seed, now, 5), who = GW.suggestions(seed, now, 4);
   return [
     topbar('Explore'),
     h('div', { class: 'explore-block' }, h('h3', {}, 'Trending'),
       trends.map((t, k) => h('div', { class: 'trend' }, h('div', { class: 'muted' }, `${k + 1} · Trending`), h('b', {}, t.tag ? '#' + t.tag : t.topic), h('div', { class: 'muted' }, fmt(t.posts) + ' posts')))),
-    h('div', { class: 'explore-block' }, h('h3', {}, 'Who to follow'),
+    who.length > 0 && h('div', { class: 'explore-block' }, h('h3', {}, 'Who to follow'),
       who.map(p => {
         const rx = ctx.reactions.get('u:' + p.id) || {};
         return h('div', { class: 'suggest' },
           h('a', { href: '#/u/' + p.id, class: 'suggest-who' }, ghostAvatar(p, 'sm'), h('div', {}, h('b', {}, p.name), h('div', { class: 'muted' }, '@' + p.handle))),
           h('button', { class: 'btn' + (rx.followed ? '' : ' primary'), onclick: () => setReaction(acct, ctx, 'u:' + p.id, 'followed') }, rx.followed ? 'Following' : 'Follow'));
       })),
-    h('div', { class: 'explore-block' }, h('h3', {}, 'Discover'),
+    crowdOn() && h('div', { class: 'explore-block' }, h('h3', {}, 'Discover'),
       h('p', { class: 'muted', style: 'margin:0 0 12px' }, `Pick a stranger from ${Ghost.WORLD.toLocaleString()} possible accounts. All generated, none real.`),
       h('button', { class: 'btn primary', onclick: () => go('/u/' + seed + '.' + Ghost.discover()) }, 'Discover someone new')),
   ];
@@ -728,7 +746,7 @@ function notificationsView() {
 function postView(acct, ctx, id) {
   const gp = Ghost.parsePostId(id);
   if (gp) {
-    const g = Ghost.post(gp.seed, gp.i, gp.m);
+    const g = GW.post(gp.seed, gp.i, gp.m);
     const replies = ctx.posts.filter(r => r.parentId === g.id).sort((a, b) => a.createdAt - b.createdAt);
     return [
       topbar('Post', { back: true }),
@@ -742,7 +760,7 @@ function postView(acct, ctx, id) {
   const chain = [];
   for (let c = ctx.byId.get(p.parentId); c; c = ctx.byId.get(c.parentId)) chain.unshift(c);
   const rootGp = Ghost.parsePostId((chain[0] || p).parentId);
-  const rootGhost = rootGp && Ghost.post(rootGp.seed, rootGp.i, rootGp.m);
+  const rootGhost = rootGp && GW.post(rootGp.seed, rootGp.i, rootGp.m);
   const replies = ctx.posts.filter(r => r.parentId === p.id).sort((a, b) => a.createdAt - b.createdAt);
   return [
     topbar('Post', { back: true }),
@@ -890,8 +908,148 @@ async function removeDuress(acct) {
 
 let settingsTab = 'general';
 
+/* ---------- characters: edit anyone in the crowd, or add people of your own ---------- */
+let popQuery = '';
+let popShown = 20;
+
+const toHex = css => { const c = document.createElement('canvas').getContext('2d'); c.fillStyle = '#000000'; c.fillStyle = css; return c.fillStyle; };
+
+function personRow(acct, p) {
+  return h('div', { class: 'person-row' },
+    h('a', { href: '#/u/' + p.id, class: 'suggest-who' }, ghostAvatar(p, 'sm'), h('div', {}, h('b', {}, p.name), h('div', { class: 'muted' }, '@' + p.handle))),
+    p.custom ? h('span', { class: 'badge' }, 'Character') : p.edited ? h('span', { class: 'badge' }, 'Edited') : null,
+    h('button', { class: 'btn', onclick: () => personEditor(acct, p.id) }, 'Edit'));
+}
+
+function charactersTab(acct) {
+  const seed = worldSeed();
+  const mine = [...castMap.values()].filter(r => r.injected).sort((a, b) => a.createdAt - b.createdAt);
+  const q = popQuery.trim().toLowerCase();
+  const everyone = Array.from({ length: Ghost.POP }, (_, i) => GW.person(seed, i));
+  const hits = q ? everyone.filter(p => p.name.toLowerCase().includes(q) || p.handle.includes(q)) : everyone;
+  const search = h('input', { type: 'search', placeholder: 'Search the population', value: popQuery, 'aria-label': 'Search the population' });
+  search.addEventListener('input', () => {
+    popQuery = search.value; popShown = 20;
+    clearTimeout(search._t);
+    search._t = setTimeout(() => render(true).then(() => { const el = $('.settings input[type=search]'); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }), 200);
+  });
+  return [
+    h('section', {}, h('h3', {}, 'Your cast: ' + (castOn() ? 'showing' : 'hidden')),
+      h('p', {}, 'Characters are people you invent. Show them and they join the feed, Explore and the side column, either on their own or alongside the generated crowd (turn the crowd on or off in General, Populated mode). Like everyone here they can never reply, like, follow or message anyone.'),
+      h('div', { class: 'btnrow' }, h('button', { class: 'btn' + (castOn() ? ' primary' : ''), 'aria-pressed': String(castOn()), onclick: () => {
+        if (castOn()) { ls('as.cast', null); toast('Cast hidden.'); } else { worldSeed(); ls('as.cast', '1'); toast(mine.length ? 'Your cast has joined the feed.' : 'Cast on. Add a character to give it someone.'); }
+        render(true);
+      } }, castOn() ? 'Hide my cast' : 'Show my cast')),
+      h('p', { class: 'fine', style: 'padding:8px 0 0' }, `Crowd: ${crowdOn() ? 'on' : 'off'} · Cast: ${castOn() ? 'on' : 'off'}`)),
+    h('section', {}, h('h3', {}, `Add a character (${mine.length} of ${MAX_CAST})`),
+      h('p', {}, 'Invent a person: their name, handle, bio, avatar, banner, numbers, how often they post and how they sound, or write their posts yourself.'),
+      mine.map(rec => personRow(acct, GW.person(rec.seed, 0))),
+      h('div', { class: 'btnrow', style: 'margin-top:10px' }, h('button', { class: 'btn primary', disabled: mine.length >= MAX_CAST, onclick: () => personEditor(acct, null) }, 'Add a character'))),
+    h('section', {}, h('h3', {}, 'Population'),
+      h('p', {}, `${people(Ghost.POP)} in the crowd, every one of them editable. Change someone's look and it updates everywhere. Change their posting style and their posts from now on use it; what they already said stays as it was.`),
+      search,
+      h('p', { class: 'fine', style: 'padding:8px 0' }, `${people(hits.length)}${q ? (hits.length === 1 ? ' matches' : ' match') : ''}${[...castMap.values()].filter(r => !r.injected).length ? ` · ${plural([...castMap.values()].filter(r => !r.injected).length, 'edit')} so far` : ''}`),
+      hits.slice(0, popShown).map(p => personRow(acct, p)),
+      hits.length > popShown && h('div', { class: 'btnrow', style: 'margin-top:10px' }, h('button', { class: 'btn', onclick: () => { popShown += 20; render(true); } }, 'Show more'))),
+  ];
+}
+
+function personEditor(acct, ref) {
+  const isNew = !ref;
+  let seed, idx;
+  if (isNew) { seed = Ghost.newCharacterSeed(); idx = 0; ref = `${seed}.0`; }
+  else { const pr = Ghost.parsePersonRef(ref); if (!pr) return; seed = pr.seed; idx = pr.i; }
+  if (isNew && [...castMap.values()].filter(r => r.injected).length >= MAX_CAST) return toast(`That is the most characters allowed (${MAX_CAST}).`);
+  const existing = castMap.get(ref) || null;
+  const cur = GW.person(seed, idx);
+  let avatarImg = cur.avatarImg || null, bannerImg = cur.bannerImg || null, colorTouched = !!existing?.color, bannerTouched = !!existing?.bannerColor;
+
+  const name = h('input', { value: cur.name, maxlength: 40 });
+  const handle = h('input', { value: cur.handle, maxlength: 15, autocapitalize: 'none', spellcheck: 'false' });
+  const bio = h('textarea', { rows: 2, maxlength: 160 }, cur.bio);
+  const joined = h('input', { value: cur.joined, maxlength: 30 });
+  const followers = h('input', { type: 'number', min: '0', value: String(cur.followers) });
+  const following = h('input', { type: 'number', min: '0', value: String(cur.following) });
+  const color = h('input', { type: 'color', value: toHex(cur.color) });
+  const bannerColor = h('input', { type: 'color', value: existing?.bannerColor || toHex(cur.color) });
+  const style = h('select', { 'aria-label': 'Posting style' }, h('option', { value: '' }, 'Original mix'), Ghost.STYLES.map(x => h('option', { value: x.id }, x.label)));
+  style.value = existing?.style || '';
+  const every = h('input', { type: 'number', min: '1', max: '168', step: '1', placeholder: 'auto', value: existing?.every ? String(existing.every) : (isNew ? '8' : '') });
+  const lines = h('textarea', { rows: 5, placeholder: 'One post per line. They will go through these in order, again and again.', 'aria-label': 'Their posts' }, (existing?.lines || []).join('\n'));
+  const err = h('p', { class: 'err' });
+  const banner = h('div', { class: 'banner edit' });
+  const av = h('div', { class: 'avatar lg' });
+  const paint = () => {
+    banner.style.background = bannerTouched ? `linear-gradient(135deg, ${bannerColor.value}, color-mix(in srgb, ${bannerColor.value} 55%, #8b5cf6))` : cur.banner;
+    banner.style.backgroundImage = ''; paintImage(banner, bannerImg);
+    av.style.background = colorTouched ? color.value : cur.color; av.style.backgroundImage = '';
+    av.textContent = avatarImg ? '' : (name.value.trim() || '?')[0].toUpperCase(); paintImage(av, avatarImg);
+  };
+  color.addEventListener('input', () => { colorTouched = true; paint(); });
+  bannerColor.addEventListener('input', () => { bannerTouched = true; paint(); });
+  name.addEventListener('input', paint);
+  paint();
+
+  const field = (label, el) => h('label', { class: 'field' }, h('span', {}, label), el);
+  const save = h('button', { class: 'btn primary' }, isNew ? 'Add character' : 'Save');
+  const close = modal(h('div', {},
+    h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => close() }, icon('x')), h('b', {}, isNew ? 'New character' : 'Edit this person')),
+    h('div', { class: 'mp' },
+      h('p', { class: 'muted', style: 'margin-top:0' }, isNew ? 'They will be marked "Custom character, made by you" and can never respond to anything.' : 'Their look changes everywhere straight away. A new posting style applies to what they post from now on.'),
+      banner,
+      h('div', { class: 'btnrow' },
+        h('button', { class: 'btn', onclick: async () => { const d = await chooseImage(1500, 500); if (d) { bannerImg = d; paint(); } } }, 'Change banner'),
+        h('button', { class: 'btn', onclick: () => { bannerImg = null; paint(); } }, 'Remove banner')),
+      h('div', { style: 'margin:12px 0' }, av),
+      h('div', { class: 'btnrow' },
+        h('button', { class: 'btn', onclick: async () => { const d = await chooseImage(256, 256); if (d) { avatarImg = d; paint(); } } }, 'Change avatar'),
+        h('button', { class: 'btn', onclick: () => { avatarImg = null; paint(); } }, 'Remove avatar')),
+      h('div', { style: 'height:12px' }),
+      field('Name', name), field('Handle', handle), field('Bio', bio), field('Joined', joined),
+      h('div', { class: 'two' }, field('Followers', followers), field('Following', following)),
+      h('div', { class: 'two' }, field('Avatar color (no image)', color), field('Banner color (no image)', bannerColor)),
+      h('div', { class: 'two' }, field('Posting style', style), field('Posts every ~hours', every)),
+      field('Write their posts (optional)', lines),
+      err,
+      h('div', { class: 'btnrow' },
+        save,
+        existing && !isNew && !existing.injected && h('button', { class: 'btn', onclick: async () => { await db.del('posts', existing.id); close(); toast('Back to the original.'); render(true); } }, 'Restore original'),
+        existing && existing.injected && h('button', { class: 'btn danger', onclick: async () => { if (!confirm(`Delete ${cur.name}? They will vanish from the population.`)) return; await db.del('posts', existing.id); close(); toast('Character deleted.'); render(true); } }, 'Delete character')))));
+
+  save.addEventListener('click', async () => {
+    err.textContent = '';
+    const nm = name.value.trim(), hd = handle.value.trim().toLowerCase().replace(/^@/, '');
+    if (!nm) return void (err.textContent = 'Everyone needs a name.');
+    if (!/^[a-z0-9_]{1,15}$/.test(hd)) return void (err.textContent = 'Handle: 1-15 letters, numbers or underscores.');
+    const fo = Number(followers.value), fg = Number(following.value);
+    if (!(fo >= 0 && fo <= 999999999) || !(fg >= 0 && fg <= 999999999)) return void (err.textContent = 'Follower numbers are 0 to 999,999,999.');
+    const ev = every.value === '' ? null : Number(every.value);
+    if (ev !== null && !(ev >= 1 && ev <= 168)) return void (err.textContent = 'Posting frequency is every 1 to 168 hours.');
+    const ls_ = lines.value.split('\n').map(x => x.trim()).filter(Boolean);
+    if (ls_.length > 100 || ls_.some(x => x.length > 280)) return void (err.textContent = 'Up to 100 posts, 280 characters each.');
+    const info = await storageInfo();
+    if (info && info.usage >= storageCap()) return void (err.textContent = `You have reached your storage limit of ${fmtMB(storageCap())}. Raise it in Settings or delete some posts.`);
+    const changedVoice = JSON.stringify([style.value, ls_]) !== JSON.stringify([existing?.style || '', existing?.lines || []]);
+    const rec = {
+      id: existing?.id || uid(), accountId: acct.id, kind: 'cast', ref, seed, injected: isNew || !!existing?.injected,
+      createdAt: existing?.createdAt || Date.now(),
+      name: nm, handle: hd, bio: bio.value.trim(), joined: joined.value.trim(), followers: Math.floor(fo), following: Math.floor(fg),
+      color: colorTouched ? color.value : (existing?.color || null), bannerColor: bannerTouched ? bannerColor.value : (existing?.bannerColor || null),
+      avatarImg, bannerImg, style: style.value || null, every: ev, lines: ls_,
+      since: isNew || existing?.injected ? 0 : (changedVoice ? Date.now() : (existing?.since || 0)),
+    };
+    save.disabled = true;
+    try { await savePost(acct, rec); }
+    catch (e) { console.error(e); err.textContent = isQuotaError(e) ? 'Out of space.' : 'That could not be saved.'; save.disabled = false; return; }
+    close();
+    toast(isNew ? `${nm} has joined the population.` : 'Saved.');
+    if (isNew) { ls('as.cast', '1'); settingsTab = 'characters'; go('/settings/characters'); }
+    render(true);
+  });
+}
+
 function populatedSection() {
-  const on = populated();
+  const on = crowdOn();
   const input = h('input', { value: ls('as.seed') || '', maxlength: 16, 'aria-label': 'World seed', placeholder: 'seed', spellcheck: 'false' });
   return h('section', {}, h('h3', {}, 'Populated mode: ' + (on ? 'on' : 'off')),
     h('p', {}, 'Fills Home, Explore and the side column with a procedurally generated crowd. They are scenery: nobody in it can reply, like, follow or message you, ever. Nothing is saved for them. The crowd is calculated on screen from a seed, so it costs no storage.'),
@@ -988,8 +1146,8 @@ function settingsView(acct) {
   const tab = (k, label) => h('button', { role: 'tab', 'aria-selected': String(settingsTab === k), class: settingsTab === k ? 'active' : '', onclick: () => { settingsTab = k; render(true); } }, label);
   return [
     topbar('Settings'),
-    h('div', { class: 'tabs', role: 'tablist' }, tab('general', 'General'), tab('security', 'Privacy & Security')),
-    h('div', { class: 'settings' }, settingsTab === 'security' ? security : general),
+    h('div', { class: 'tabs', role: 'tablist' }, tab('general', 'General'), tab('characters', 'Characters'), tab('security', 'Privacy & Security')),
+    h('div', { class: 'settings' }, settingsTab === 'security' ? security : settingsTab === 'characters' ? charactersTab(acct) : general),
   ];
 }
 
@@ -1257,7 +1415,7 @@ function shell(acct, route, main) {
         ? [h('div', { class: 'card' }, h('h3', {}, "What's happening"),
             Ghost.trending(worldSeed(), Date.now(), 3).map((t, k) => h('div', { class: 'side-trend' }, h('div', { class: 'muted' }, `${k + 1} · Trending`), h('b', {}, t.tag ? '#' + t.tag : t.topic), h('div', { class: 'muted' }, fmt(t.posts) + ' posts')))),
            h('div', { class: 'card' }, h('h3', {}, 'Who to follow'),
-            Ghost.suggestions(worldSeed(), Date.now(), 3).map(p => h('a', { class: 'side-who', href: '#/u/' + p.id }, ghostAvatar(p, 'sm'), h('div', {}, h('b', {}, p.name), h('div', { class: 'muted' }, '@' + p.handle)))))]
+            GW.suggestions(worldSeed(), Date.now(), 3).map(p => h('a', { class: 'side-who', href: '#/u/' + p.id }, ghostAvatar(p, 'sm'), h('div', {}, h('b', {}, p.name), h('div', { class: 'muted' }, '@' + p.handle)))))]
         : [h('div', { class: 'card' }, h('h3', {}, "What's happening"), h('p', {}, 'Nothing. Nobody is here.')),
            h('div', { class: 'card' }, h('h3', {}, 'Who to follow'), h('p', {}, 'No one. There is no one.'))],
       h('p', { class: 'fine' }, 'No servers · No tracking · No audience · Terms: TOUCH GRASS')));
@@ -1283,7 +1441,8 @@ async function render(keepScroll = false) {
     currentAcct = acct;
     if (all.bad) console.warn(`${all.bad} post(s) could not be decrypted`);
     // Your likes, reposts and follows of generated accounts live beside your posts but are not posts.
-    const posts = all.filter(p => p.kind !== 'ghost');
+    const posts = all.filter(p => p.kind !== 'ghost' && p.kind !== 'cast');
+    castMap = new Map(all.filter(p => p.kind === 'cast').map(p => [p.ref, p]));
     const reactions = new Map(all.filter(p => p.kind === 'ghost').map(p => [p.target, p]));
     const ctx = { posts, reactions, following: [...reactions.values()].filter(x => x.followed).length, byId: new Map(posts.map(p => [p.id, p])), replyCount: new Map() };
     for (const p of posts) if (p.parentId) ctx.replyCount.set(p.parentId, (ctx.replyCount.get(p.parentId) || 0) + 1);
@@ -1292,7 +1451,7 @@ async function render(keepScroll = false) {
     const route = { notifications: 'notifications', explore: 'explore', profile: 'profile', settings: 'settings', post: 'post', u: 'u' }[r] || 'home';
     const main = {
       home: () => homeView(acct, ctx), explore: () => exploreView(acct, ctx), notifications: notificationsView, u: () => ghostProfileView(acct, ctx, arg),
-      profile: () => profileView(acct, ctx), settings: () => { if (arg === 'security') settingsTab = 'security'; return settingsView(acct); }, post: () => postView(acct, ctx, arg),
+      profile: () => profileView(acct, ctx), settings: () => { if (arg === 'security' || arg === 'characters') settingsTab = arg; return settingsView(acct); }, post: () => postView(acct, ctx, arg),
     }[route]();
     document.title = route === 'home' ? 'Home / Anti-Social' : route[0].toUpperCase() + route.slice(1) + ' / Anti-Social';
     root.replaceChildren(shell(acct, route, main));
