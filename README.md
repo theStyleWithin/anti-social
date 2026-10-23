@@ -99,7 +99,7 @@ be a crime, and so can lying to officers about what a PIN does. This is a privac
 
 **Populated mode.** The crowd is calculated on screen from a short seed code (same seed, same people) and is never written to disk, so it uses no storage. Generated accounts are scenery: they have no way to respond to anything. You can reply to, like and follow them, and nothing ever comes back. Your own replies, likes and follows are saved like any post, so with a passcode they are encrypted too, including which stranger you reacted to.
 
-**Storage.** Settings shows how much space Anti-Social is using and lets you set a limit. Pictures are shrunk before saving, new posts pause at your limit or when the device is nearly full, and oversize images are refused. The desktop apps will get a choice of which drive to keep data on in a later release; browsers and phones cannot move their storage.
+**Storage.** Settings shows how much space Anti-Social is using and lets you set a limit. Pictures are shrunk before saving, new posts pause at your limit or when the device is nearly full, and oversize images are refused. Data stays in each app's own private storage on the device; choosing a different drive is not supported.
 
 **Honest limits.** Encryption protects data at rest. It can't protect you if someone watches you type the passcode, if
 malware is on the device, or if you pick a weak passcode. Exported JSON files are not encrypted. Deleted data can linger
