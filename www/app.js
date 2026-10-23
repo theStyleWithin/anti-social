@@ -36,6 +36,7 @@ const ICONS = {
   x: '<path d="M6 6l12 12M18 6L6 18"/>',
   compose: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
   chart: '<path d="M3 20h18M7 20V10M12 20V4M17 20v-7"/>',
+  lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   camera: '<path d="M3 8h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13" r="4"/>',
 };
 function icon(name) {
@@ -100,6 +101,143 @@ const db = {
   clear: async n => req((await store(n, 'readwrite')).clear()),
   postsOf: async id => req((await store('posts')).index('accountId').getAll(id)),
 };
+
+db.batch = async (accounts, posts) => {
+  const d = await openDb();
+  return new Promise((res, rej) => {
+    const t = d.transaction(['accounts', 'posts'], 'readwrite');
+    for (const a of accounts) t.objectStore('accounts').put(a);
+    for (const p of posts) t.objectStore('posts').put(p);
+    t.oncomplete = () => res();
+    t.onerror = t.onabort = () => rej(t.error);
+  });
+};
+
+/* ---------- vault ----------
+   Passcode -> PBKDF2-SHA256 (600k rounds) -> AES-256-GCM key, held in memory only.
+   Every post (text, images, flags, timestamps) and the profile (name, bio, avatar, banner)
+   is stored as ciphertext. Only the id, handle and account id stay readable, so the account
+   picker and the database index still work. The passcode and key are never stored. */
+const VAULT_ITER = 600000;
+const MIN_PASSCODE = 8;
+const te = new TextEncoder();
+const td = new TextDecoder();
+const vault = { id: null, key: null };
+const postCache = new Map();
+const PROFILE_KEYS = ['name', 'bio', 'color', 'avatarImg', 'bannerImg', 'duress'];
+
+async function deriveKey(pass, salt, iter) {
+  const base = await crypto.subtle.importKey('raw', te.encode(pass.normalize('NFKC')), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: iter, hash: 'SHA-256' }, base,
+    { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function seal(key, obj, aad) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: te.encode(aad) }, key, te.encode(JSON.stringify(obj)));
+  return { iv, ct };
+}
+async function unseal(key, rec, aad) {
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: rec.iv, additionalData: te.encode(aad) }, key, rec.ct);
+  return JSON.parse(td.decode(pt));
+}
+// Every vault carries a duress slot, set or not, so its mere presence tells an inspector nothing.
+const randBytes = n => crypto.getRandomValues(new Uint8Array(n));
+const decoyAlt = () => ({ salt: randBytes(16), iter: VAULT_ITER, check: { iv: randBytes(12), ct: randBytes(23).buffer } });
+async function makeAlt(id, pin) {
+  const salt = randBytes(16);
+  const key = await deriveKey(pin, salt, VAULT_ITER);
+  return { salt, iter: VAULT_ITER, check: await seal(key, { d: 1 }, 'duress:' + id) };
+}
+async function matchesDuress(raw, pin) {
+  try {
+    const key = await deriveKey(pin, raw.vault.alt.salt, raw.vault.alt.iter);
+    await unseal(key, raw.vault.alt.check, 'duress:' + raw.id);
+    return true;
+  } catch { return false; }
+}
+// Erase everything the app stores. The vault salt goes with it, so any ciphertext left on disk is unreadable.
+async function panicWipe() {
+  lockVault();
+  session = null;
+  try { await db.clear('posts'); await db.clear('accounts'); } catch { /* wipe on regardless */ }
+  try { (await dbp).close(); } catch { /* already closed */ }
+  dbp = undefined;
+  await new Promise(res => { const r = indexedDB.deleteDatabase('anti-social'); r.onsuccess = r.onerror = r.onblocked = () => res(); });
+  for (const k of ['as.session', 'as.lockAfter', 'as.theme']) ls(k, null);
+  authMode = { mode: 'signup' };
+  history.replaceState(null, '', location.pathname + location.search);
+  applyTheme();
+  render();
+}
+
+async function makeVault(id, pass) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await deriveKey(pass, salt, VAULT_ITER);
+  return { key, meta: { v: 1, salt, iter: VAULT_ITER, check: await seal(key, { ok: 1 }, 'check:' + id), alt: decoyAlt() } };
+}
+async function openVault(raw, pass) {
+  try {
+    const key = await deriveKey(pass, raw.vault.salt, raw.vault.iter);
+    await unseal(key, raw.vault.check, 'check:' + raw.id);
+    return key;
+  } catch { return null; }
+}
+function lockVault() {
+  vault.id = null; vault.key = null; postCache.clear();
+}
+
+// The account as the app uses it: profile fields decrypted and merged in.
+async function loadAccount(id) {
+  const raw = await db.get('accounts', id);
+  if (!raw) return null;
+  if (!raw.vault) return raw;
+  if (vault.id !== id) return { ...raw, locked: true };
+  return { ...raw, ...(await unseal(vault.key, raw.profile, 'profile:' + id)) };
+}
+async function updateAccount(id, fields) {
+  const raw = await db.get('accounts', id);
+  if (!raw.vault) return db.put('accounts', { ...raw, ...fields });
+  const cur = await unseal(vault.key, raw.profile, 'profile:' + id);
+  return db.put('accounts', { ...raw, profile: await seal(vault.key, { ...cur, ...fields }, 'profile:' + id) });
+}
+async function savePost(acct, post) {
+  if (!acct.vault) return db.put('posts', post);
+  const { iv, ct } = await seal(vault.key, post, `post:${acct.id}:${post.id}`);
+  postCache.delete(post.id);
+  return db.put('posts', { id: post.id, accountId: acct.id, v: 1, iv, ct });
+}
+async function loadPosts(acct) {
+  const raw = await db.postsOf(acct.id);
+  if (!acct.vault) return raw;
+  const out = [];
+  out.bad = 0;
+  for (const r of raw) {
+    const ck = r.id + ':' + r.iv.join(',');
+    try {
+      let p = postCache.get(ck);
+      if (!p) { p = await unseal(vault.key, r, `post:${acct.id}:${r.id}`); postCache.set(ck, p); }
+      out.push(p);
+    } catch { out.bad++; }
+  }
+  return out;
+}
+// Re-encrypt the whole account (and every post) under a new passcode, in a single transaction,
+// so a crash can never leave half the posts under the old key.
+async function rekeyAccount(acct, pass) {
+  const posts = await loadPosts(acct);
+  if (posts.bad) throw new Error('unreadable posts');
+  const raw = await db.get('accounts', acct.id);
+  const { key, meta } = await makeVault(acct.id, pass);
+  const profile = Object.fromEntries(PROFILE_KEYS.map(k => [k, acct[k] ?? null]));
+  const account = { id: raw.id, handle: raw.handle, createdAt: raw.createdAt, vault: { ...meta, alt: raw.vault?.alt || meta.alt }, profile: await seal(key, profile, 'profile:' + raw.id) };
+  const recs = [];
+  for (const p of posts) {
+    const { iv, ct } = await seal(key, p, `post:${acct.id}:${p.id}`);
+    recs.push({ id: p.id, accountId: acct.id, v: 1, iv, ct });
+  }
+  await db.batch([account], recs);
+  vault.id = acct.id; vault.key = key; postCache.clear();
+}
 
 /* ---------- state ---------- */
 let renderId = 0;
@@ -208,7 +346,7 @@ function chooseImage(w, hgt) {
 async function setProfileImage(acctId, field, w, hgt) {
   const data = await chooseImage(w, hgt);
   if (!data) return;
-  await db.put('accounts', { ...(await db.get('accounts', acctId)), [field]: data });
+  await updateAccount(acctId, { [field]: data });
   render(true);
 }
 
@@ -240,10 +378,11 @@ function mediaGrid(images) {
   return h('div', { class: 'media n' + images.length }, images.map(src => h('img', { src, alt: 'Attached image', loading: 'lazy' })));
 }
 
-function topbar(title, { back = false, sub = '' } = {}) {
+function topbar(title, { back = false, sub = '', action = null } = {}) {
   return h('div', { class: 'topbar' },
     back && h('button', { class: 'back', 'aria-label': 'Back', onclick: () => history.length > 1 ? history.back() : go('/') }, icon('back')),
-    h('div', {}, h('h1', {}, title), sub && h('div', { class: 'sub' }, sub)));
+    h('div', {}, h('h1', {}, title), sub && h('div', { class: 'sub' }, sub)),
+    action && h('div', { class: 'tbact' }, action));
 }
 
 function composer(acct, { placeholder, parentId = null, onDone, autofocus = false, label = 'Post' }) {
@@ -264,7 +403,7 @@ function composer(acct, { placeholder, parentId = null, onDone, autofocus = fals
   const send = async () => {
     if (submit.disabled) return;
     submit.disabled = true;
-    await db.put('posts', { id: uid(), accountId: acct.id, text: ta.value.trim(), images, createdAt: Date.now(), parentId, liked: false, reposted: false });
+    await savePost(acct, { id: uid(), accountId: acct.id, text: ta.value.trim(), images, createdAt: Date.now(), parentId, liked: false, reposted: false });
     toast(pick(TOASTS));
     onDone?.();
   };
@@ -292,7 +431,7 @@ function postEl(p, acct, ctx, { detail = false } = {}) {
   const replies = ctx.replyCount.get(p.id) || 0;
   const parent = p.parentId && ctx.byId.get(p.parentId);
   const refresh = () => render(true);
-  const patch = async fields => { await db.put('posts', { ...p, ...fields }); refresh(); };
+  const patch = async fields => { await savePost(acct, { ...p, ...fields }); refresh(); };
   const remove = async () => {
     if (!confirm('Delete this post? (Nobody saw it, but still.)')) return;
     const doomed = new Set([p.id]);
@@ -353,7 +492,8 @@ function emptyState(title, text) {
 function homeView(acct, ctx) {
   const top = ctx.posts.filter(p => !p.parentId).sort((a, b) => b.createdAt - a.createdAt);
   return [
-    topbar('Home'),
+    topbar('Home', { action: acct.vault && h('button', { class: 'back', 'aria-label': 'Lock vault', title: 'Lock vault', onclick: () => { lockVault(); render(); } }, icon('lock')) }),
+    !acct.vault && h('div', { class: 'vault-note' }, h('span', {}, "Your posts aren't encrypted yet."), h('button', { class: 'btn primary', onclick: () => passcodeModal(acct) }, 'Set up vault')),
     composer(acct, { placeholder: "What's happening?", onDone: () => render(true) }),
     top.length
       ? [...top.map(p => postEl(p, acct, ctx)), h('div', { class: 'empty-note' }, "You're all caught up. Nobody else posted. Nobody else exists.")]
@@ -442,6 +582,83 @@ function profileView(acct, ctx) {
   ];
 }
 
+const LOCK_CHOICES = [['0', 'Right away'], ['60', 'After 1 minute'], ['300', 'After 5 minutes'], ['never', 'Never']];
+const lockAfter = () => ls('as.lockAfter') ?? '60';
+
+function passcodeModal(acct) {
+  const changing = !!acct.vault;
+  const cur = changing && h('input', { type: 'password', autocomplete: 'current-password' });
+  const p1 = h('input', { type: 'password', autocomplete: 'new-password' });
+  const p2 = h('input', { type: 'password', autocomplete: 'new-password' });
+  const err = h('p', { class: 'err' });
+  const go_ = h('button', { class: 'btn primary' }, changing ? 'Change passcode' : 'Encrypt everything');
+  const close = modal(h('div', {},
+    h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => close() }, icon('x')), h('b', {}, changing ? 'Change passcode' : 'Set up the vault')),
+    h('div', { class: 'mp' },
+      h('p', { class: 'muted', style: 'margin-top:0' }, 'Everything is locked with this passcode: posts, images, avatar, banner and profile. There is no recovery. Forget it and your posts are gone for good, for everyone, including me.'),
+      changing && h('label', { class: 'field' }, h('span', {}, 'Current passcode'), cur),
+      h('label', { class: 'field' }, h('span', {}, `New passcode (at least ${MIN_PASSCODE} characters)`), p1),
+      h('label', { class: 'field' }, h('span', {}, 'Type it again'), p2),
+      err, go_)));
+  go_.addEventListener('click', async () => {
+    err.textContent = '';
+    if (changing && !(await openVault(await db.get('accounts', acct.id), cur.value))) { err.textContent = 'Current passcode is wrong.'; return; }
+    if (p1.value.length < MIN_PASSCODE) { err.textContent = `Use at least ${MIN_PASSCODE} characters.`; return; }
+    if (p1.value !== p2.value) { err.textContent = "Those don't match."; return; }
+    go_.disabled = true;
+    go_.textContent = 'Encrypting...';
+    try {
+      await rekeyAccount(acct, p1.value);
+      close();
+      toast(changing ? 'Passcode changed.' : 'Vault ready. Everything is encrypted.');
+      render(true);
+    } catch (e) {
+      console.error(e);
+      err.textContent = e.message === 'unreadable posts' ? "Some posts can't be read, so nothing was changed." : 'Something went wrong, so nothing was changed.';
+      go_.disabled = false;
+      go_.textContent = changing ? 'Change passcode' : 'Encrypt everything';
+    }
+  });
+}
+
+function duressModal(acct) {
+  const cur = h('input', { type: 'password', autocomplete: 'current-password' });
+  const p1 = h('input', { type: 'password', autocomplete: 'off' });
+  const p2 = h('input', { type: 'password', autocomplete: 'off' });
+  const err = h('p', { class: 'err' });
+  const btn = h('button', { class: 'btn danger' }, acct.duress ? 'Change duress PIN' : 'Set duress PIN');
+  const close = modal(h('div', {},
+    h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => close() }, icon('x')), h('b', {}, 'Duress PIN')),
+    h('div', { class: 'mp' },
+      h('p', { class: 'muted', style: 'margin-top:0' }, 'At the unlock screen this PIN looks like any wrong passcode attempt, but it silently and permanently erases ALL Anti-Social data on this device: every account, post and image. No confirmation, no undo. Your real passcode is unaffected. Copies you exported or backed up elsewhere are not touched.'),
+      h('label', { class: 'field' }, h('span', {}, 'Your real passcode'), cur),
+      h('label', { class: 'field' }, h('span', {}, 'Duress PIN (at least 4 characters, different from your passcode)'), p1),
+      h('label', { class: 'field' }, h('span', {}, 'Type it again'), p2),
+      err, btn)));
+  btn.addEventListener('click', async () => {
+    err.textContent = '';
+    const raw = await db.get('accounts', acct.id);
+    if (!(await openVault(raw, cur.value))) { err.textContent = 'Your real passcode is wrong.'; return; }
+    if (p1.value.length < 4) { err.textContent = 'Use at least 4 characters.'; return; }
+    if (p1.value === cur.value) { err.textContent = 'It has to be different from your passcode.'; return; }
+    if (p1.value !== p2.value) { err.textContent = "Those don't match."; return; }
+    btn.disabled = true;
+    try {
+      const alt = await makeAlt(acct.id, p1.value);
+      const profile = { ...(await unseal(vault.key, raw.profile, 'profile:' + acct.id)), duress: true };
+      await db.batch([{ ...raw, vault: { ...raw.vault, alt }, profile: await seal(vault.key, profile, 'profile:' + acct.id) }], []);
+      close(); toast('Duress PIN set. Test it somewhere you can afford to lose.'); render(true);
+    } catch (e) { console.error(e); err.textContent = 'Something went wrong, so nothing was changed.'; btn.disabled = false; }
+  });
+}
+
+async function removeDuress(acct) {
+  const raw = await db.get('accounts', acct.id);
+  const profile = { ...(await unseal(vault.key, raw.profile, 'profile:' + acct.id)), duress: false };
+  await db.batch([{ ...raw, vault: { ...raw.vault, alt: decoyAlt() }, profile: await seal(vault.key, profile, 'profile:' + acct.id) }], []);
+  toast('Duress PIN removed.'); render(true);
+}
+
 function settingsView(acct) {
   const theme = ls('as.theme') || 'auto';
   const themeBtn = (v, label) => h('button', { class: 'btn' + (theme === v ? ' primary' : ''), onclick: () => { ls('as.theme', v === 'auto' ? null : v); applyTheme(); render(true); } }, label);
@@ -452,8 +669,23 @@ function settingsView(acct) {
         h('div', { class: 'btnrow' }, themeBtn('auto', 'Auto'), themeBtn('light', 'Light'), themeBtn('dark', 'Dark'))),
       installPrompt && h('section', {}, h('h3', {}, 'Install'), h('p', {}, 'Put Anti-Social on your home screen or desktop. It works offline, because there is nothing to connect to.'),
         h('button', { class: 'btn primary', onclick: async () => { installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; render(true); } }, 'Install app')),
+      h('section', {}, h('h3', {}, 'Vault'),
+        acct.vault
+          ? [h('p', {}, 'Your posts, images and profile are encrypted with your passcode (AES-256). The passcode is never stored, and there is no recovery.'),
+             h('div', { class: 'btnrow' },
+               h('button', { class: 'btn', onclick: () => { lockVault(); render(); } }, 'Lock now'),
+               h('button', { class: 'btn', onclick: () => passcodeModal(acct) }, 'Change passcode')),
+             h('p', { style: 'margin:14px 0 4px' }, h('b', {}, 'Duress PIN: '), acct.duress ? 'on.' : 'off.', ' A second PIN that looks like a normal unlock but secretly erases everything. Know the law where you live: destroying data you are legally required to keep can be a crime.'),
+             h('div', { class: 'btnrow' },
+               h('button', { class: 'btn', onclick: () => duressModal(acct) }, acct.duress ? 'Change duress PIN' : 'Set duress PIN'),
+               acct.duress && h('button', { class: 'btn', onclick: () => removeDuress(acct) }, 'Remove it')),
+             h('p', { style: 'margin:14px 0 8px' }, 'Lock automatically after I leave the app:'),
+             h('div', { class: 'btnrow' }, LOCK_CHOICES.map(([v, label]) =>
+               h('button', { class: 'btn' + (lockAfter() === v ? ' primary' : ''), onclick: () => { ls('as.lockAfter', v); render(true); } }, label)))]
+          : [h('p', {}, 'Your posts and profile are stored unencrypted on this device. Set up the vault to lock all of it behind a passcode.'),
+             h('button', { class: 'btn primary', onclick: () => passcodeModal(acct) }, 'Set up vault')]),
       h('section', {}, h('h3', {}, 'Your data'), h('p', {}, 'It lives in this browser, on this device, and nowhere else. Clearing site data deletes it. There is no recovery because there is no one to recover it.'),
-        h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: exportData }, 'Export everything (JSON)'))),
+        h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: () => exportData(acct) }, 'Export my data (JSON)'))),
       h('section', {}, h('h3', {}, 'Account'),
         h('div', { class: 'btnrow' },
           h('button', { class: 'btn', onclick: logout }, 'Switch account'),
@@ -465,7 +697,7 @@ function settingsView(acct) {
 }
 
 /* ---------- account actions ---------- */
-function logout() { session = null; ls('as.session', null); authMode = { mode: 'pick' }; go('/'); }
+function logout() { lockVault(); session = null; ls('as.session', null); authMode = { mode: 'pick' }; go('/'); }
 
 async function deleteAccount(acct) {
   if (!confirm(`Delete @${acct.handle} and every post? This cannot be undone. Nobody can help you.`)) return;
@@ -480,10 +712,11 @@ async function wipeEverything() {
   logout();
 }
 
-async function exportData() {
-  const accounts = (await db.all('accounts')).map(({ salt, hash, ...a }) => a);
-  const posts = await db.all('posts');
-  const blob = new Blob([JSON.stringify({ app: 'anti-social', exportedAt: new Date().toISOString(), accounts, posts }, null, 2)], { type: 'application/json' });
+async function exportData(acct) {
+  if (acct.vault && !confirm('The export file is NOT encrypted. Anyone who gets it can read your posts. Export anyway?')) return;
+  const { salt, hash, vault: _v, profile: _p, locked, ...account } = acct;
+  const posts = await loadPosts(acct);
+  const blob = new Blob([JSON.stringify({ app: 'anti-social', exportedAt: new Date().toISOString(), account, posts }, null, 2)], { type: 'application/json' });
   const a = h('a', { href: URL.createObjectURL(blob), download: 'anti-social-export.json' });
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
@@ -528,7 +761,7 @@ function editProfile(acct) {
       err,
       h('button', { class: 'btn primary', onclick: async () => {
         if (!name.value.trim()) { err.textContent = 'You need a name, even here.'; return; }
-        await db.put('accounts', { ...(await db.get('accounts', acct.id)), name: name.value.trim(), bio: bio.value.trim(), color: color.value, avatarImg, bannerImg });
+        await updateAccount(acct.id, { name: name.value.trim(), bio: bio.value.trim(), color: color.value, avatarImg, bannerImg });
         close(); render(true);
       } }, 'Save'))));
 }
@@ -546,54 +779,90 @@ async function authView() {
   const wrap = body => h('div', { class: 'auth' }, h('div', { class: 'box' },
     h('div', { class: 'logo' }, icon('logo')), h('h1', {}, 'Anti-Social'),
     h('p', { class: 'tag' }, 'Social media with nobody on it.'), body));
-  const loginAs = async a => { session = a.id; ls('as.session', a.id); go('/'); };
+  const loginAs = a => { session = a.id; ls('as.session', a.id); go('/'); };
 
   if (authMode.mode === 'unlock') {
     const a = authMode.account;
     const pass = h('input', { type: 'password', autocomplete: 'current-password', 'aria-label': 'Passcode' });
     const err = h('p', { class: 'err' });
+    const btn = h('button', { class: 'btn primary' }, 'Unlock');
     const submit = async e => {
       e.preventDefault();
-      if (await sha256(a.salt + pass.value) === a.hash) loginAs(a); else { err.textContent = 'Wrong passcode. Nobody is going to help you.'; pass.select(); }
+      err.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Unlocking...';
+      let ok = false;
+      try {
+        if (a.vault) {
+          // Always do both derivations so the duress slot costs the same time whether or not it is set.
+          const key = await openVault(a, pass.value);
+          const duress = await matchesDuress(a, pass.value);
+          if (duress) return panicWipe();
+          if (key) { vault.id = a.id; vault.key = key; ok = true; }
+        } else {
+          ok = await sha256(a.salt + pass.value) === a.hash;
+        }
+      } catch { /* fall through to the error */ }
+      if (ok) return loginAs(a);
+      err.textContent = 'Wrong passcode. Nobody is going to help you.';
+      btn.disabled = false;
+      btn.textContent = 'Unlock';
+      pass.select();
     };
     setTimeout(() => pass.focus(), 0);
     return wrap(h('form', { onsubmit: submit },
       h('label', { class: 'field' }, h('span', {}, `Passcode for @${a.handle}`), pass), err,
-      h('div', { class: 'stack' }, h('button', { class: 'btn primary' }, 'Unlock'),
-        h('button', { type: 'button', class: 'btn', onclick: () => { authMode = { mode: 'pick' }; render(); } }, 'Back'))));
+      h('div', { class: 'stack' }, btn,
+        h('button', { type: 'button', class: 'btn', onclick: () => logout() }, accounts.length > 1 ? 'Switch account' : 'Back'))));
   }
 
   if (authMode.mode === 'signup') {
     const name = h('input', { autocomplete: 'name', maxlength: 50, required: true });
     const handle = h('input', { autocapitalize: 'none', autocomplete: 'username', maxlength: 15, required: true });
-    const pass = h('input', { type: 'password', autocomplete: 'new-password' });
+    const pass = h('input', { type: 'password', autocomplete: 'new-password', required: true });
+    const pass2 = h('input', { type: 'password', autocomplete: 'new-password', required: true });
     const err = h('p', { class: 'err' });
+    const btn = h('button', { class: 'btn primary' }, 'Create account');
     const submit = async e => {
       e.preventDefault();
+      err.textContent = '';
       const hd = handle.value.trim().replace(/^@/, '');
       if (!/^\w{1,15}$/.test(hd)) { err.textContent = 'Handle: 1-15 letters, numbers or underscores.'; return; }
       if (accounts.some(a => a.handle.toLowerCase() === hd.toLowerCase())) { err.textContent = 'That handle is taken. By you. Earlier.'; return; }
-      const a = { id: uid(), name: name.value.trim(), handle: hd, bio: '', color: colorFor(hd), createdAt: Date.now(), salt: null, hash: null };
-      if (pass.value) {
-        try { a.salt = uid(); a.hash = await sha256(a.salt + pass.value); }
-        catch { err.textContent = 'Passcodes need a secure context (https or localhost).'; return; }
+      if (pass.value.length < MIN_PASSCODE) { err.textContent = `Passcode: at least ${MIN_PASSCODE} characters.`; return; }
+      if (pass.value !== pass2.value) { err.textContent = "Those passcodes don't match."; return; }
+      btn.disabled = true;
+      btn.textContent = 'Locking the vault...';
+      try {
+        const id = uid();
+        const { key, meta } = await makeVault(id, pass.value);
+        const profile = { name: name.value.trim(), bio: '', color: colorFor(hd), avatarImg: null, bannerImg: null };
+        await db.put('accounts', { id, handle: hd, createdAt: Date.now(), vault: meta, profile: await seal(key, profile, 'profile:' + id) });
+        vault.id = id; vault.key = key;
+        loginAs({ id });
+      } catch (e2) {
+        console.error(e2);
+        err.textContent = 'Encryption needs a secure context (https, localhost or the installed app).';
+        btn.disabled = false;
+        btn.textContent = 'Create account';
       }
-      await db.put('accounts', a);
-      loginAs(a);
     };
     return wrap(h('form', { onsubmit: submit },
       h('label', { class: 'field' }, h('span', {}, 'Name'), name),
       h('label', { class: 'field' }, h('span', {}, 'Handle'), handle),
-      h('label', { class: 'field' }, h('span', {}, 'Passcode (optional, only locks this device)'), pass),
+      h('label', { class: 'field' }, h('span', {}, `Passcode (at least ${MIN_PASSCODE} characters)`), pass),
+      h('label', { class: 'field' }, h('span', {}, 'Type it again'), pass2),
       err,
-      h('div', { class: 'stack' }, h('button', { class: 'btn primary' }, 'Create account'),
+      h('div', { class: 'stack' }, btn,
         accounts.length > 0 && h('button', { type: 'button', class: 'btn', onclick: () => { authMode = { mode: 'pick' }; render(); } }, 'Back')),
-      h('p', { class: 'fine', style: 'padding:12px 0 0' }, 'No email needed. There is nobody to send it.')));
+      h('p', { class: 'fine', style: 'padding:12px 0 0' }, 'Everything you post is encrypted with this passcode. There is no recovery: forget it and your posts are gone. No email needed. There is nobody to send it.')));
   }
 
   return wrap(h('div', { class: 'stack' },
-    accounts.map(a => h('button', { class: 'acct', onclick: () => a.hash ? (authMode = { mode: 'unlock', account: a }, render()) : loginAs(a) },
-      avatar(a, 'sm'), h('div', {}, h('b', {}, a.name), h('div', { class: 'muted' }, '@' + a.handle)))),
+    accounts.map(a => h('button', { class: 'acct', onclick: () => a.vault || a.hash ? (authMode = { mode: 'unlock', account: a }, render()) : loginAs(a) },
+      avatar(a, 'sm'),
+      h('div', {}, h('b', {}, a.name || '@' + a.handle), h('div', { class: 'muted' }, a.name ? '@' + a.handle : 'Locked')),
+      (a.vault || a.hash) && h('span', { class: 'muted', style: 'margin-left:auto;display:flex' }, icon('lock')))),
     h('button', { class: 'btn primary', onclick: () => { authMode = { mode: 'signup' }; render(); } }, 'Create account')));
 }
 
@@ -621,11 +890,18 @@ async function render(keepScroll = false) {
   const y = scrollY;
   const root = $('#app');
   try {
-    const acct = session && await db.get('accounts', session);
+    const acct = session && await loadAccount(session);
     if (my !== renderId) return;
+    if (acct?.locked) {
+      if (authMode.mode !== 'unlock' || authMode.account?.id !== acct.id) authMode = { mode: 'unlock', account: acct };
+      document.title = 'Anti-Social';
+      root.replaceChildren(await authView());
+      return;
+    }
     if (!acct) { session = null; ls('as.session', null); document.title = 'Anti-Social'; root.replaceChildren(await authView()); return; }
-    const posts = await db.postsOf(acct.id);
+    const posts = await loadPosts(acct);
     if (my !== renderId) return;
+    if (posts.bad) console.warn(`${posts.bad} post(s) could not be decrypted`);
     const ctx = { posts, byId: new Map(posts.map(p => [p.id, p])), replyCount: new Map() };
     for (const p of posts) if (p.parentId) ctx.replyCount.set(p.parentId, (ctx.replyCount.get(p.parentId) || 0) + 1);
 
@@ -649,5 +925,30 @@ async function render(keepScroll = false) {
 window.addEventListener('hashchange', () => render());
 applyTheme();
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+// Auto-lock when the app goes to the background (minimised window, other app, locked phone).
+let hiddenAt = 0;
+let lockTimer;
+document.addEventListener('visibilitychange', () => {
+  clearTimeout(lockTimer);
+  const lim = lockAfter();
+  if (document.hidden) {
+    hiddenAt = Date.now();
+    if (vault.id && lim !== 'never') lockTimer = setTimeout(() => { lockVault(); render(); }, Number(lim) * 1000);
+  } else if (vault.id && lim !== 'never' && Date.now() - hiddenAt >= Number(lim) * 1000) {
+    lockVault();
+    render();
+  }
+});
+
+// The service worker is only for the plain-browser build. The installed apps ship their own files.
+const nativeApp = !!window.Capacitor || /; wv\)/.test(navigator.userAgent);
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  if (nativeApp) {
+    navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(() => {});
+    if (window.caches) caches.keys().then(ks => ks.forEach(k => caches.delete(k))).catch(() => {});
+  } else {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+}
 render();

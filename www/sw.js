@@ -1,5 +1,5 @@
 // Cache the app shell so Anti-Social works offline. There is no network API to call.
-const CACHE = 'anti-social-v1';
+const CACHE = 'anti-social-v2';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png'];
 
@@ -15,5 +15,10 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  e.respondWith(caches.match(e.request).then(hit => hit || fetch(e.request)));
+  // Network first so an updated app is never hidden behind a stale cache; cache is the offline fallback.
+  e.respondWith(fetch(e.request).then(res => {
+    const copy = res.clone();
+    caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
+    return res;
+  }).catch(() => caches.match(e.request)));
 });

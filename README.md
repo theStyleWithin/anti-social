@@ -19,6 +19,9 @@ is a flat, unblinking **0**.
 - A profile with **0 followers** and **0 views** on everything
 - A notifications tab that is, and always will be, empty
 - A search-for-people page that never finds anyone
+- **Encrypted vault:** every post, image and your whole profile is locked with your passcode (AES-256). Reopen the app, enter the passcode, and it is all there
+- **Duress PIN:** a second PIN that looks like a normal unlock but silently erases everything
+- Avatar and banner images
 - Light, dark or auto theme
 - Export everything as JSON, or nuke it all
 - Installable on phone, tablet and desktop. Works offline. Obviously.
@@ -61,10 +64,26 @@ release with every installer attached.
 
 A hosted web version. Currently skipped because hosting costs money and nobody is here anyway.
 
-## Privacy policy
+## Privacy
 
-There is nothing to leak. Data lives in your browser's IndexedDB. Clearing site data
-deletes everything, and there is no recovery, because there is no one to recover it.
+There is nothing to leak: no server, no accounts anywhere but your device, no network access.
+
+**The vault.** Your passcode is stretched with PBKDF2 (600,000 rounds) into an AES-256-GCM key that lives only in memory.
+Posts, images and the profile are stored as ciphertext; only the handle is readable. The passcode and key are never
+saved. The app locks when you leave it (you choose how soon). **There is no recovery.** Forget the passcode and the
+posts are gone for everyone, including the developer. Old accounts from v0.1.0 can be upgraded in Settings.
+
+**The duress PIN.** Set one in Settings. Typing it at the unlock screen looks like any failed attempt but erases every
+account and post on the device, including the vault salt, so leftover scraps can't be unlocked either. No confirmation, no
+undo. It does not touch exports or backups you made elsewhere. Test it with throwaway data first.
+
+*Know the law where you live.* You generally have the right to decline a search and to ask for a warrant and a lawyer.
+Destroying data you are legally required to keep (a court order, a preservation demand, an active investigation) can
+be a crime, and so can lying to officers about what a PIN does. This is a privacy tool, not legal advice.
+
+**Honest limits.** Encryption protects data at rest. It can't protect you if someone watches you type the passcode, if
+malware is on the device, or if you pick a weak passcode. Exported JSON files are not encrypted. Deleted data can linger
+as unreadable ciphertext in disk blocks until the system reuses them.
 
 ## Terms of Use
 
