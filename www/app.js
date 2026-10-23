@@ -36,6 +36,7 @@ const ICONS = {
   x: '<path d="M6 6l12 12M18 6L6 18"/>',
   compose: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
   chart: '<path d="M3 20h18M7 20V10M12 20V4M17 20v-7"/>',
+  camera: '<path d="M3 8h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13" r="4"/>',
 };
 function icon(name) {
   const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -169,10 +170,60 @@ function downscale(file, max = 1280) {
   });
 }
 
+function cropImage(file, w, hgt) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = w; c.height = hgt;
+      const k = Math.max(w / img.width, hgt / img.height);
+      const g = c.getContext('2d');
+      g.fillStyle = '#fff';
+      g.fillRect(0, 0, w, hgt);
+      g.drawImage(img, (w - img.width * k) / 2, (hgt - img.height * k) / 2, img.width * k, img.height * k);
+      URL.revokeObjectURL(url);
+      res(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('bad image')); };
+    img.src = url;
+  });
+}
+
+function chooseImage(w, hgt) {
+  return new Promise(res => {
+    const input = h('input', { type: 'file', accept: 'image/*', hidden: true });
+    input.addEventListener('change', async () => {
+      const f = input.files[0];
+      input.remove();
+      if (!f) return res(null);
+      try { res(await cropImage(f, w, hgt)); } catch { toast("That doesn't look like an image."); res(null); }
+    });
+    input.addEventListener('cancel', () => { input.remove(); res(null); });
+    document.body.append(input);
+    input.click();
+  });
+}
+
+async function setProfileImage(acctId, field, w, hgt) {
+  const data = await chooseImage(w, hgt);
+  if (!data) return;
+  await db.put('accounts', { ...(await db.get('accounts', acctId)), [field]: data });
+  render(true);
+}
+
 /* ---------- components ---------- */
+function paintImage(el, data) {
+  if (!data) return;
+  el.style.backgroundImage = `url("${data}")`;
+  el.style.backgroundSize = 'cover';
+  el.style.backgroundPosition = 'center';
+}
+
 function avatar(a, size = '') {
-  const e = h('div', { class: 'avatar ' + size }, (a.name || a.handle)[0].toUpperCase());
+  const e = h('div', { class: 'avatar ' + size }, a.avatarImg ? '' : (a.name || a.handle)[0].toUpperCase());
   e.style.background = a.color || colorFor(a.handle);
+  paintImage(e, a.avatarImg);
   return e;
 }
 
@@ -374,9 +425,13 @@ function profileView(acct, ctx) {
     h('button', { role: 'tab', 'aria-selected': String(profileTab === k), class: profileTab === k ? 'active' : '', onclick: () => { profileTab = k; render(true); } }, label)));
   return [
     topbar(acct.name, { back: true, sub: plural(ctx.posts.length, 'post') }),
-    h('div', { class: 'banner' }),
+    h('button', { class: 'banner', 'aria-label': 'Change banner image', onclick: () => setProfileImage(acct.id, 'bannerImg', 1500, 500) },
+      acct.bannerImg && (() => { const d = h('span', { class: 'bimg' }); paintImage(d, acct.bannerImg); return d; })(),
+      h('span', { class: 'cam' }, icon('camera'))),
     h('div', { class: 'pinfo' },
-      h('div', { class: 'top' }, avatar(acct, 'lg'), h('button', { class: 'btn', onclick: () => editProfile(acct) }, 'Edit profile')),
+      h('div', { class: 'top' },
+        h('button', { class: 'avbtn', 'aria-label': 'Change avatar image', onclick: () => setProfileImage(acct.id, 'avatarImg', 256, 256) }, avatar(acct, 'lg'), h('span', { class: 'cam' }, icon('camera'))),
+        h('button', { class: 'btn', onclick: () => editProfile(acct) }, 'Edit profile')),
       h('h2', {}, acct.name),
       h('div', { class: 'muted' }, '@' + acct.handle),
       h('div', { class: 'bio' }, acct.bio || 'No bio. No audience either.'),
@@ -436,20 +491,44 @@ async function exportData() {
 }
 
 function editProfile(acct) {
+  let avatarImg = acct.avatarImg || null;
+  let bannerImg = acct.bannerImg || null;
   const name = h('input', { value: acct.name, maxlength: 50 });
   const bio = h('textarea', { rows: 3, maxlength: 160 }, acct.bio || '');
   const color = h('input', { type: 'color', value: acct.color || colorFor(acct.handle) });
   const err = h('p', { class: 'err' });
+  const banner = h('div', { class: 'banner edit' });
+  const av = h('div', { class: 'avatar lg' });
+  const paint = () => {
+    banner.style.backgroundImage = bannerImg ? `url("${bannerImg}")` : '';
+    banner.style.backgroundSize = 'cover';
+    banner.style.backgroundPosition = 'center';
+    av.style.background = color.value;
+    av.style.backgroundImage = '';
+    av.textContent = avatarImg ? '' : (name.value.trim() || acct.handle)[0].toUpperCase();
+    paintImage(av, avatarImg);
+  };
+  color.addEventListener('input', paint);
+  name.addEventListener('input', paint);
+  paint();
   const close = modal(h('div', {},
     h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => close() }, icon('x')), h('b', {}, 'Edit profile')),
     h('div', { class: 'mp' },
-      h('label', { class: 'field' }, h('span', {}, 'Name'), name),
+      banner,
+      h('div', { class: 'btnrow' },
+        h('button', { class: 'btn', onclick: async () => { const d = await chooseImage(1500, 500); if (d) { bannerImg = d; paint(); } } }, 'Change banner'),
+        h('button', { class: 'btn', onclick: () => { bannerImg = null; paint(); } }, 'Remove banner')),
+      h('div', { style: 'margin:12px 0' }, av),
+      h('div', { class: 'btnrow' },
+        h('button', { class: 'btn', onclick: async () => { const d = await chooseImage(256, 256); if (d) { avatarImg = d; paint(); } } }, 'Change avatar'),
+        h('button', { class: 'btn', onclick: () => { avatarImg = null; paint(); } }, 'Remove avatar')),
+      h('label', { class: 'field', style: 'margin-top:16px' }, h('span', {}, 'Name'), name),
       h('label', { class: 'field' }, h('span', {}, 'Bio'), bio),
-      h('label', { class: 'field' }, h('span', {}, 'Avatar color'), color),
+      h('label', { class: 'field' }, h('span', {}, 'Avatar color (used when there is no image)'), color),
       err,
       h('button', { class: 'btn primary', onclick: async () => {
         if (!name.value.trim()) { err.textContent = 'You need a name, even here.'; return; }
-        await db.put('accounts', { ...acct, name: name.value.trim(), bio: bio.value.trim(), color: color.value });
+        await db.put('accounts', { ...(await db.get('accounts', acct.id)), name: name.value.trim(), bio: bio.value.trim(), color: color.value, avatarImg, bannerImg });
         close(); render(true);
       } }, 'Save'))));
 }
