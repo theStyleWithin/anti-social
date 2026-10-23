@@ -39,6 +39,7 @@ const ICONS = {
   lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   check: '<path d="M5 13l4 4L19 7"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
   camera: '<path d="M3 8h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13" r="4"/>',
 };
 function icon(name) {
@@ -290,6 +291,34 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') [...document.querySelectorAll('.modal-bg')].pop()?.remove();
 });
 
+/* ---------- storage safeguards ----------
+   The generated crowd is never saved, so it costs no disk. Only your own posts and pictures
+   take space, and pictures are the big part, so those are the ones we limit. */
+const MB = 1024 * 1024;
+const DEFAULT_CAP_MB = 1024;        // default limit; you can change it in Settings
+const storageCap = () => { const v = Number(ls('as.capmb')); return (v >= 50 ? v : DEFAULT_CAP_MB) * MB; };
+const MIN_FREE = 100 * MB;          // always leave this much of the browser's allowance free
+const MAX_SOURCE = 40 * MB;         // refuse absurdly large source images (they can exhaust memory)
+
+async function storageInfo() {
+  try {
+    const e = await navigator.storage.estimate();
+    return { usage: e.usage || 0, quota: e.quota || 0 };
+  } catch { return null; }
+}
+const fmtMB = n => n < MB ? Math.max(0.1, Math.round(n / 1024 * 10) / 10 / 1024).toFixed(1) + ' MB' : (n >= 1024 * MB ? (n / 1024 / MB).toFixed(2) + ' GB' : Math.round(n / MB) + ' MB');
+
+// Returns a message if a new picture should be refused, otherwise null.
+async function pictureBlocked(file) {
+  if (file.size > MAX_SOURCE) return 'That image is over 40 MB. Pick a smaller one.';
+  const s = await storageInfo();
+  if (!s) return null;
+  if (s.usage + file.size / 4 >= storageCap()) return `You have reached your storage limit of ${fmtMB(storageCap())}, so new pictures are paused. Delete some posts or raise the limit in Settings.`;
+  if (s.quota && s.quota - s.usage < MIN_FREE + 8 * MB) return 'Your device is nearly out of space, so new pictures are paused to keep it from filling up.';
+  return null;
+}
+const isQuotaError = e => e && (e.name === 'QuotaExceededError' || /quota/i.test(e.message || ''));
+
 /* ---------- images ---------- */
 function downscale(file, max = 1280) {
   return new Promise((res, rej) => {
@@ -339,6 +368,8 @@ function chooseImage(w, hgt) {
       const f = input.files[0];
       input.remove();
       if (!f) return res(null);
+      const blocked = await pictureBlocked(f);
+      if (blocked) { toast(blocked); return res(null); }
       try { res(await cropImage(f, w, hgt)); } catch { toast("That doesn't look like an image."); res(null); }
     });
     input.addEventListener('cancel', () => { input.remove(); res(null); });
@@ -408,7 +439,20 @@ function composer(acct, { placeholder, parentId = null, onDone, autofocus = fals
   const send = async () => {
     if (submit.disabled) return;
     submit.disabled = true;
-    await savePost(acct, { id: uid(), accountId: acct.id, text: ta.value.trim(), images, createdAt: Date.now(), parentId, liked: false, reposted: false });
+    const s = await storageInfo();
+    if (s && s.usage >= storageCap()) {
+      toast(`You have reached your storage limit of ${fmtMB(storageCap())}, so nothing new is saved. Delete some posts or raise the limit in Settings.`);
+      submit.disabled = false;
+      return;
+    }
+    try {
+      await savePost(acct, { id: uid(), accountId: acct.id, text: ta.value.trim(), images, createdAt: Date.now(), parentId, liked: false, reposted: false });
+    } catch (e) {
+      console.error(e);
+      toast(isQuotaError(e) ? 'Out of space, so that post was not saved. Free some room and try again.' : 'That post could not be saved.');
+      submit.disabled = false;
+      return;
+    }
     toast(pick(TOASTS));
     onDone?.();
   };
@@ -417,6 +461,8 @@ function composer(acct, { placeholder, parentId = null, onDone, autofocus = fals
   submit.addEventListener('click', send);
   file.addEventListener('change', async () => {
     for (const f of [...file.files].slice(0, 4 - images.length)) {
+      const blocked = await pictureBlocked(f);
+      if (blocked) { toast(blocked); break; }
       try { images.push(await downscale(f)); } catch { toast("That doesn't look like an image."); }
     }
     file.value = '';
@@ -435,6 +481,8 @@ function composer(acct, { placeholder, parentId = null, onDone, autofocus = fals
 function postEl(p, acct, ctx, { detail = false } = {}) {
   const replies = ctx.replyCount.get(p.id) || 0;
   const parent = p.parentId && ctx.byId.get(p.parentId);
+  const gp = Ghost.parsePostId(p.parentId);
+  const gParent = gp && Ghost.person(gp.seed, gp.i).handle;
   const refresh = () => render(true);
   const patch = async fields => { await savePost(acct, { ...p, ...fields }); refresh(); };
   const remove = async () => {
@@ -468,6 +516,7 @@ function postEl(p, acct, ctx, { detail = false } = {}) {
         h('div', {}, h('div', {}, name), h('div', {}, handle))),
       p.reposted && h('div', { class: 'replying' }, 'You reposted yourself'),
       parent && h('div', { class: 'replying' }, 'Replying to yourself, as usual'),
+      gParent && h('div', { class: 'replying' }, 'Replying to @' + gParent),
       p.text && h('div', { class: 'text' }, richText(p.text)),
       mediaGrid(p.images),
       h('div', { class: 'muted', style: 'margin-top:12px' }, `${when} · `, h('b', { style: 'color:var(--fg)' }, '0'), ' Views'),
@@ -484,6 +533,7 @@ function postEl(p, acct, ctx, { detail = false } = {}) {
       p.reposted && h('div', { class: 'replying' }, 'You reposted yourself'),
       h('div', { class: 'head' }, name, handle, h('span', { class: 'time' }, '· ' + timeAgo(p.createdAt))),
       parent && h('div', { class: 'replying' }, 'Replying to @' + acct.handle),
+      gParent && h('div', { class: 'replying' }, 'Replying to @' + gParent),
       p.text && h('div', { class: 'text' }, richText(p.text)),
       mediaGrid(p.images),
       actions));
@@ -493,16 +543,122 @@ function emptyState(title, text) {
   return h('div', { class: 'empty' }, h('h2', {}, title), h('p', {}, text));
 }
 
+/* ---------- populated mode ---------- */
+const populated = () => ls('as.populated') === '1';
+function worldSeed() {
+  let s = ls('as.seed');
+  if (!s) { s = Ghost.newSeed(); ls('as.seed', s); }
+  return s;
+}
+let homeTab = 'foryou';
+let feedCount = 25;
+let ghostPostCount = 12;
+const FEED_MAX = 500;      // the on-screen crowd is capped, so memory and time stay small
+const fmt = n => n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1000 ? (n / 1000).toFixed(n < 10000 ? 1 : 0) + 'K' : String(n);
+
+const actBtn = (name, count, label, onclick, cls = '', on = false) =>
+  h('button', { class: `act ${cls}${on ? ' on' : ''}`, 'aria-label': label, 'aria-pressed': cls === 'like' || cls === 'repost' ? String(on) : null, onclick: e => { e.stopPropagation(); onclick(); } },
+    icon(name), count ? String(count) : '');
+
+// Your reaction to a generated post or person (like, repost, follow). Stored like any post, so the vault covers it.
+// The record id is random on purpose: ids are stored in the clear, and which stranger you liked must stay inside the ciphertext.
+async function setReaction(acct, ctx, target, field) {
+  const cur = ctx.reactions.get(target) || { id: uid(), accountId: acct.id, kind: 'ghost', target, liked: false, reposted: false, followed: false, createdAt: Date.now() };
+  try { await savePost(acct, { ...cur, [field]: !cur[field] }); } catch (e) { console.error(e); toast(isQuotaError(e) ? 'Out of space.' : 'That could not be saved.'); return; }
+  render(true);
+}
+
+const ghostAvatar = (p, size = '') => avatar({ name: p.name, handle: p.handle, color: p.color }, size);
+
+function ghostPostEl(g, acct, ctx, { detail = false } = {}) {
+  const who = Ghost.person(g.seed, g.i);
+  const rx = ctx.reactions.get(g.id) || {};
+  const replies = ctx.replyCount.get(g.id) || 0;     // only your own replies exist
+  const reposts = g.reposts + (rx.reposted ? 1 : 0), likes = g.likes + (rx.liked ? 1 : 0);
+  const actions = h('div', { class: 'actions' },
+    actBtn('reply', replies, 'Reply', () => detail ? $('.composer textarea')?.focus() : go('/post/' + g.id)),
+    actBtn('repost', fmt(reposts), 'Repost', () => setReaction(acct, ctx, g.id, 'reposted'), 'repost', !!rx.reposted),
+    actBtn('heart', fmt(likes), 'Like', () => setReaction(acct, ctx, g.id, 'liked'), 'like', !!rx.liked),
+    h('span', { class: 'act views', title: 'Views', 'aria-label': fmt(g.views) + ' views' }, icon('chart'), fmt(g.views)));
+  const name = h('a', { class: 'name', href: '#/u/' + who.id }, who.name);
+  const handle = h('a', { class: 'handle', href: '#/u/' + who.id }, '@' + who.handle);
+
+  if (detail) {
+    const when = new Date(g.ts).toLocaleString(undefined, { hour: 'numeric', minute: '2-digit', month: 'short', day: 'numeric', year: 'numeric' });
+    return h('article', { class: 'post detail ghost-post', 'data-ghost': g.id },
+      h('div', { style: 'display:flex;gap:12px;align-items:center' }, h('a', { href: '#/u/' + who.id }, ghostAvatar(who)),
+        h('div', {}, h('div', {}, name), h('div', {}, handle))),
+      h('div', { class: 'text' }, richText(g.text)),
+      g.image && mediaGrid([g.image]),
+      h('div', { class: 'muted', style: 'margin-top:12px' }, `${when} · `, h('b', { style: 'color:var(--fg)' }, fmt(g.views)), ' Views'),
+      h('div', { class: 'stats' },
+        h('span', {}, h('b', {}, replies), ' Replies'),
+        h('span', {}, h('b', {}, fmt(reposts)), ' Reposts'),
+        h('span', {}, h('b', {}, fmt(likes)), ' Likes')),
+      actions);
+  }
+  return h('article', { class: 'post ghost-post', 'data-ghost': g.id, onclick: e => { if (!e.target.closest('button,a')) go('/post/' + g.id); } },
+    h('a', { href: '#/u/' + who.id, 'aria-label': who.name }, ghostAvatar(who)),
+    h('div', { class: 'content' },
+      h('div', { class: 'head' }, name, handle, h('span', { class: 'time' }, '· ' + timeAgo(g.ts))),
+      h('div', { class: 'text' }, richText(g.text)),
+      g.image && mediaGrid([g.image]),
+      actions));
+}
+
+function ghostProfileView(acct, ctx, ref) {
+  const pr = Ghost.parsePersonRef(ref);
+  if (!pr) return [topbar('Profile', { back: true }), emptyState('Nobody here', 'That is not a person this world knows about.')];
+  const who = Ghost.person(pr.seed, pr.i);
+  const rx = ctx.reactions.get('u:' + who.id) || {};
+  const list = Ghost.profilePosts(pr.seed, pr.i, Date.now(), ghostPostCount);
+  return [
+    topbar(who.name, { back: true, sub: fmt(who.baseline + list[0].m % 50) + ' posts' }),
+    h('div', { class: 'gen-tag', role: 'note' }, h('b', {}, 'Procedurally generated'), ` · seed ${pr.seed} · account ${pr.i.toLocaleString()} of ${Ghost.WORLD.toLocaleString()}`),
+    (() => { const b = h('div', { class: 'banner ghost' }); b.style.background = who.banner; return b; })(),
+    h('div', { class: 'pinfo' },
+      h('div', { class: 'top' },
+        h('div', { class: 'avwrap' }, ghostAvatar(who, 'lg')),
+        h('button', { class: 'btn' + (rx.followed ? '' : ' primary'), 'aria-pressed': String(!!rx.followed), onclick: () => setReaction(acct, ctx, 'u:' + who.id, 'followed') }, rx.followed ? 'Following' : 'Follow')),
+      h('h2', {}, who.name),
+      h('div', { class: 'muted' }, '@' + who.handle),
+      h('div', { class: 'bio' }, who.bio),
+      h('div', { class: 'meta' }, 'Joined ' + who.joined),
+      pr.i >= Ghost.POP && h('div', { class: 'meta' }, 'Far from the busy part of the world. Discovered by you.'),
+      h('div', { class: 'follow' }, h('span', {}, h('b', {}, fmt(who.following)), ' Following'), h('span', {}, h('b', {}, fmt(who.followers + (rx.followed ? 1 : 0))), ' Followers'))),
+    h('div', { class: 'tabs', role: 'tablist' }, h('button', { role: 'tab', 'aria-selected': 'true', class: 'active' }, 'Posts')),
+    list.map(g => ghostPostEl(g, acct, ctx)),
+    ghostPostCount < 120 ? h('div', { class: 'empty-note' }, h('button', { class: 'btn', onclick: () => { ghostPostCount += 12; render(true); } }, 'Show more')) : h('div', { class: 'empty-note' }, 'That is everything they have posted lately.'),
+  ];
+}
+
 /* ---------- views ---------- */
 function homeView(acct, ctx) {
   const top = ctx.posts.filter(p => !p.parentId).sort((a, b) => b.createdAt - a.createdAt);
-  return [
+  const pop = populated();
+  const head = [
     topbar('Home', { action: acct.vault && h('button', { class: 'back', 'aria-label': 'Lock vault', title: 'Lock vault', onclick: () => { lockVault(); render(); } }, icon('lock')) }),
+    pop && h('div', { class: 'tabs', role: 'tablist' }, [['foryou', 'For you'], ['mine', 'Yours']].map(([k, label]) =>
+      h('button', { role: 'tab', 'aria-selected': String(homeTab === k), class: homeTab === k ? 'active' : '', onclick: () => { homeTab = k; render(true); } }, label))),
     !acct.vault && !ls('as.hidenote.' + acct.id) && h('div', { class: 'vault-note' }, h('span', {}, "Your posts aren't encrypted. That's fine for a local app, or you can lock them with a passcode."),
       h('div', { class: 'btnrow' },
         h('button', { class: 'btn primary', onclick: () => passcodeModal(acct) }, 'Set up vault'),
         h('button', { class: 'btn', onclick: () => { ls('as.hidenote.' + acct.id, '1'); render(true); } }, 'No thanks'))),
     composer(acct, { placeholder: "What's happening?", onDone: () => render(true) }),
+  ];
+  if (pop && homeTab === 'foryou') {
+    const crowd = Ghost.feed(worldSeed(), Date.now(), feedCount);
+    const cutoff = crowd.length ? crowd[crowd.length - 1].ts : 0;
+    const items = [
+      ...crowd.map(g => ({ ts: g.ts, el: () => ghostPostEl(g, acct, ctx) })),
+      ...top.filter(p => p.createdAt >= cutoff).map(p => ({ ts: p.createdAt, el: () => postEl(p, acct, ctx) })),
+    ].sort((a, b) => b.ts - a.ts);
+    return [...head, items.map(x => x.el()),
+      feedCount < FEED_MAX
+        ? h('div', { class: 'empty-note' }, h('button', { class: 'btn', onclick: () => { feedCount += 25; render(true); } }, 'Show more'))
+        : h('div', { class: 'empty-note' }, "That's all the crowd has to say for now. None of them are real.")];
+  }
+  return [...head,
     top.length
       ? [...top.map(p => postEl(p, acct, ctx)), h('div', { class: 'empty-note' }, "You're all caught up. Nobody else posted. Nobody else exists.")]
       : emptyState('Welcome to nowhere', 'Your timeline is empty. So is everyone else\'s. Go on, post something.'),
@@ -521,7 +677,28 @@ const SEARCH_JOKES = [
 ];
 let searchAttempts = 0;
 
-function exploreView() {
+function exploreCrowdView(acct, ctx) {
+  const seed = worldSeed(), now = Date.now();
+  const trends = Ghost.trending(seed, now, 5), who = Ghost.suggestions(seed, now, 4);
+  return [
+    topbar('Explore'),
+    h('div', { class: 'explore-block' }, h('h3', {}, 'Trending'),
+      trends.map((t, k) => h('div', { class: 'trend' }, h('div', { class: 'muted' }, `${k + 1} · Trending`), h('b', {}, t.tag ? '#' + t.tag : t.topic), h('div', { class: 'muted' }, fmt(t.posts) + ' posts')))),
+    h('div', { class: 'explore-block' }, h('h3', {}, 'Who to follow'),
+      who.map(p => {
+        const rx = ctx.reactions.get('u:' + p.id) || {};
+        return h('div', { class: 'suggest' },
+          h('a', { href: '#/u/' + p.id, class: 'suggest-who' }, ghostAvatar(p, 'sm'), h('div', {}, h('b', {}, p.name), h('div', { class: 'muted' }, '@' + p.handle))),
+          h('button', { class: 'btn' + (rx.followed ? '' : ' primary'), onclick: () => setReaction(acct, ctx, 'u:' + p.id, 'followed') }, rx.followed ? 'Following' : 'Follow'));
+      })),
+    h('div', { class: 'explore-block' }, h('h3', {}, 'Discover'),
+      h('p', { class: 'muted', style: 'margin:0 0 12px' }, `Pick a stranger from ${Ghost.WORLD.toLocaleString()} possible accounts. All generated, none real.`),
+      h('button', { class: 'btn primary', onclick: () => go('/u/' + seed + '.' + Ghost.discover()) }, 'Discover someone new')),
+  ];
+}
+
+function exploreView(acct, ctx) {
+  if (populated()) return exploreCrowdView(acct, ctx);
   const line = h('p', { class: 'search-line' }, 'Searching for people...');
   const tries = h('div', { class: 'search-tries' });
   const again = h('button', { class: 'btn' }, 'Search again');
@@ -542,18 +719,34 @@ function exploreView() {
 function notificationsView() {
   return [
     topbar('Notifications'),
-    emptyState('Nothing to see here', 'Literally no one has liked, replied to, or noticed you. No one can. That is the whole point.'),
+    populated()
+      ? emptyState('Still nothing', 'There is a whole crowd now, and not one of them can notice you. That is by design.')
+      : emptyState('Nothing to see here', 'Literally no one has liked, replied to, or noticed you. No one can. That is the whole point.'),
   ];
 }
 
 function postView(acct, ctx, id) {
+  const gp = Ghost.parsePostId(id);
+  if (gp) {
+    const g = Ghost.post(gp.seed, gp.i, gp.m);
+    const replies = ctx.posts.filter(r => r.parentId === g.id).sort((a, b) => a.createdAt - b.createdAt);
+    return [
+      topbar('Post', { back: true }),
+      ghostPostEl(g, acct, ctx, { detail: true }),
+      composer(acct, { placeholder: 'Post your reply (they will not answer)', parentId: g.id, label: 'Reply', onDone: () => render(true) }),
+      replies.map(r => postEl(r, acct, ctx)),
+    ];
+  }
   const p = ctx.byId.get(id);
   if (!p) return [topbar('Post', { back: true }), emptyState('Post not found', 'It may have been deleted. Nobody will miss it.')];
   const chain = [];
   for (let c = ctx.byId.get(p.parentId); c; c = ctx.byId.get(c.parentId)) chain.unshift(c);
+  const rootGp = Ghost.parsePostId((chain[0] || p).parentId);
+  const rootGhost = rootGp && Ghost.post(rootGp.seed, rootGp.i, rootGp.m);
   const replies = ctx.posts.filter(r => r.parentId === p.id).sort((a, b) => a.createdAt - b.createdAt);
   return [
     topbar('Post', { back: true }),
+    rootGhost && ghostPostEl(rootGhost, acct, ctx),
     chain.map(c => postEl(c, acct, ctx)),
     postEl(p, acct, ctx, { detail: true }),
     composer(acct, { placeholder: 'Post your reply (to yourself)', parentId: p.id, label: 'Reply', onDone: () => render(true) }),
@@ -584,7 +777,7 @@ function profileView(acct, ctx) {
       h('div', { class: 'muted' }, '@' + acct.handle),
       h('div', { class: 'bio' }, acct.bio || 'No bio. No audience either.'),
       h('div', { class: 'meta' }, 'Joined ' + joined + ' · Location: your device'),
-      h('div', { class: 'follow' }, h('span', {}, h('b', {}, 0), ' Following'), h('span', {}, h('b', {}, 0), ' Followers'))),
+      h('div', { class: 'follow' }, h('span', {}, h('b', {}, ctx.following || 0), ' Following'), h('span', {}, h('b', {}, 0), ' Followers'))),
     tabs,
     list.length ? list.map(p => postEl(p, acct, ctx)) : emptyState('Nothing here yet', 'Not that it matters. Nobody is checking.'),
   ];
@@ -697,6 +890,51 @@ async function removeDuress(acct) {
 
 let settingsTab = 'general';
 
+function populatedSection() {
+  const on = populated();
+  const input = h('input', { value: ls('as.seed') || '', maxlength: 16, 'aria-label': 'World seed', placeholder: 'seed', spellcheck: 'false' });
+  return h('section', {}, h('h3', {}, 'Populated mode: ' + (on ? 'on' : 'off')),
+    h('p', {}, 'Fills Home, Explore and the side column with a procedurally generated crowd. They are scenery: nobody in it can reply, like, follow or message you, ever. Nothing is saved for them. The crowd is calculated on screen from a seed, so it costs no storage.'),
+    h('div', { class: 'btnrow' }, h('button', { class: 'btn' + (on ? ' primary' : ''), 'aria-pressed': String(on), onclick: () => {
+      if (on) { ls('as.populated', null); toast('Back to nobody.'); }
+      else { worldSeed(); ls('as.populated', '1'); toast(`Populated mode on. ${Ghost.POP} people, 0 of them real.`); }
+      render(true);
+    } }, on ? 'Turn off' : 'Turn on')),
+    on && h('div', { style: 'margin-top:14px' },
+      h('p', { style: 'margin:0 0 6px' }, 'World seed. The same seed always gives the same people. Share yours and a friend sees the same crowd, and still not you.'),
+      h('div', { class: 'btnrow' }, input,
+        h('button', { class: 'btn', onclick: () => { const v = Ghost.cleanSeed(input.value); if (!v) return toast('A seed is letters, numbers, - or _.'); ls('as.seed', v); toast('New world loaded.'); render(true); } }, 'Apply'),
+        h('button', { class: 'btn', onclick: () => { ls('as.seed', Ghost.newSeed()); toast('New world loaded.'); render(true); } }, 'Randomize'))));
+}
+
+function storageSection() {
+  const note = h('p', {}, 'Checking...');
+  const bar = h('div', { class: 'storage-bar', hidden: true }, h('span', {}));
+  const capMB = storageCap() / MB;
+  const num = h('input', { type: 'number', min: '1', step: 'any', value: String(capMB >= 1024 && capMB % 1024 === 0 ? capMB / 1024 : capMB), 'aria-label': 'Storage limit' });
+  const unit = h('select', { 'aria-label': 'Unit' }, h('option', { value: 'MB' }, 'MB'), h('option', { value: 'GB' }, 'GB'));
+  unit.value = capMB >= 1024 && capMB % 1024 === 0 ? 'GB' : 'MB';
+  const save = () => {
+    const mb = Math.round(Number(num.value) * (unit.value === 'GB' ? 1024 : 1));
+    if (!(mb >= 50)) return toast('The smallest limit is 50 MB.');
+    ls('as.capmb', String(mb));
+    toast(`Limit set to ${fmtMB(mb * MB)}.`);
+    render(true);
+  };
+  storageInfo().then(s => {
+    if (!s) { note.textContent = 'This device does not report storage use.'; return; }
+    const cap = storageCap(), pct = Math.min(100, s.usage / cap * 100);
+    const free = s.quota ? ` Your device has about ${fmtMB(Math.max(0, s.quota - s.usage))} of room left for it.` : '';
+    note.textContent = `Anti-Social is using ${fmtMB(s.usage)} of your ${fmtMB(cap)} limit.` + (s.usage >= cap ? ' You have hit the limit, so new posts are paused.' : pct >= 80 ? ' You are close to the limit.' : '') + free;
+    bar.hidden = false; bar.firstChild.style.width = Math.max(2, pct) + '%';
+    bar.classList.toggle('warn', pct >= 80);
+  });
+  return h('section', {}, h('h3', {}, 'Storage'), note, bar,
+    h('p', { style: 'margin:12px 0 6px' }, 'Stop saving new posts when Anti-Social reaches:'),
+    h('div', { class: 'btnrow' }, num, unit, h('button', { class: 'btn', onclick: save }, 'Set limit')),
+    h('p', { class: 'fine', style: 'padding:8px 0 0' }, 'The meter is approximate. Pictures are shrunk before they are saved and are most of the space. Posts pause at your limit, or sooner if your device is nearly full. The generated crowd is never saved, so it costs nothing. Deleting posts frees space.'));
+}
+
 function settingsView(acct) {
   const theme = ls('as.theme') || 'auto';
   const themeBtn = (v, label) => h('button', { class: 'btn' + (theme === v ? ' primary' : ''), onclick: () => { ls('as.theme', v === 'auto' ? null : v); applyTheme(); render(true); } }, label);
@@ -704,6 +942,8 @@ function settingsView(acct) {
   const general = [
     h('section', {}, h('h3', {}, 'Display'), h('p', {}, 'Pick a theme. Nobody will see it.'),
       h('div', { class: 'btnrow' }, themeBtn('auto', 'Auto'), themeBtn('light', 'Light'), themeBtn('dark', 'Dark'))),
+    populatedSection(),
+    storageSection(),
     installPrompt && h('section', {}, h('h3', {}, 'Install'), h('p', {}, 'Put Anti-Social on your home screen or desktop. It works offline, because there is nothing to connect to.'),
       h('button', { class: 'btn primary', onclick: async () => { installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; render(true); } }, 'Install app')),
     h('section', {}, h('h3', {}, 'Your data'), h('p', {}, 'It lives on this device and nowhere else. Clearing the app or site data deletes it. There is no recovery because there is no one to recover it.'),
@@ -1013,8 +1253,13 @@ function shell(acct, route, main) {
     h('main', { class: 'main' }, main),
     h('aside', { class: 'side' },
       h('div', { class: 'search' }, icon('search'), h('span', {}, 'Search for people in Explore. Good luck.')),
-      h('div', { class: 'card' }, h('h3', {}, "What's happening"), h('p', {}, 'Nothing. Nobody is here.')),
-      h('div', { class: 'card' }, h('h3', {}, 'Who to follow'), h('p', {}, 'No one. There is no one.')),
+      populated()
+        ? [h('div', { class: 'card' }, h('h3', {}, "What's happening"),
+            Ghost.trending(worldSeed(), Date.now(), 3).map((t, k) => h('div', { class: 'side-trend' }, h('div', { class: 'muted' }, `${k + 1} · Trending`), h('b', {}, t.tag ? '#' + t.tag : t.topic), h('div', { class: 'muted' }, fmt(t.posts) + ' posts')))),
+           h('div', { class: 'card' }, h('h3', {}, 'Who to follow'),
+            Ghost.suggestions(worldSeed(), Date.now(), 3).map(p => h('a', { class: 'side-who', href: '#/u/' + p.id }, ghostAvatar(p, 'sm'), h('div', {}, h('b', {}, p.name), h('div', { class: 'muted' }, '@' + p.handle)))))]
+        : [h('div', { class: 'card' }, h('h3', {}, "What's happening"), h('p', {}, 'Nothing. Nobody is here.')),
+           h('div', { class: 'card' }, h('h3', {}, 'Who to follow'), h('p', {}, 'No one. There is no one.'))],
       h('p', { class: 'fine' }, 'No servers · No tracking · No audience · Terms: TOUCH GRASS')));
 }
 
@@ -1033,17 +1278,20 @@ async function render(keepScroll = false) {
       return;
     }
     if (!acct) { session = null; ls('as.session', null); document.title = 'Anti-Social'; root.replaceChildren(await authView()); return; }
-    const posts = await loadPosts(acct);
+    const all = await loadPosts(acct);
     if (my !== renderId) return;
     currentAcct = acct;
-    if (posts.bad) console.warn(`${posts.bad} post(s) could not be decrypted`);
-    const ctx = { posts, byId: new Map(posts.map(p => [p.id, p])), replyCount: new Map() };
+    if (all.bad) console.warn(`${all.bad} post(s) could not be decrypted`);
+    // Your likes, reposts and follows of generated accounts live beside your posts but are not posts.
+    const posts = all.filter(p => p.kind !== 'ghost');
+    const reactions = new Map(all.filter(p => p.kind === 'ghost').map(p => [p.target, p]));
+    const ctx = { posts, reactions, following: [...reactions.values()].filter(x => x.followed).length, byId: new Map(posts.map(p => [p.id, p])), replyCount: new Map() };
     for (const p of posts) if (p.parentId) ctx.replyCount.set(p.parentId, (ctx.replyCount.get(p.parentId) || 0) + 1);
 
     const [, r = '', arg] = location.hash.split('/');
-    const route = { notifications: 'notifications', explore: 'explore', profile: 'profile', settings: 'settings', post: 'post' }[r] || 'home';
+    const route = { notifications: 'notifications', explore: 'explore', profile: 'profile', settings: 'settings', post: 'post', u: 'u' }[r] || 'home';
     const main = {
-      home: () => homeView(acct, ctx), explore: exploreView, notifications: notificationsView,
+      home: () => homeView(acct, ctx), explore: () => exploreView(acct, ctx), notifications: notificationsView, u: () => ghostProfileView(acct, ctx, arg),
       profile: () => profileView(acct, ctx), settings: () => { if (arg === 'security') settingsTab = 'security'; return settingsView(acct); }, post: () => postView(acct, ctx, arg),
     }[route]();
     document.title = route === 'home' ? 'Home / Anti-Social' : route[0].toUpperCase() + route.slice(1) + ' / Anti-Social';
@@ -1057,7 +1305,7 @@ async function render(keepScroll = false) {
   }
 }
 
-window.addEventListener('hashchange', () => render());
+window.addEventListener('hashchange', () => { feedCount = 25; ghostPostCount = 12; render(); });
 applyTheme();
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
 

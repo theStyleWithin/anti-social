@@ -6,9 +6,9 @@
 
 ## Status: full featured and complete
 
-Anti-Social v0.3.1 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.4.0 is feature complete. It is a finished app, not a work in progress.
 
-**Tested by the developer:**
+**Tested by the developer** (Android and Linux were tried by hand on v0.3.1; Populated mode and the storage limit arrived in v0.4.0 and are covered by automated tests):
 - **Android:** installed and used on a real phone, including account switching.
 - **Features:** sign-up with and without a passcode, posting with images, likes, reposts and replies, avatar and banner images, the empty notifications tab, the Explore page that never finds anyone, themes, export and delete.
 - **Vault and duress PIN:** checked end to end. Data on disk is unreadable, it comes back after you unlock, a wrong passcode is rejected, and the duress PIN erases everything.
@@ -34,6 +34,8 @@ is a flat, unblinking **0**.
 - A search-for-people page that never finds anyone
 - **Encrypted vault (optional):** set a passcode and every post, image and your whole profile is locked (AES-256). Reopen the app, enter the passcode, and it is all there. Skip the passcode and the app just opens
 - **Duress PIN** (needs the vault): a second PIN that looks like a normal unlock but silently erases everything
+- **Populated mode (optional):** a procedurally generated crowd fills Home, Explore and the side column, in the spirit of No Man's Sky. One seed makes the whole world, nothing is saved for it, and nobody in it can ever reply, like, follow or message you. Every generated profile carries a "Procedurally generated" tag
+- **Storage limit:** a meter in Settings and a limit you choose (say 30 GB). New posts pause when you reach it
 - Multiple accounts: click your account at the bottom left on desktop, or your avatar at the top left on a phone, to switch or add one, with a joke about it
 - Avatar and banner images
 - Light, dark or auto theme
@@ -94,6 +96,10 @@ undo. It does not touch exports or backups you made elsewhere. Test it with thro
 *Know the law where you live.* You generally have the right to decline a search and to ask for a warrant and a lawyer.
 Destroying data you are legally required to keep (a court order, a preservation demand, an active investigation) can
 be a crime, and so can lying to officers about what a PIN does. This is a privacy tool, not legal advice.
+
+**Populated mode.** The crowd is calculated on screen from a short seed code (same seed, same people) and is never written to disk, so it uses no storage. Generated accounts are scenery: they have no way to respond to anything. You can reply to, like and follow them, and nothing ever comes back. Your own replies, likes and follows are saved like any post, so with a passcode they are encrypted too, including which stranger you reacted to.
+
+**Storage.** Settings shows how much space Anti-Social is using and lets you set a limit. Pictures are shrunk before saving, new posts pause at your limit or when the device is nearly full, and oversize images are refused. The desktop apps will get a choice of which drive to keep data on in a later release; browsers and phones cannot move their storage.
 
 **Honest limits.** Encryption protects data at rest. It can't protect you if someone watches you type the passcode, if
 malware is on the device, or if you pick a weak passcode. Exported JSON files are not encrypted. Deleted data can linger
