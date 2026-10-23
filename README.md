@@ -4,6 +4,19 @@
 
 > get offline
 
+## Status: full featured and complete
+
+Anti-Social v0.2.2 is feature complete. It is a finished app, not a work in progress.
+
+**Tested by the developer:**
+- **Android:** installed and used on a real phone.
+- **Features:** sign-up with and without a passcode, posting with images, likes, reposts and replies, avatar and banner images, the empty notifications tab, the Explore page that never finds anyone, themes, export and delete.
+- **Vault and duress PIN:** checked end to end. Data on disk is unreadable, it comes back after you unlock, a wrong passcode is rejected, and the duress PIN erases everything.
+- **Linux desktop:** run and checked, including closing and reopening it.
+- **Windows desktop:** built and packaged, but not yet run on a real Windows machine. Tell us if something is off.
+
+The v0.2.2 Android APK was scanned on VirusTotal with 0 detections. Check the SHA-256 on the release page against any file you download.
+
 Sign up. Post your hottest takes. Post your nudes. Post your 3 a.m. thoughts about
 whether a hot dog is a sandwich.
 
