@@ -37,6 +37,8 @@ const ICONS = {
   compose: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
   chart: '<path d="M3 20h18M7 20V10M12 20V4M17 20v-7"/>',
   lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  check: '<path d="M5 13l4 4L19 7"/>',
   camera: '<path d="M3 8h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13" r="4"/>',
 };
 function icon(name) {
@@ -265,6 +267,7 @@ const TOASTS = [
   'Posted. Not even the algorithm cares.',
 ];
 function toast(msg) {
+  document.querySelectorAll('.toast').forEach(t => t.remove());
   const t = h('div', { class: 'toast', role: 'status' }, msg);
   document.body.append(t);
   setTimeout(() => t.remove(), 2600);
@@ -706,6 +709,7 @@ function settingsView(acct) {
     h('section', {}, h('h3', {}, 'Account'),
       h('div', { class: 'btnrow' },
         h('button', { class: 'btn', onclick: logout }, 'Switch account'),
+        h('button', { class: 'btn', onclick: () => addAccount(acct) }, 'Add account'),
         h('button', { class: 'btn danger', onclick: () => deleteAccount(acct) }, 'Delete this account'),
         h('button', { class: 'btn danger', onclick: wipeEverything }, 'Delete all data on this device'))),
     h('section', {}, h('h3', {}, 'Terms of Use'), h('p', {}, 'TOUCH GRASS.'),
@@ -745,6 +749,64 @@ function settingsView(acct) {
     h('div', { class: 'tabs', role: 'tablist' }, tab('general', 'General'), tab('security', 'Privacy & Security')),
     h('div', { class: 'settings' }, settingsTab === 'security' ? security : general),
   ];
+}
+
+function extraAccountJoke(existing) {
+  if (existing <= 1) return 'You really need a second account on an app with no people?';
+  if (existing === 2) return 'A third account? There is nobody here to avoid.';
+  return `Account number ${existing + 1}. You are the entire user base, and you want to be more of it.`;
+}
+function extraAccountToast(n) {
+  return `Account number ${n} created. Followers across all of them: still 0.`;
+}
+
+/* ---------- accounts: switch and add ---------- */
+function switchAccount(raw) {
+  lockVault();
+  if (raw.vault || raw.hash) {
+    session = null; ls('as.session', null);
+    authMode = { mode: 'unlock', account: raw };
+  } else {
+    session = raw.id; ls('as.session', raw.id);
+    authMode = { mode: 'pick' };
+  }
+  go('/');
+}
+
+async function addAccount(acct) {
+  const raw = await db.get('accounts', acct.id);
+  const from = { raw, view: { name: acct.name || null, handle: acct.handle, color: acct.color, avatarImg: acct.avatarImg || null } };
+  lockVault();
+  session = null; ls('as.session', null);
+  authMode = { mode: 'signup', from };
+  go('/');
+}
+
+async function openAccountMenu(anchor, acct) {
+  document.querySelector('.popover')?.remove();
+  const accounts = (await db.all('accounts')).sort((a, b) => a.createdAt - b.createdAt);
+  const close = () => { pop.remove(); document.removeEventListener('mousedown', outside, true); document.removeEventListener('keydown', esc, true); };
+  const outside = e => { if (!pop.contains(e.target) && !anchor.contains(e.target)) close(); };
+  const esc = e => { if (e.key === 'Escape') close(); };
+  const row = a => {
+    const current = a.id === acct.id;
+    const view = current ? acct : a;
+    return h('button', { class: 'pop-row', role: 'menuitem', onclick: () => { close(); if (!current) switchAccount(a); } },
+      avatar(view, 'sm'),
+      h('div', { class: 'who' }, h('b', {}, view.name || '@' + view.handle), h('div', { class: 'muted' }, view.name ? '@' + view.handle : 'Locked')),
+      h('span', { class: 'pop-mark' }, current ? icon('check') : (a.vault || a.hash) ? icon('lock') : null));
+  };
+  const pop = h('div', { class: 'popover', role: 'menu', 'aria-label': 'Accounts' },
+    h('div', { class: 'pop-head' }, plural(accounts.length, 'account') + ' on this device'),
+    accounts.map(row),
+    h('button', { class: 'pop-row add', role: 'menuitem', onclick: () => { close(); addAccount(acct); } }, h('span', { class: 'pop-plus' }, icon('plus')), h('b', {}, 'Add account')),
+    h('div', { class: 'pop-foot' }, 'Followers across all accounts: 0'));
+  document.body.append(pop);
+  const r = anchor.getBoundingClientRect();
+  pop.style.left = Math.max(8, Math.min(r.left, innerWidth - pop.offsetWidth - 8)) + 'px';
+  pop.style.bottom = (innerHeight - r.top + 8) + 'px';
+  document.addEventListener('mousedown', outside, true);
+  document.addEventListener('keydown', esc, true);
 }
 
 /* ---------- account actions ---------- */
@@ -827,10 +889,11 @@ function composeModal(acct) {
 async function authView() {
   const accounts = (await db.all('accounts')).sort((a, b) => a.createdAt - b.createdAt);
   if (!accounts.length && authMode.mode === 'pick') authMode = { mode: 'signup' };
-  const wrap = body => h('div', { class: 'auth' }, h('div', { class: 'box' },
+  const wrap = (body, top) => h('div', { class: 'auth' }, h('div', { class: 'box' },
+    top,
     h('div', { class: 'logo' }, icon('logo')), h('h1', {}, 'Anti-Social'),
     h('p', { class: 'tag' }, 'Social media with nobody on it.'), body));
-  const loginAs = a => { session = a.id; ls('as.session', a.id); go('/'); };
+  const loginAs = a => { session = a.id; ls('as.session', a.id); authMode = { mode: 'pick' }; go('/'); };
 
   if (authMode.mode === 'unlock') {
     const a = authMode.account;
@@ -870,6 +933,7 @@ async function authView() {
   if (authMode.mode === 'signup') {
     const name = h('input', { autocomplete: 'name', maxlength: 50, required: true });
     const handle = h('input', { autocapitalize: 'none', autocomplete: 'username', maxlength: 15, required: true });
+    const from = authMode.from;   // set when adding an account from inside the app
     const pass = h('input', { type: 'password', autocomplete: 'new-password' });
     const pass2 = h('input', { type: 'password', autocomplete: 'new-password' });
     const err = h('p', { class: 'err' });
@@ -884,7 +948,7 @@ async function authView() {
         // No passcode: a plain local account. Nothing is encrypted and the app opens straight away.
         const id = uid();
         await db.put('accounts', { id, name: name.value.trim(), handle: hd, bio: '', color: colorFor(hd), createdAt: Date.now(), salt: null, hash: null });
-        toast('No passcode set. Add one any time in Settings, Privacy & Security.');
+        toast(from ? extraAccountToast(accounts.length + 1) : 'No passcode set. Add one any time in Settings, Privacy & Security.');
         return loginAs({ id });
       }
       if (pass.value.length < MIN_PASSCODE) { err.textContent = `Passcode: at least ${MIN_PASSCODE} characters, or leave both boxes empty for none.`; return; }
@@ -897,6 +961,7 @@ async function authView() {
         const profile = { name: name.value.trim(), bio: '', color: colorFor(hd), avatarImg: null, bannerImg: null };
         await db.put('accounts', { id, handle: hd, createdAt: Date.now(), vault: meta, profile: await seal(key, profile, 'profile:' + id) });
         vault.id = id; vault.key = key;
+        if (from) toast(extraAccountToast(accounts.length + 1));
         loginAs({ id });
       } catch (e2) {
         console.error(e2);
@@ -912,8 +977,15 @@ async function authView() {
       h('label', { class: 'field' }, h('span', {}, 'Type it again'), pass2),
       err,
       h('div', { class: 'stack' }, btn,
-        accounts.length > 0 && h('button', { type: 'button', class: 'btn', onclick: () => { authMode = { mode: 'pick' }; render(); } }, 'Back')),
-      h('p', { class: 'fine', style: 'padding:12px 0 0' }, 'Leave the passcode blank and the app just opens, with nothing encrypted. Set one and everything you post is encrypted with it, with no recovery if you forget it. You can add or remove it later in Settings. No email needed. There is nobody to send it.')));
+        !from && accounts.length > 0 && h('button', { type: 'button', class: 'btn', onclick: () => { authMode = { mode: 'pick' }; render(); } }, 'Back')),
+      h('p', { class: 'fine', style: 'padding:12px 0 0' }, 'Leave the passcode blank and the app just opens, with nothing encrypted. Set one and everything you post is encrypted with it, with no recovery if you forget it. You can add or remove it later in Settings. No email needed. There is nobody to send it.'),
+      from && h('div', { class: 'was-on' },
+        h('p', { class: 'fine', style: 'padding:0 0 6px' }, 'You were just on:'),
+        h('button', { type: 'button', class: 'acct', onclick: () => switchAccount(from.raw) },
+          avatar(from.view, 'sm'),
+          h('div', {}, h('b', {}, from.view.name || '@' + from.view.handle), h('div', { class: 'muted' }, from.view.name ? '@' + from.view.handle : 'Locked')),
+          (from.raw.vault || from.raw.hash) && h('span', { class: 'muted', style: 'margin-left:auto;display:flex' }, icon('lock')))),
+    ), from && h('div', { class: 'joke', role: 'note' }, extraAccountJoke(accounts.length)));
   }
 
   return wrap(h('div', { class: 'stack' },
@@ -933,7 +1005,7 @@ function shell(acct, route, main) {
       link('/', 'home', 'Home'), link('/explore', 'explore', 'Explore'), link('/notifications', 'notifications', 'Notifications'),
       link('/profile', 'profile', 'Profile'), link('/settings', 'settings', 'Settings'),
       h('button', { class: 'postbtn', 'aria-label': 'Post', onclick: () => composeModal(acct) }, icon('compose'), h('span', {}, 'Post')),
-      h('button', { class: 'me', onclick: () => go('/profile') }, avatar(acct, 'sm'),
+      h('button', { class: 'me', 'aria-haspopup': 'menu', 'aria-label': 'Accounts', onclick: e => openAccountMenu(e.currentTarget, acct) }, avatar(acct, 'sm'),
         h('div', { class: 'who' }, h('b', {}, acct.name), h('div', { class: 'muted' }, '@' + acct.handle)))),
     h('main', { class: 'main' }, main),
     h('aside', { class: 'side' },
