@@ -493,7 +493,10 @@ function homeView(acct, ctx) {
   const top = ctx.posts.filter(p => !p.parentId).sort((a, b) => b.createdAt - a.createdAt);
   return [
     topbar('Home', { action: acct.vault && h('button', { class: 'back', 'aria-label': 'Lock vault', title: 'Lock vault', onclick: () => { lockVault(); render(); } }, icon('lock')) }),
-    !acct.vault && h('div', { class: 'vault-note' }, h('span', {}, "Your posts aren't encrypted yet."), h('button', { class: 'btn primary', onclick: () => passcodeModal(acct) }, 'Set up vault')),
+    !acct.vault && !ls('as.hidenote.' + acct.id) && h('div', { class: 'vault-note' }, h('span', {}, "Your posts aren't encrypted. That's fine for a local app, or you can lock them with a passcode."),
+      h('div', { class: 'btnrow' },
+        h('button', { class: 'btn primary', onclick: () => passcodeModal(acct) }, 'Set up vault'),
+        h('button', { class: 'btn', onclick: () => { ls('as.hidenote.' + acct.id, '1'); render(true); } }, 'No thanks'))),
     composer(acct, { placeholder: "What's happening?", onDone: () => render(true) }),
     top.length
       ? [...top.map(p => postEl(p, acct, ctx)), h('div', { class: 'empty-note' }, "You're all caught up. Nobody else posted. Nobody else exists.")]
@@ -621,6 +624,34 @@ function passcodeModal(acct) {
   });
 }
 
+async function removeVault(acct) {
+  const posts = await loadPosts(acct);
+  if (posts.bad) throw new Error('unreadable posts');
+  const raw = await db.get('accounts', acct.id);
+  const account = { id: raw.id, handle: raw.handle, createdAt: raw.createdAt, salt: null, hash: null,
+    ...Object.fromEntries(PROFILE_KEYS.filter(k => k !== 'duress').map(k => [k, acct[k] ?? null])) };
+  await db.batch([account], posts);
+  lockVault();
+}
+
+function removeVaultModal(acct) {
+  const cur = h('input', { type: 'password', autocomplete: 'current-password' });
+  const err = h('p', { class: 'err' });
+  const btn = h('button', { class: 'btn danger' }, 'Remove passcode and encryption');
+  const close = modal(h('div', {},
+    h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => close() }, icon('x')), h('b', {}, 'Remove the vault')),
+    h('div', { class: 'mp' },
+      h('p', { class: 'muted', style: 'margin-top:0' }, 'Your posts and profile will be stored unencrypted on this device and the app will open without a passcode. The duress PIN is removed too, since it needs the vault.'),
+      h('label', { class: 'field' }, h('span', {}, 'Your passcode'), cur), err, btn)));
+  btn.addEventListener('click', async () => {
+    err.textContent = '';
+    if (!(await openVault(await db.get('accounts', acct.id), cur.value))) { err.textContent = 'Wrong passcode.'; return; }
+    btn.disabled = true;
+    try { await removeVault(acct); close(); toast('Vault removed. Nothing is encrypted now.'); render(true); }
+    catch (e) { console.error(e); err.textContent = e.message === 'unreadable posts' ? "Some posts can't be read, so nothing was changed." : 'Something went wrong, so nothing was changed.'; btn.disabled = false; }
+  });
+}
+
 function duressModal(acct) {
   const cur = h('input', { type: 'password', autocomplete: 'current-password' });
   const p1 = h('input', { type: 'password', autocomplete: 'off' });
@@ -674,7 +705,8 @@ function settingsView(acct) {
           ? [h('p', {}, 'Your posts, images and profile are encrypted with your passcode (AES-256). The passcode is never stored, and there is no recovery.'),
              h('div', { class: 'btnrow' },
                h('button', { class: 'btn', onclick: () => { lockVault(); render(); } }, 'Lock now'),
-               h('button', { class: 'btn', onclick: () => passcodeModal(acct) }, 'Change passcode')),
+               h('button', { class: 'btn', onclick: () => passcodeModal(acct) }, 'Change passcode'),
+               h('button', { class: 'btn', onclick: () => removeVaultModal(acct) }, 'Remove passcode')),
              h('p', { style: 'margin:14px 0 4px' }, h('b', {}, 'Duress PIN: '), acct.duress ? 'on.' : 'off.', ' A second PIN that looks like a normal unlock but secretly erases everything. Know the law where you live: destroying data you are legally required to keep can be a crime.'),
              h('div', { class: 'btnrow' },
                h('button', { class: 'btn', onclick: () => duressModal(acct) }, acct.duress ? 'Change duress PIN' : 'Set duress PIN'),
@@ -682,7 +714,7 @@ function settingsView(acct) {
              h('p', { style: 'margin:14px 0 8px' }, 'Lock automatically after I leave the app:'),
              h('div', { class: 'btnrow' }, LOCK_CHOICES.map(([v, label]) =>
                h('button', { class: 'btn' + (lockAfter() === v ? ' primary' : ''), onclick: () => { ls('as.lockAfter', v); render(true); } }, label)))]
-          : [h('p', {}, 'Your posts and profile are stored unencrypted on this device. Set up the vault to lock all of it behind a passcode.'),
+          : [h('p', {}, 'No passcode: your posts and profile are stored unencrypted on this device, and the app opens straight away. That is fine for many people. Set up the vault to lock everything behind a passcode, with a duress PIN option.'),
              h('button', { class: 'btn primary', onclick: () => passcodeModal(acct) }, 'Set up vault')]),
       h('section', {}, h('h3', {}, 'Your data'), h('p', {}, 'It lives in this browser, on this device, and nowhere else. Clearing site data deletes it. There is no recovery because there is no one to recover it.'),
         h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: () => exportData(acct) }, 'Export my data (JSON)'))),
@@ -819,8 +851,8 @@ async function authView() {
   if (authMode.mode === 'signup') {
     const name = h('input', { autocomplete: 'name', maxlength: 50, required: true });
     const handle = h('input', { autocapitalize: 'none', autocomplete: 'username', maxlength: 15, required: true });
-    const pass = h('input', { type: 'password', autocomplete: 'new-password', required: true });
-    const pass2 = h('input', { type: 'password', autocomplete: 'new-password', required: true });
+    const pass = h('input', { type: 'password', autocomplete: 'new-password' });
+    const pass2 = h('input', { type: 'password', autocomplete: 'new-password' });
     const err = h('p', { class: 'err' });
     const btn = h('button', { class: 'btn primary' }, 'Create account');
     const submit = async e => {
@@ -829,7 +861,13 @@ async function authView() {
       const hd = handle.value.trim().replace(/^@/, '');
       if (!/^\w{1,15}$/.test(hd)) { err.textContent = 'Handle: 1-15 letters, numbers or underscores.'; return; }
       if (accounts.some(a => a.handle.toLowerCase() === hd.toLowerCase())) { err.textContent = 'That handle is taken. By you. Earlier.'; return; }
-      if (pass.value.length < MIN_PASSCODE) { err.textContent = `Passcode: at least ${MIN_PASSCODE} characters.`; return; }
+      if (!pass.value && !pass2.value) {
+        // No passcode: a plain local account. Nothing is encrypted and the app opens straight away.
+        const id = uid();
+        await db.put('accounts', { id, name: name.value.trim(), handle: hd, bio: '', color: colorFor(hd), createdAt: Date.now(), salt: null, hash: null });
+        return loginAs({ id });
+      }
+      if (pass.value.length < MIN_PASSCODE) { err.textContent = `Passcode: at least ${MIN_PASSCODE} characters, or leave both boxes empty for none.`; return; }
       if (pass.value !== pass2.value) { err.textContent = "Those passcodes don't match."; return; }
       btn.disabled = true;
       btn.textContent = 'Locking the vault...';
@@ -850,12 +888,12 @@ async function authView() {
     return wrap(h('form', { onsubmit: submit },
       h('label', { class: 'field' }, h('span', {}, 'Name'), name),
       h('label', { class: 'field' }, h('span', {}, 'Handle'), handle),
-      h('label', { class: 'field' }, h('span', {}, `Passcode (at least ${MIN_PASSCODE} characters)`), pass),
+      h('label', { class: 'field' }, h('span', {}, `Passcode, optional (at least ${MIN_PASSCODE} characters)`), pass),
       h('label', { class: 'field' }, h('span', {}, 'Type it again'), pass2),
       err,
       h('div', { class: 'stack' }, btn,
         accounts.length > 0 && h('button', { type: 'button', class: 'btn', onclick: () => { authMode = { mode: 'pick' }; render(); } }, 'Back')),
-      h('p', { class: 'fine', style: 'padding:12px 0 0' }, 'Everything you post is encrypted with this passcode. There is no recovery: forget it and your posts are gone. No email needed. There is nobody to send it.')));
+      h('p', { class: 'fine', style: 'padding:12px 0 0' }, 'Leave the passcode blank and the app just opens, with nothing encrypted. Set one and everything you post is encrypted with it, with no recovery if you forget it. You can add or remove it later in Settings. No email needed. There is nobody to send it.')));
   }
 
   return wrap(h('div', { class: 'stack' },

@@ -219,5 +219,5 @@ svg { width: 1.25em; height: 1.25em; fill: none; stroke: currentColor; stroke-wi
 .avbtn:focus-visible { outline-offset: 2px; }
 
 .topbar .tbact { margin-left: auto; }
-.vault-note { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--line); }
+.vault-note { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--line); }
 .vault-note .btn { padding: 6px 14px; white-space: nowrap; }

@@ -19,8 +19,8 @@ is a flat, unblinking **0**.
 - A profile with **0 followers** and **0 views** on everything
 - A notifications tab that is, and always will be, empty
 - A search-for-people page that never finds anyone
-- **Encrypted vault:** every post, image and your whole profile is locked with your passcode (AES-256). Reopen the app, enter the passcode, and it is all there
-- **Duress PIN:** a second PIN that looks like a normal unlock but silently erases everything
+- **Encrypted vault (optional):** set a passcode and every post, image and your whole profile is locked (AES-256). Reopen the app, enter the passcode, and it is all there. Skip the passcode and the app just opens
+- **Duress PIN** (needs the vault): a second PIN that looks like a normal unlock but silently erases everything
 - Avatar and banner images
 - Light, dark or auto theme
 - Export everything as JSON, or nuke it all
@@ -68,7 +68,7 @@ A hosted web version. Currently skipped because hosting costs money and nobody i
 
 There is nothing to leak: no server, no accounts anywhere but your device, no network access.
 
-**The vault.** Your passcode is stretched with PBKDF2 (600,000 rounds) into an AES-256-GCM key that lives only in memory.
+**The vault (optional).** Leave the passcode blank when you sign up and nothing is encrypted; you can add or remove it any time in Settings. If you do set one, your passcode is stretched with PBKDF2 (600,000 rounds) into an AES-256-GCM key that lives only in memory.
 Posts, images and the profile are stored as ciphertext; only the handle is readable. The passcode and key are never
 saved. The app locks when you leave it (you choose how soon). **There is no recovery.** Forget the passcode and the
 posts are gone for everyone, including the developer. Old accounts from v0.1.0 can be upgraded in Settings.
