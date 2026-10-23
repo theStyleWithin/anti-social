@@ -28,25 +28,32 @@ is a flat, unblinking **0**.
 
 - Create an account (no email, because who would we send it to)
 - Post text and up to 4 images
-- Like, repost and reply to your own posts
-- A profile with **0 followers** and **0 views** on everything
+- Like, repost and reply to your own posts, and to anyone in Populated mode. Nobody ever answers
+- A profile with **0 followers** and **0 views** on everything, and avatar and banner images you can click to change
 - A notifications tab that is, and always will be, empty
-- A search-for-people page that never finds anyone
-- **Encrypted vault (optional):** set a passcode and every post, image and your whole profile is locked (AES-256). Reopen the app, enter the passcode, and it is all there. Skip the passcode and the app just opens
+- A search-for-people page that never finds anyone (unless you turn on Populated mode, and even then they can't find you)
+- **Manage your posting limit:** Settings, General, Storage has a meter of how much space Anti-Social is using and a limit you choose in MB or GB (say 30 GB). When you reach it, new posts pause until you free up room or raise the limit
+- **Encrypted vault (optional):** set a passcode and every post, image and your whole profile is locked (AES-256). Reopen the app, enter the passcode, and it is all there. Skip the passcode and the app just opens. Add or remove it any time in Settings, Privacy & Security
+- **Auto-lock** when you leave the app, with a delay you choose
 - **Duress PIN** (needs the vault): a second PIN that looks like a normal unlock but silently erases everything
-- **Populated mode (optional):** a procedurally generated crowd fills Home, Explore and the side column, in the spirit of No Man's Sky. One seed makes the whole world, nothing is saved for it, and nobody in it can ever reply, like, follow or message you. Every generated profile carries a "Procedurally generated" tag
-- **Storage limit:** a meter in Settings and a limit you choose (say 30 GB). New posts pause when you reach it
-- Multiple accounts: click your account at the bottom left on desktop, or your avatar at the top left on a phone, to switch or add one, with a joke about it
-- Avatar and banner images
+- **Populated mode (optional):** a procedurally generated crowd fills Home, Explore and the side column, in the spirit of No Man's Sky. One seed makes the whole world, nothing is saved for it, and nobody in it can ever reply, like, follow or message you. Every generated profile carries a "Procedurally generated" tag above its banner. Share a seed and a friend sees the same crowd
+- **Multiple accounts:** click your account at the bottom left on desktop, or your avatar at the top left on a phone, to switch or add one, with a joke about it
 - Light, dark or auto theme
-- Export everything as JSON, or nuke it all
-- Installable on phone, tablet and desktop. Works offline. Obviously.
+- Export your data as JSON, or delete it all
+- Native apps for Windows, Linux and Android. Works offline. Obviously.
+
+## Version history
+
+- **v0.4.0:** Populated mode, and a posting limit you control with a storage meter
+- **v0.3.x:** account switching on desktop and phone, with jokes
+- **v0.2.x:** the encrypted vault (optional passcode), duress PIN, auto-lock, Privacy & Security settings
+- **v0.1.0:** the first release. Post to nobody
 
 ## Always offline
 
 Anti-Social never touches the internet. The page ships with a rule that blocks
 every network request (`connect-src 'none'`), so it *can't* phone home even if it wanted to.
-You can download this folder and double-click `index.html` with Wi-Fi off. It works.
+You can download this folder and double-click `index.html` with Wi-Fi off. It works. The Android app has no internet permission at all, and the desktop apps only hand a link to your own browser if you click one.
 
 ## Get the apps
 
@@ -56,7 +63,7 @@ You can download this folder and double-click `index.html` with Wi-Fi off. It wo
 | Linux | `.AppImage` (any distro) or `.deb` (Debian/Ubuntu) |
 | Android | `.apk` (sideload: allow "install unknown apps") |
 
-The Android app has no internet permission at all. It could not go online if it tried.
+Grab them from the Releases page of this repo. Check the SHA-256 shown there against your download.
 
 ## Build it yourself
 
@@ -99,7 +106,7 @@ be a crime, and so can lying to officers about what a PIN does. This is a privac
 
 **Populated mode.** The crowd is calculated on screen from a short seed code (same seed, same people) and is never written to disk, so it uses no storage. Generated accounts are scenery: they have no way to respond to anything. You can reply to, like and follow them, and nothing ever comes back. Your own replies, likes and follows are saved like any post, so with a passcode they are encrypted too, including which stranger you reacted to.
 
-**Storage.** Settings shows how much space Anti-Social is using and lets you set a limit. Pictures are shrunk before saving, new posts pause at your limit or when the device is nearly full, and oversize images are refused. Data stays in each app's own private storage on the device; choosing a different drive is not supported.
+**Storage and your posting limit.** Settings, General, Storage shows how much space Anti-Social is using and lets you set your own limit in MB or GB. New posts pause when you reach it, or sooner if your device is nearly full, and you can raise it or delete posts to carry on. Pictures are shrunk before saving and anything over 40 MB is refused. The meter is approximate. Data stays in each app's own private storage on the device; choosing a different drive is not supported.
 
 **Honest limits.** Encryption protects data at rest. It can't protect you if someone watches you type the passcode, if
 malware is on the device, or if you pick a weak passcode. Exported JSON files are not encrypted. Deleted data can linger
