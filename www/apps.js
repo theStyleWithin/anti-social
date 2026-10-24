@@ -478,17 +478,17 @@ function appsHome(acct, ctx) {
   const move = (id, delta) => {
     const next = AC.moveId(order, id, delta);
     ls(appOrderKey(acct), JSON.stringify(next));
-    toast(`${cards.find(c => c[0] === id)[2]} is now number ${next.indexOf(id) + 1} of ${next.length}.`);
+    toast(`${appName(acct, id)} is now number ${next.indexOf(id) + 1} of ${next.length}.`);
     render(true).then(() => { const sel = `.move[data-for="${id}"][data-dir="${delta}"]`; (document.querySelector(sel + ':not([disabled])') || document.querySelector(`.move[data-for="${id}"]:not([disabled])`))?.focus(); });
   };
   const grid = h('div', { class: 'apps-grid' + (appsReorder ? ' reorder' : ''), role: 'list', 'aria-label': 'Apps' }, sorted.map(([id, ic, name, line], k) => {
-    const inner = [h('span', { class: 'app-ico' }, icon(ic)), h('b', {}, name), h('span', { class: 'muted' }, line)];
+    const inner = [h('span', { class: 'app-ico' }, icon(ic)), h('b', {}, appName(acct, id)), h('span', { class: 'muted' }, line)];
     if (!appsReorder) return h('a', { class: 'app-card', role: 'listitem', href: '#/apps/' + id, 'data-app': id, draggable: 'false' }, ...inner);
     return h('div', { class: 'app-card', role: 'listitem', 'data-app': id }, ...inner,
       h('div', { class: 'app-move' },
-        h('button', { class: 'move', type: 'button', 'data-for': id, 'data-dir': '-1', 'aria-label': `Move ${name} earlier`, disabled: k === 0, onclick: () => move(id, -1) }, icon('back')),
+        h('button', { class: 'move', type: 'button', 'data-for': id, 'data-dir': '-1', 'aria-label': `Move ${appName(acct, id)} earlier`, disabled: k === 0, onclick: () => move(id, -1) }, icon('back')),
         h('span', { class: 'handle', 'aria-hidden': 'true', title: 'Drag me' }, icon('grid')),
-        h('button', { class: 'move flip', type: 'button', 'data-for': id, 'data-dir': '1', 'aria-label': `Move ${name} later`, disabled: k === sorted.length - 1, onclick: () => move(id, 1) }, icon('back'))));
+        h('button', { class: 'move flip', type: 'button', 'data-for': id, 'data-dir': '1', 'aria-label': `Move ${appName(acct, id)} later`, disabled: k === sorted.length - 1, onclick: () => move(id, 1) }, icon('back'))));
   }));
   enableAppDrag(grid, acct);
   const custom = saved && order.join() !== cards.map(c => c[0]).join();
@@ -506,6 +506,18 @@ let appsReorder = false;
 // Every app, for the Settings list that shows or hides them. The Bible starts hidden; turn it on if you want it.
 const APP_LIST = [['calendar', 'Calendar'], ['calc', 'Calculator'], ['bank', 'Banking'], ['inventory', 'Household'], ['groceries', 'Groceries'], ['chores', 'Chores'], ['notes', 'Notes'], ['bible', 'Bible'], ['diary', 'Diary']];
 const hiddenKey = acct => 'as.hiddenapps.' + acct.id;
+// Every app can be given your own name (per account). An empty name means the original one.
+const namesKey = acct => 'as.appnames.' + acct.id;
+function customNames(acct) {
+  try { const v = JSON.parse(ls(namesKey(acct)) || 'null'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; } catch { return {}; }
+}
+const defaultName = id => (APP_LIST.find(a => a[0] === id) || [id, id])[1];
+const appName = (acct, id) => { const n = customNames(acct)[id]; return typeof n === 'string' && n.trim() ? n.trim().slice(0, 30) : defaultName(id); };
+function setAppName(acct, id, name) {
+  const all = customNames(acct), n = String(name || '').trim().slice(0, 30);
+  if (n && n !== defaultName(id)) all[id] = n; else delete all[id];
+  ls(namesKey(acct), Object.keys(all).length ? JSON.stringify(all) : null);
+}
 function hiddenApps(acct) {
   let v = null;
   try { v = JSON.parse(ls(hiddenKey(acct)) || 'null'); } catch { /* use the default */ }
@@ -586,7 +598,7 @@ function enableAppDrag(grid, acct) {
 }
 
 function appsView(acct, ctx, sub, arg) {
-  const back = (title, extra) => topbar(title, { back: true, ...extra });
+  const back = (title, extra) => topbar(sub && title === defaultName(sub) ? appName(acct, sub) : title, { back: true, ...extra });
   switch (sub) {
     case 'calendar': return calendarView(acct, ctx, back);
     case 'calc': return calculatorView(back);

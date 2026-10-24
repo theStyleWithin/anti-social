@@ -1202,11 +1202,13 @@ function settingsView(acct, ctxBg) {
         h('button', { class: 'btn primary', onclick: () => bgFile.click() }, bgRec ? 'Change picture' : 'Choose a picture'),
         bgRec && h('button', { class: 'btn', onclick: async () => { await appDelete(bgRec.id); toast('Background removed.'); render(true); } }, 'Remove'), bgFile),
       bgRec && h('label', { class: 'colorpick wide' }, h('span', {}, 'More picture'), veil, h('span', {}, 'More color'))),
-    h('section', {}, h('h3', {}, 'Apps'), h('p', {}, 'Choose which apps show up in Apps. Hiding one keeps its data; it all comes back when you turn it on.'),
+    h('section', {}, h('h3', {}, 'Apps'), h('p', {}, 'Show or hide each app, and call it whatever you like (up to 30 characters). Hiding an app keeps its data. Clear the name to go back to the original.'),
       h('div', { class: 'toggles' }, APP_LIST.map(([id, label]) => {
         const box = h('input', { type: 'checkbox', checked: !hiddenApps(acct).has(id), 'aria-label': 'Show ' + label });
-        box.addEventListener('change', () => { const hid = hiddenApps(acct); if (box.checked) hid.delete(id); else hid.add(id); ls(hiddenKey(acct), JSON.stringify([...hid])); toast(`${label} is ${box.checked ? 'shown' : 'hidden'}.`); });
-        return h('label', { class: 'check' }, box, ' ' + label);
+        box.addEventListener('change', () => { const hid = hiddenApps(acct); if (box.checked) hid.delete(id); else hid.add(id); ls(hiddenKey(acct), JSON.stringify([...hid])); toast(`${appName(acct, id)} is ${box.checked ? 'shown' : 'hidden'}.`); });
+        const name = h('input', { class: 'appname', value: customNames(acct)[id] || '', placeholder: label, maxlength: 30, 'aria-label': `Name for ${label}` });
+        name.addEventListener('change', () => { setAppName(acct, id, name.value); name.value = customNames(acct)[id] || ''; toast(`Now called ${appName(acct, id)}.`); });
+        return h('div', { class: 'check' }, box, name);
       }))),
     populatedSection(),
     storageSection(),

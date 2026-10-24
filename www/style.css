@@ -520,3 +520,4 @@ html.has-bg .main { backdrop-filter: blur(2px); }
 .bible-hit { display: flex; flex-direction: column; gap: 2px; padding: 10px 4px; border-bottom: 1px solid var(--line); color: var(--fg); }
 .toggles { display: grid; gap: 4px; margin-top: 8px; }
 .check { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+.appname { flex: 1; min-width: 0; padding: 8px 12px; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 999px; }
