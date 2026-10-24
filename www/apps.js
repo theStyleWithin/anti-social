@@ -268,6 +268,32 @@ const AppsCore = (() => {
     return Object.entries(by).map(([who, count]) => ({ who, count })).sort((a, b) => b.count - a.count || a.who.localeCompare(b.who));
   }
 
+  /* ---------- the order of the apps on the launcher ---------- */
+  // Your saved order wins. Apps that do not exist any more are ignored, repeats are dropped, and
+  // anything new (an app added in a later version) is placed at the end in its usual order.
+  function orderApps(defaults, saved) {
+    const out = [], seen = new Set();
+    for (const id of Array.isArray(saved) ? saved : []) if (defaults.includes(id) && !seen.has(id)) { seen.add(id); out.push(id); }
+    for (const id of defaults) if (!seen.has(id)) out.push(id);
+    return out;
+  }
+  // Move one id earlier (-1) or later (+1), stopping at the ends.
+  function moveId(list, id, delta) {
+    const i = list.indexOf(id), j = Math.max(0, Math.min(list.length - 1, i + delta));
+    if (i < 0 || i === j) return [...list];
+    const out = [...list]; out.splice(i, 1); out.splice(j, 0, id);
+    return out;
+  }
+  // Where to drop a dragged card, given the pointer and the other cards' boxes: next to the nearest one.
+  // rects: [{id, left, top, width, height}]. Returns {id, before} or null.
+  function dropTarget(rects, x, y) {
+    let best = null, bd = Infinity;
+    for (const r of rects) { const d = Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2)); if (d < bd) { bd = d; best = r; } }
+    if (!best) return null;
+    const cy = best.top + best.height / 2, cx = best.left + best.width / 2, band = best.height * 0.25;
+    return { id: best.id, before: y < cy - band || (Math.abs(y - cy) <= band && x < cx) };
+  }
+
   /* ---------- calculator: a real parser, no eval ---------- */
   function fmtNum(x) {
     if (!Number.isFinite(x)) return 'Error';
@@ -384,6 +410,7 @@ const AppsCore = (() => {
     CATEGORIES, CURRENCIES, parseMoney, fmtMoney, sum, balance, summarize,
     r2, tipSplit, taxDiscount, percentChange, loanPayment, growth, csvCell, toCsv,
     ASSET_CATEGORIES, ROOMS, unitsOf, unitValue, paidOf, worthOf, assetTotals, groupTotals, warranties,
+    orderApps, moveId, dropTarget,
     AISLES, guessAisle, parseQuickAdd, groceryTotal, qtyText, groceryText,
     REPEATS, addMonths, stepDue, nextDue, choreStatus, dueLabel, repeatLabel, choreSort, choreStats,
     fmtNum, evaluate, calcError,
@@ -439,12 +466,112 @@ function appsHome(acct, ctx) {
     ['notes', 'notes', 'Notes', A.note.length ? plural(A.note.length, 'note') : 'Nothing written yet'],
     ['diary', 'book', 'Diary', st ? `${plural(st, 'day')} in a row` : dset.size ? plural(dset.size, 'entry').replace('entrys', 'entries') : 'A page for today'],
   ];
+  // your own order (saved per account on this device), with anything new tacked on the end
+  document.querySelectorAll('.app-drag-clone').forEach(x => x.remove());
+  let saved = null;
+  try { const v = JSON.parse(ls(appOrderKey(acct)) || 'null'); saved = Array.isArray(v) ? v : null; } catch { /* use the default */ }
+  const order = AC.orderApps(cards.map(c => c[0]), saved);
+  const sorted = order.map(id => cards.find(c => c[0] === id));
+  const move = (id, delta) => {
+    const next = AC.moveId(order, id, delta);
+    ls(appOrderKey(acct), JSON.stringify(next));
+    toast(`${cards.find(c => c[0] === id)[2]} is now number ${next.indexOf(id) + 1} of ${next.length}.`);
+    render(true).then(() => { const sel = `.move[data-for="${id}"][data-dir="${delta}"]`; (document.querySelector(sel + ':not([disabled])') || document.querySelector(`.move[data-for="${id}"]:not([disabled])`))?.focus(); });
+  };
+  const grid = h('div', { class: 'apps-grid' + (appsReorder ? ' reorder' : ''), role: 'list', 'aria-label': 'Apps' }, sorted.map(([id, ic, name, line], k) => {
+    const inner = [h('span', { class: 'app-ico' }, icon(ic)), h('b', {}, name), h('span', { class: 'muted' }, line)];
+    if (!appsReorder) return h('a', { class: 'app-card', role: 'listitem', href: '#/apps/' + id, 'data-app': id, draggable: 'false' }, ...inner);
+    return h('div', { class: 'app-card', role: 'listitem', 'data-app': id }, ...inner,
+      h('div', { class: 'app-move' },
+        h('button', { class: 'move', type: 'button', 'data-for': id, 'data-dir': '-1', 'aria-label': `Move ${name} earlier`, disabled: k === 0, onclick: () => move(id, -1) }, icon('back')),
+        h('span', { class: 'handle', 'aria-hidden': 'true', title: 'Drag me' }, icon('grid')),
+        h('button', { class: 'move flip', type: 'button', 'data-for': id, 'data-dir': '1', 'aria-label': `Move ${name} later`, disabled: k === sorted.length - 1, onclick: () => move(id, 1) }, icon('back'))));
+  }));
+  enableAppDrag(grid, acct);
+  const custom = saved && order.join() !== cards.map(c => c[0]).join();
   return [
-    topbar('Apps'),
-    h('div', { class: 'apps-intro' }, 'If you are going to be anti-social, you might as well get something done. Everything here works offline, stays on this device, and is encrypted too if you use a passcode.'),
-    h('div', { class: 'apps-grid' }, cards.map(([id, ic, name, line]) =>
-      h('a', { class: 'app-card', href: '#/apps/' + id }, h('span', { class: 'app-ico' }, icon(ic)), h('b', {}, name), h('span', { class: 'muted' }, line)))),
+    topbar('Apps', { action: h('button', { class: 'btn' + (appsReorder ? ' primary' : ''), 'aria-pressed': String(appsReorder), onclick: () => { appsReorder = !appsReorder; render(true); } }, appsReorder ? 'Done' : 'Reorder') }),
+    h('div', { class: 'apps-intro' }, 'If you are going to be anti-social, you might as well get something done. Everything here works offline, stays on this device, and is encrypted too if you use a passcode.',
+      h('div', { class: 'fine', style: 'padding:6px 0 0' }, appsReorder ? 'Drag a card, or use the arrows, to put the apps in your order.' : 'Tip: drag any app to rearrange them (on a phone, touch and hold first).')),
+    grid,
+    appsReorder && custom ? h('div', { class: 'btnrow', style: 'padding:0 16px 16px' }, h('button', { class: 'btn', onclick: () => { ls(appOrderKey(acct), null); toast('Back to the original order.'); render(true); } }, 'Reset order')) : null,
   ];
+}
+
+/* ---- rearranging the launcher: drag with a mouse, or touch and hold on a phone ---- */
+let appsReorder = false;
+const appOrderKey = acct => 'as.apporder.' + acct.id;
+function enableAppDrag(grid, acct) {
+  let st = null, suppress = false;
+  const cardsNow = () => [...grid.querySelectorAll('.app-card')];
+  const cleanup = () => {
+    if (st) { clearTimeout(st.timer); st.clone?.remove(); st.card.classList.remove('ghosted'); document.body.classList.remove('app-dragging'); }
+    st = null;
+    document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', end); document.removeEventListener('pointercancel', end); document.removeEventListener('touchmove', onTouchMove);
+  };
+  const activate = () => {
+    st.active = true;
+    const r = st.card.getBoundingClientRect();
+    st.offX = st.x - r.left; st.offY = st.y - r.top;
+    st.clone = st.card.cloneNode(true); st.clone.classList.add('app-drag-clone'); st.clone.removeAttribute('href');
+    Object.assign(st.clone.style, { width: r.width + 'px', height: r.height + 'px' });
+    document.body.append(st.clone); st.card.classList.add('ghosted'); document.body.classList.add('app-dragging');
+    try { navigator.vibrate?.(12); } catch { /* not supported */ }
+    place();
+  };
+  const place = () => {
+    st.clone.style.transform = `translate(${st.x - st.offX}px, ${st.y - st.offY}px) scale(1.04)`;
+    const others = cardsNow().filter(c => c !== st.card);
+    const t = AC.dropTarget(others.map(c => { const r = c.getBoundingClientRect(); return { id: c.dataset.app, left: r.left, top: r.top, width: r.width, height: r.height }; }), st.x, st.y);
+    if (!t) return;
+    const target = others.find(c => c.dataset.app === t.id), ref = t.before ? target : target.nextElementSibling;
+    if (ref === st.card || target.nextElementSibling === st.card && !t.before) return;
+    const first = new Map(cardsNow().map(c => [c, c.getBoundingClientRect()]));
+    grid.insertBefore(st.card, ref);
+    for (const c of cardsNow()) {   // slide the others into place instead of jumping
+      if (c === st.card) continue;
+      const a = first.get(c), z = c.getBoundingClientRect(), dx = a.left - z.left, dy = a.top - z.top;
+      if (dx || dy) { c.style.transition = 'none'; c.style.transform = `translate(${dx}px, ${dy}px)`; requestAnimationFrame(() => requestAnimationFrame(() => { c.style.transition = 'transform .18s ease'; c.style.transform = ''; })); }
+    }
+  };
+  // While a press is in progress we listen on the whole page, so the drag keeps working even when a
+  // card is re-inserted (which makes the browser let go of the pointer) or the finger leaves the grid.
+  const onMove = e => {
+    if (!st || e.pointerId !== st.id) return;
+    st.x = e.clientX; st.y = e.clientY;
+    if (!st.active) {
+      const moved = Math.hypot(st.x - st.x0, st.y - st.y0);
+      if (st.touch && !appsReorder) { if (moved > 9) cleanup(); return; }   // a swipe before the hold: let the page scroll
+      if (moved > 5) activate(); else return;
+    }
+    e.preventDefault(); place();
+  };
+  const onTouchMove = e => { if (st && st.active) e.preventDefault(); };   // no scrolling while dragging
+  const end = e => {
+    if (!st || e.pointerId !== st.id) return;
+    const was = st.active;
+    if (was) {
+      const ids = cardsNow().map(c => c.dataset.app);
+      if (e.type !== 'pointercancel') ls(appOrderKey(acct), JSON.stringify(ids));
+      suppress = true; setTimeout(() => { suppress = false; }, 80);
+    }
+    cleanup();
+    if (was && e.type === 'pointercancel') render(true);
+  };
+  grid.addEventListener('pointerdown', e => {
+    const card = e.target.closest('.app-card');
+    if (!card || e.button > 0 || e.target.closest('.move')) return;
+    cleanup();
+    st = { card, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, touch: e.pointerType !== 'mouse', active: false, id: e.pointerId };
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', end);
+    document.addEventListener('pointercancel', end);
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    if (st.touch) { if (appsReorder) activate(); else st.timer = setTimeout(() => { if (st && !st.active) activate(); }, 380); }
+  });
+  grid.addEventListener('contextmenu', e => { if (st) e.preventDefault(); });                                // no link menu on a long press
+  grid.addEventListener('dragstart', e => e.preventDefault());
+  grid.addEventListener('click', e => { if (e.target.closest('.move')) return; if (suppress || appsReorder) { e.preventDefault(); e.stopPropagation(); } }, true);
 }
 
 function appsView(acct, ctx, sub, arg) {

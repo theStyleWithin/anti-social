@@ -463,3 +463,18 @@ button, a { -webkit-tap-highlight-color: transparent; }
 @media (max-width: 699px) { .chore-row { flex-wrap: wrap; } .chore-acts { width: 100%; padding-left: 42px; } }
 
 [hidden] { display: none !important; }
+
+/* ---------- rearranging the apps ---------- */
+.app-card { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.apps-grid.reorder .app-card { cursor: grab; touch-action: none; border-style: dashed; position: relative; padding-bottom: 12px; }
+.app-card.ghosted { opacity: 0.3; border-style: dashed; }
+.app-drag-clone { position: fixed; left: 0; top: 0; z-index: 80; pointer-events: none; margin: 0; box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45); border-color: var(--accent); background: var(--card); will-change: transform; display: flex; flex-direction: column; gap: 4px; padding: 16px; border: 1px solid var(--accent); border-radius: 16px; color: var(--fg); }
+body.app-dragging { cursor: grabbing; }
+body.app-dragging * { user-select: none; -webkit-user-select: none; }
+.app-move { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.app-move .move { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--fg); display: flex; align-items: center; justify-content: center; padding: 0; }
+.app-move .move:hover:not([disabled]) { border-color: var(--accent); color: var(--accent); }
+.app-move .move[disabled] { opacity: 0.25; cursor: default; }
+.app-move .handle { color: var(--muted); display: flex; }
+.app-move .flip svg { transform: scaleX(-1); }
+@media (prefers-reduced-motion: reduce) { .app-card { transition: none !important; } }

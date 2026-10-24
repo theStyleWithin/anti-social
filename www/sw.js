@@ -1,5 +1,5 @@
 // Cache the app shell so Anti-Social works offline. There is no network API to call.
-const CACHE = 'anti-social-v4';
+const CACHE = 'anti-social-v5';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'ghost.js', 'apps.js', 'manifest.webmanifest',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png'];
 
