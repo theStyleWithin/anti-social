@@ -47,6 +47,8 @@ const ICONS = {
   notes: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>',
   book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>',
   pin: '<path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3z"/>',
+  cart: '<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11l2-8H6"/>',
+  tasks: '<path d="M9 6h11M9 12h11M9 18h11M3.5 6l1.5 1.5L7.5 5M3.5 12l1.5 1.5L7.5 10M3.5 18l1.5 1.5L7.5 16"/>',
   box: '<path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
   camera: '<path d="M3 8h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13" r="4"/>',
 };
@@ -1466,7 +1468,7 @@ async function render(keepScroll = false) {
     if (all.bad) console.warn(`${all.bad} post(s) could not be decrypted`);
     // Your likes, reposts and follows of generated accounts live beside your posts but are not posts.
     const posts = all.filter(p => !p.kind);                 // real posts only; everything else is a record of some other kind
-    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [] };
+    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [] };
     for (const p of all) if (apps[p.kind]) apps[p.kind].push(p);
     castMap = new Map(all.filter(p => p.kind === 'cast').map(p => [p.ref, p]));
     const reactions = new Map(all.filter(p => p.kind === 'ghost').map(p => [p.target, p]));

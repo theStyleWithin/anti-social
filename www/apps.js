@@ -160,6 +160,114 @@ const AppsCore = (() => {
   };
   const toCsv = rows => rows.map(r => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
 
+  /* ---------- groceries ---------- */
+  const AISLES = ['Produce', 'Dairy and eggs', 'Meat and fish', 'Bakery', 'Pantry', 'Frozen', 'Drinks', 'Snacks', 'Household', 'Health and beauty', 'Other'];
+  const AISLE_WORDS = {
+    'Produce': ['apple', 'banana', 'orange', 'lemon', 'lime', 'grape', 'berr', 'strawberr', 'blueberr', 'raspberr', 'blackberr', 'cranberr', 'avocado', 'tomato', 'potato', 'onion', 'garlic', 'carrot', 'lettuce', 'spinach', 'kale', 'cucumber', 'pepper', 'broccoli', 'cauliflower', 'celery', 'mushroom', 'corn', 'zucchini', 'squash', 'pear', 'peach', 'melon', 'mango', 'pineapple', 'pea', 'cilantro', 'parsley', 'basil', 'ginger', 'cabbage', 'salad', 'herbs', 'plum', 'cherr', 'asparagus', 'beet', 'radish', 'leek', 'pumpkin'],
+    'Dairy and eggs': ['milk', 'cheese', 'yogurt', 'yoghurt', 'butter', 'cream', 'egg', 'margarine', 'cottage', 'kefir'],
+    'Meat and fish': ['chicken', 'beef', 'pork', 'bacon', 'sausage', 'ham', 'turkey', 'steak', 'mince', 'salmon', 'tuna', 'fish', 'shrimp', 'prawn', 'lamb', 'cod', 'meatball', 'hot dog'],
+    'Bakery': ['bread', 'bagel', 'bun', 'roll', 'tortilla', 'croissant', 'muffin', 'cake', 'pita', 'baguette', 'donut', 'doughnut', 'sourdough'],
+    'Pantry': ['rice', 'pasta', 'flour', 'sugar', 'salt', 'oil', 'vinegar', 'sauce', 'beans', 'lentil', 'cereal', 'oats', 'spice', 'honey', 'jam', 'peanut butter', 'soup', 'stock', 'broth', 'noodle', 'canned', 'nuts', 'syrup', 'ketchup', 'mustard', 'mayo', 'baking', 'yeast', 'chickpea', 'tinned', 'salsa', 'olive'],
+    'Frozen': ['frozen', 'ice cream', 'fries', 'popsicle', 'gelato', 'sorbet'],
+    'Drinks': ['water', 'juice', 'soda', 'cola', 'beer', 'wine', 'coffee', 'tea', 'sparkling', 'lemonade', 'whiskey', 'vodka', 'kombucha', 'cider', 'energy drink'],
+    'Snacks': ['chip', 'cracker', 'cookie', 'chocolate', 'candy', 'popcorn', 'pretzel', 'granola', 'biscuit', 'gum', 'jerky', 'snack'],
+    'Household': ['paper towel', 'toilet paper', 'tissue', 'detergent', 'soap', 'sponge', 'trash bag', 'bin liner', 'foil', 'cling', 'bleach', 'cleaner', 'battery', 'batteries', 'light bulb', 'candle', 'laundry', 'dish', 'napkin', 'garbage bag', 'ziploc', 'wrap'],
+    'Health and beauty': ['shampoo', 'conditioner', 'toothpaste', 'toothbrush', 'deodorant', 'razor', 'lotion', 'vitamin', 'medicine', 'bandage', 'floss', 'sunscreen', 'tampon', 'pad', 'aspirin', 'ibuprofen', 'cough'],
+  };
+  const AISLE_INDEX = Object.entries(AISLE_WORDS).flatMap(([aisle, words]) => words.map(w => [w, aisle])).sort((a, b) => b[0].length - a[0].length);
+  // The name of the thing is usually its last word ("orange juice" is juice, "potato chips" are chips,
+  // "tomato sauce" is sauce). So: a known two-word phrase first, then the last word, then any word in
+  // the name, with longer keywords beating shorter ones ("peanut butter" is pantry, plain "butter" is dairy).
+  const WORD_HIT = (kw, text) => new RegExp('[ ]' + kw.replace(/ /g, '[ ]')).test(text);
+  function guessAisle(name) {
+    const words = String(name || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
+    if (!words.length) return 'Other';
+    // Words like these decide the aisle no matter what follows: frozen peas, canned tomatoes.
+    if (words.includes('frozen')) return 'Frozen';
+    if (words.includes('canned') || words.includes('tinned')) return 'Pantry';
+    const phrase = ' ' + words.slice(-2).join(' '), last = ' ' + words[words.length - 1], all = ' ' + words.join(' ');
+    if (words.length > 1) for (const [w, aisle] of AISLE_INDEX) if (w.includes(' ') && WORD_HIT(w, phrase)) return aisle;
+    for (const [w, aisle] of AISLE_INDEX) if (!w.includes(' ') && WORD_HIT(w, last)) return aisle;
+    for (const [w, aisle] of AISLE_INDEX) if (WORD_HIT(w, all)) return aisle;
+    return 'Other';
+  }
+  const UNITS = ['lb', 'lbs', 'kg', 'g', 'oz', 'l', 'ml', 'dozen', 'pack', 'packs', 'bag', 'bags', 'can', 'cans', 'box', 'boxes', 'bottle', 'bottles', 'jar', 'jars', 'loaf', 'loaves', 'bunch', 'bunches', 'pint', 'quart', 'gallon', 'carton', 'tub', 'tubs'];
+  const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
+  // "2 apples", "3x eggs", "milk x2", "2 lb apples", "1 dozen eggs", "bread"
+  function parseQuickAdd(text) {
+    let t = String(text ?? '').trim().replace(/\s+/g, ' '), qty = 1, unit = '', m;
+    if (!t) return null;
+    if ((m = /^(\d+(?:\.\d+)?)\s*[x×]\s+(.+)$/i.exec(t)) || (m = /^(\d+(?:\.\d+)?)[x×](.+)$/i.exec(t))) { qty = Number(m[1]); t = m[2]; }
+    else if ((m = /^(.+?)\s*[x×]\s*(\d+(?:\.\d+)?)$/i.exec(t))) { qty = Number(m[2]); t = m[1]; }
+    else if ((m = /^(\d+(?:\.\d+)?)\s*([a-z]+)\s+(.+)$/i.exec(t)) && UNITS.includes(m[2].toLowerCase())) { qty = Number(m[1]); unit = m[2].toLowerCase(); t = m[3]; }
+    else if ((m = /^(\d+(?:\.\d+)?)\s+(.+)$/.exec(t))) { qty = Number(m[1]); t = m[2]; }
+    t = t.trim();
+    if (!t || !(qty > 0) || qty > 999) { qty = 1; unit = ''; t = String(text).trim().replace(/\s+/g, ' '); }
+    return { name: cap1(t), qty, unit };
+  }
+  const groceryTotal = items => sum(items.filter(i => Number.isSafeInteger(i.priceCents)).map(i => Math.round(i.priceCents * (Number(i.qty) || 1))));
+  const qtyText = i => { const q = Number(i.qty) || 1; return (q === 1 && !i.unit ? '' : `${q}${i.unit ? ' ' + i.unit : ''}`); };
+  // The still-to-buy items as plain text, grouped by aisle, ready to paste into a message.
+  function groceryText(items, title = 'Groceries') {
+    const need = items.filter(i => !i.checked);
+    const out = [title];
+    for (const aisle of AISLES) {
+      const here = need.filter(i => (i.aisle || 'Other') === aisle).sort((a, b) => a.name.localeCompare(b.name));
+      if (here.length) { out.push('', aisle); for (const i of here) out.push(`- ${qtyText(i) ? qtyText(i) + ' ' : ''}${i.name}`); }
+    }
+    return out.join('\n') + '\n';
+  }
+
+  /* ---------- chores ---------- */
+  const REPEATS = [['none', 'Does not repeat'], ['daily', 'Every day'], ['weekly', 'Every week'], ['biweekly', 'Every 2 weeks'], ['monthly', 'Every month'], ['yearly', 'Every year'], ['days', 'Every N days']];
+  // Adds months but keeps landing on the right day: the 31st becomes the 28th, then back to the 31st.
+  function addMonths(key, n, anchorDay) {
+    const d = parseKey(key), day = anchorDay || d.getDate();
+    const t = new Date(d.getFullYear(), d.getMonth() + n, 1);
+    t.setDate(Math.min(day, dim(t.getFullYear(), t.getMonth())));
+    return dateKey(t);
+  }
+  function stepDue(key, ch) {
+    switch (ch.repeat) {
+      case 'daily': return addDays(key, 1);
+      case 'weekly': return addDays(key, 7);
+      case 'biweekly': return addDays(key, 14);
+      case 'monthly': return addMonths(key, 1, ch.anchorDay);
+      case 'yearly': return addMonths(key, 12, ch.anchorDay);
+      case 'days': return addDays(key, Math.max(1, Math.floor(Number(ch.everyDays)) || 1));
+      default: return null;
+    }
+  }
+  // The next due date after finishing a chore on doneKey, or null if it does not repeat.
+  // It is never left sitting in the past, even if you were weeks late.
+  function nextDue(ch, doneKey) {
+    if (!ch.repeat || ch.repeat === 'none') return null;
+    let next = stepDue(ch.repeatFrom === 'done' || !isKey(ch.due) ? doneKey : ch.due, ch), guard = 0;
+    while (next && next <= doneKey && guard++ < 2000) next = stepDue(next, ch);
+    return next;
+  }
+  function choreStatus(ch, today) {
+    if (!isKey(ch.due)) return 'none';
+    const d = diffDays(ch.due, today);
+    return d < 0 ? 'overdue' : d === 0 ? 'today' : d <= 7 ? 'soon' : 'later';
+  }
+  function dueLabel(ch, today) {
+    if (!isKey(ch.due)) return 'No due date';
+    const d = diffDays(ch.due, today);
+    if (d < 0) return d === -1 ? 'Overdue by 1 day' : `Overdue by ${-d} days`;
+    if (d === 0) return 'Due today';
+    if (d === 1) return 'Due tomorrow';
+    if (d <= 7) return `Due in ${d} days`;
+    return 'Due ' + parseKey(ch.due).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+  const repeatLabel = ch => ch.repeat === 'days' ? `Every ${Math.max(1, Math.floor(Number(ch.everyDays)) || 1)} days` : (REPEATS.find(r => r[0] === (ch.repeat || 'none')) || REPEATS[0])[1];
+  const choreSort = (a, b) => (a.due || '9999').localeCompare(b.due || '9999') || a.title.localeCompare(b.title);
+  function choreStats(done, ym) {
+    const by = {};
+    for (const d of done) if (String(d.date).startsWith(ym)) { const k = (d.who || '').trim() || 'Anyone'; by[k] = (by[k] || 0) + 1; }
+    return Object.entries(by).map(([who, count]) => ({ who, count })).sort((a, b) => b.count - a.count || a.who.localeCompare(b.who));
+  }
+
   /* ---------- calculator: a real parser, no eval ---------- */
   function fmtNum(x) {
     if (!Number.isFinite(x)) return 'Error';
@@ -276,6 +384,8 @@ const AppsCore = (() => {
     CATEGORIES, CURRENCIES, parseMoney, fmtMoney, sum, balance, summarize,
     r2, tipSplit, taxDiscount, percentChange, loanPayment, growth, csvCell, toCsv,
     ASSET_CATEGORIES, ROOMS, unitsOf, unitValue, paidOf, worthOf, assetTotals, groupTotals, warranties,
+    AISLES, guessAisle, parseQuickAdd, groceryTotal, qtyText, groceryText,
+    REPEATS, addMonths, stepDue, nextDue, choreStatus, dueLabel, repeatLabel, choreSort, choreStats,
     fmtNum, evaluate, calcError,
   };
 })();
@@ -324,6 +434,8 @@ function appsHome(acct, ctx) {
     ['calc', 'calc', 'Calculator', 'Plain and scientific'],
     ['bank', 'wallet', 'Banking', total === null ? 'Receipts and math, offline' : `Balance ${money(total)}`],
     ['inventory', 'box', 'Household', A.asset.length ? `${plural(AC.assetTotals(A.asset, today).units, 'thing')} · ${money(AC.assetTotals(A.asset, today).paid)}` : 'What you own, and what it cost'],
+    ['groceries', 'cart', 'Groceries', (() => { const n = A.groc.filter(i => !i.archived && !i.checked).length; return n ? `${n} to buy` : 'Nothing to buy'; })()],
+    ['chores', 'tasks', 'Chores', (() => { const act = A.chore.filter(c => !c.archived); if (!act.length) return 'No chores yet'; const d = act.filter(c => ['overdue', 'today'].includes(AC.choreStatus(c, today))).length; return d ? `${d} to do today` : 'All caught up'; })()],
     ['notes', 'notes', 'Notes', A.note.length ? plural(A.note.length, 'note') : 'Nothing written yet'],
     ['diary', 'book', 'Diary', st ? `${plural(st, 'day')} in a row` : dset.size ? plural(dset.size, 'entry').replace('entrys', 'entries') : 'A page for today'],
   ];
@@ -342,6 +454,8 @@ function appsView(acct, ctx, sub, arg) {
     case 'calc': return calculatorView(back);
     case 'bank': return bankView(acct, ctx, back);
     case 'inventory': return inventoryView(acct, ctx, back);
+    case 'groceries': return groceryView(acct, ctx, back);
+    case 'chores': return choresView(acct, ctx, back);
     case 'notes': return notesView(acct, ctx, back, arg);
     case 'diary': return diaryView(acct, ctx, back, arg);
     default: return appsHome(acct, ctx);
@@ -1024,4 +1138,226 @@ function assetEditor(acct, ctx, it, prefill) {
     close(); render(true);
   });
   setTimeout(() => name.focus(), 0);
+}
+
+/* ---------- Groceries ---------- */
+let grocList = 'default';
+function groceryView(acct, ctx, back) {
+  const A = ctx.apps;
+  const lists = [{ id: 'default', name: 'Groceries' }, ...[...A.glist].sort((a, b) => a.createdAt - b.createdAt)];
+  if (!lists.some(l => l.id === grocList)) grocList = 'default';
+  const cur = lists.find(l => l.id === grocList);
+  const items = A.groc.filter(i => (i.list || 'default') === grocList);
+  const live = items.filter(i => !i.archived);
+  const need = live.filter(i => !i.checked), cart = live.filter(i => i.checked);
+  const input = h('input', { class: 'groc-input', placeholder: 'Add an item. Try "2 lb apples" or "milk, eggs, bread"', 'aria-label': 'Add an item', list: 'groc-names', autocomplete: 'off', maxlength: 400 });
+  const names = [...new Set(items.map(i => i.name))];
+  const dl = h('datalist', { id: 'groc-names' }, names.map(n => h('option', { value: n })));
+  const refocus = () => render(true).then(() => $('.groc-input')?.focus());
+  const addText = async text => {
+    let changed = 0;
+    for (const part of String(text).split(/[,\n]/)) {
+      const p = AC.parseQuickAdd(part);
+      if (!p) continue;
+      const match = items.find(i => i.name.toLowerCase() === p.name.toLowerCase());
+      let rec;
+      if (match && !match.archived && !match.checked) rec = { ...match, qty: Math.min(999, (Number(match.qty) || 1) + p.qty), unit: match.unit || p.unit, updatedAt: Date.now() };
+      else if (match) rec = { ...match, archived: false, checked: false, qty: p.qty, unit: p.unit || match.unit || '', uses: (match.uses || 1) + 1, updatedAt: Date.now() };
+      else rec = { id: uid(), accountId: acct.id, kind: 'groc', list: grocList, name: p.name, qty: p.qty, unit: p.unit, aisle: AC.guessAisle(p.name), priceCents: null, note: '', checked: false, archived: false, uses: 1, createdAt: Date.now(), updatedAt: Date.now() };
+      if (!(await appSave(acct, rec))) return changed;
+      const at = items.findIndex(i => i.id === rec.id); if (at >= 0) items[at] = rec; else items.push(rec);
+      changed++;
+    }
+    return changed;
+  };
+  const submit = async () => { const t = input.value; if (!t.trim()) return; input.disabled = true; if (await addText(t)) { input.value = ''; } input.disabled = false; refocus(); };
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+  const toggle = async i => { if (await appSave(acct, { ...i, checked: !i.checked, updatedAt: Date.now() })) render(true); };
+  const row = i => h('div', { class: 'groc-row' + (i.checked ? ' done' : '') },
+    h('button', { class: 'groc-check', role: 'checkbox', 'aria-checked': String(!!i.checked), 'aria-label': `${i.checked ? 'Put back' : 'Got'} ${i.name}`, onclick: () => toggle(i) }, i.checked ? icon('check') : null),
+    h('span', { class: 'groc-name' }, AC.qtyText(i) ? h('b', { class: 'groc-qty' }, AC.qtyText(i)) : null, ' ', i.name, i.note ? h('span', { class: 'muted groc-note' }, ' · ' + i.note) : null),
+    Number.isSafeInteger(i.priceCents) ? h('span', { class: 'muted' }, money(Math.round(i.priceCents * (Number(i.qty) || 1)))) : null,
+    h('button', { class: 'groc-edit', 'aria-label': `Edit ${i.name}`, onclick: () => groceryEditor(acct, i) }, icon('compose')));
+  const groups = AC.AISLES.map(a => [a, need.filter(i => (i.aisle || 'Other') === a).sort((x, y) => x.name.localeCompare(y.name))]).filter(([, l]) => l.length);
+  const total = AC.groceryTotal(live);
+  const frequent = items.filter(i => i.archived).sort((a, b) => (b.uses || 1) - (a.uses || 1) || b.updatedAt - a.updatedAt).slice(0, 12);
+  const copy = async () => { try { await navigator.clipboard.writeText(AC.groceryText(live, cur.name)); toast('List copied. Paste it anywhere.'); } catch { toast('Could not copy.'); } };
+  const clearCart = async () => { for (const i of cart) if (!(await appSave(acct, { ...i, checked: false, archived: true, updatedAt: Date.now() }))) break; render(true); };
+  const uncheckAll = async () => { for (const i of cart) if (!(await appSave(acct, { ...i, checked: false, updatedAt: Date.now() }))) break; render(true); };
+  return [back(cur.name), h('div', { class: 'app-pad' }, dl,
+    h('div', { class: 'chips', role: 'tablist', 'aria-label': 'Lists' }, lists.map(l => h('button', { class: 'chip' + (l.id === grocList ? ' on' : ''), role: 'tab', 'aria-selected': String(l.id === grocList), onclick: () => { grocList = l.id; render(true); } }, l.name)), h('button', { class: 'chip add', onclick: () => listEditor(acct, null) }, '+ New list')),
+    h('div', { class: 'groc-add' }, input, h('button', { class: 'btn primary', onclick: submit }, 'Add')),
+    frequent.length ? h('div', { class: 'chips freq', 'aria-label': 'Add again' }, frequent.map(i => h('button', { class: 'chip', title: 'Add again', onclick: async () => { if (await addText(i.name)) render(true); } }, '+ ' + i.name))) : null,
+    live.length ? h('div', { class: 'groc-progress' }, h('span', { class: 'muted' }, `${cart.length} of ${live.length} in the cart`), h('div', { class: 'cat-bar' }, h('i', { style: `width:${live.length ? cart.length / live.length * 100 : 0}%` }))) : null,
+    !live.length ? emptyState('Nothing to buy', 'Add the first thing above. Commas add several at once.') : null,
+    groups.map(([aisle, list]) => h('div', { class: 'aisle' }, h('h4', {}, aisle, h('span', { class: 'muted' }, ' ' + list.length)), list.map(row))),
+    cart.length ? h('div', { class: 'aisle in-cart' }, h('h4', {}, 'In the cart', h('span', { class: 'muted' }, ' ' + cart.length)), cart.map(row)) : null,
+    live.length ? h('p', { class: 'fine', style: 'padding:10px 0' }, total ? `Estimated total ${money(total)} (for items with a price)` : 'Add prices in an item\'s editor to see an estimated total.') : null,
+    h('div', { class: 'btnrow', style: 'margin-top:8px' },
+      cart.length ? h('button', { class: 'btn primary', onclick: clearCart }, 'Clear the cart') : null,
+      cart.length ? h('button', { class: 'btn', onclick: uncheckAll }, 'Put everything back') : null,
+      live.length ? h('button', { class: 'btn', onclick: copy }, 'Copy list') : null,
+      grocList !== 'default' ? h('button', { class: 'btn', onclick: () => listEditor(acct, A.glist.find(l => l.id === grocList)) }, 'Rename or delete list') : null))];
+}
+
+function groceryEditor(acct, i) {
+  const rec = { ...i };
+  const name = h('input', { value: rec.name, maxlength: 80, 'aria-label': 'Item' });
+  const qty = h('input', { type: 'number', min: '0.01', max: '999', step: 'any', value: String(Number(rec.qty) || 1), 'aria-label': 'Quantity' });
+  const unit = h('input', { value: rec.unit || '', maxlength: 20, placeholder: 'lb, dozen, can...', 'aria-label': 'Unit' });
+  const aisle = h('select', { 'aria-label': 'Aisle' }, AC.AISLES.map(a => h('option', { value: a }, a)));
+  aisle.value = rec.aisle || 'Other';
+  const price = h('input', { value: Number.isSafeInteger(rec.priceCents) ? (rec.priceCents / 100).toFixed(2) : '', inputmode: 'decimal', placeholder: 'optional', 'aria-label': 'Price each' });
+  const note = h('input', { value: rec.note || '', maxlength: 120, placeholder: 'brand, size, anything', 'aria-label': 'Note' });
+  const err = h('p', { class: 'err' });
+  const save = h('button', { class: 'btn primary' }, 'Save');
+  const close = modal(h('div', {},
+    h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => close() }, icon('x')), h('b', {}, 'Edit item')),
+    h('div', { class: 'mp' }, fieldEl('Item', name), h('div', { class: 'two' }, fieldEl('Quantity', qty), fieldEl('Unit', unit)), h('div', { class: 'two' }, fieldEl('Aisle', aisle), fieldEl('Price each', price)), fieldEl('Note', note), err,
+      h('div', { class: 'btnrow' }, save, h('button', { class: 'btn danger', onclick: async () => { await appDelete(rec.id); close(); render(true); } }, 'Remove')))));
+  save.addEventListener('click', async () => {
+    const q = Number(qty.value), pc = price.value.trim() === '' ? null : AC.parseMoney(price.value);
+    if (!name.value.trim()) return void (err.textContent = 'Give it a name.');
+    if (!(q > 0 && q <= 999)) return void (err.textContent = 'Quantity is between 0 and 999.');
+    if (pc !== null && pc < 0) return void (err.textContent = 'Price like 2.49.');
+    Object.assign(rec, { name: AC.parseQuickAdd(name.value)?.name || name.value.trim(), qty: q, unit: unit.value.trim(), aisle: aisle.value, priceCents: pc, note: note.value.trim(), updatedAt: Date.now() });
+    save.disabled = true;
+    if (!(await appSave(acct, rec))) { save.disabled = false; return; }
+    close(); render(true);
+  });
+}
+
+function listEditor(acct, l) {
+  const rec = l ? { ...l } : { id: uid(), accountId: acct.id, kind: 'glist', name: '', createdAt: Date.now() };
+  const name = h('input', { value: rec.name, maxlength: 40, placeholder: 'Costco, Pharmacy, Party...', 'aria-label': 'List name' });
+  const err = h('p', { class: 'err' });
+  const save = h('button', { class: 'btn primary' }, l ? 'Save' : 'Create list');
+  const close = modal(h('div', {},
+    h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => close() }, icon('x')), h('b', {}, l ? 'Rename list' : 'New list')),
+    h('div', { class: 'mp' }, fieldEl('Name', name), err,
+      h('div', { class: 'btnrow' }, save, l && h('button', { class: 'btn danger', onclick: async () => {
+        if (!confirm(`Delete the list "${rec.name}" and everything on it?`)) return;
+        const all = await loadPosts(acct); for (const i of all.filter(x => x.kind === 'groc' && x.list === rec.id)) await appDelete(i.id);
+        await appDelete(rec.id); grocList = 'default'; close(); render(true);
+      } }, 'Delete list')))));
+  save.addEventListener('click', async () => {
+    if (!name.value.trim()) return void (err.textContent = 'Name the list.');
+    rec.name = name.value.trim();
+    save.disabled = true;
+    if (!(await appSave(acct, rec))) { save.disabled = false; return; }
+    grocList = rec.id; close(); render(true);
+  });
+  setTimeout(() => name.focus(), 0);
+}
+
+/* ---------- Chores ---------- */
+let choreTab = 'today', choreWho = 'all';
+function choresView(acct, ctx, back) {
+  const A = ctx.apps, today = todayKey();
+  const active = A.chore.filter(c => !c.archived);
+  const tab = (k, label) => h('button', { role: 'tab', 'aria-selected': String(choreTab === k), class: choreTab === k ? 'active' : '', onclick: () => { choreTab = k; render(true); } }, label);
+  const people = [...new Set([...A.chore.map(c => (c.assignee || '').trim()), ...A.done.map(d => (d.who || '').trim())].filter(Boolean))].sort();
+  let body;
+  if (choreTab === 'upcoming') body = choreUpcoming(acct, ctx, active, today);
+  else if (choreTab === 'all') body = choreAll(acct, ctx, active, today, people);
+  else if (choreTab === 'history') body = choreHistory(acct, ctx, today);
+  else body = choreToday(acct, ctx, active, today);
+  return [back('Chores', { action: h('button', { class: 'btn primary', onclick: () => choreEditor(acct, ctx, null) }, 'Add chore') }),
+    h('div', { class: 'tabs', role: 'tablist' }, tab('today', 'Today'), tab('upcoming', 'Upcoming'), tab('all', 'All'), tab('history', 'History')),
+    h('div', { class: 'app-pad' }, body)];
+}
+
+async function completeChore(acct, ch) {
+  const today = todayKey(), next = AC.nextDue(ch, today);
+  const log = { id: uid(), accountId: acct.id, kind: 'done', chore: ch.id, title: ch.title, who: ch.assignee || '', date: today, ts: Date.now(), prev: { due: ch.due || '', lastDone: ch.lastDone || '', doneCount: ch.doneCount || 0, archived: !!ch.archived } };
+  if (!(await appSave(acct, log))) return;
+  const upd = { ...ch, lastDone: today, doneCount: (ch.doneCount || 0) + 1, updatedAt: Date.now() };
+  if (next) upd.due = next; else upd.archived = true;
+  if (!(await appSave(acct, upd))) { await appDelete(log.id); return; }
+  toast(next ? `Done. Next one: ${AC.parseKey(next).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}.` : 'Done. Crossed off for good.');
+  render(true);
+}
+async function undoChore(acct, ctx, log) {
+  const ch = ctx.apps.chore.find(c => c.id === log.chore);
+  if (ch && log.prev) await appSave(acct, { ...ch, due: log.prev.due, lastDone: log.prev.lastDone, doneCount: log.prev.doneCount, archived: log.prev.archived, updatedAt: Date.now() });
+  await appDelete(log.id); toast('Undone.'); render(true);
+}
+const choreSnooze = async (acct, ch) => { const t = todayKey(); if (await appSave(acct, { ...ch, due: AC.addDays(ch.due && ch.due > t ? ch.due : t, 1), updatedAt: Date.now() })) { toast('Pushed to tomorrow.'); render(true); } };
+const choreSkip = async (acct, ch) => { const next = AC.nextDue(ch, todayKey()); if (await appSave(acct, next ? { ...ch, due: next, updatedAt: Date.now() } : { ...ch, archived: true, updatedAt: Date.now() })) { toast(next ? 'Skipped this one.' : 'Dropped.'); render(true); } };
+
+function choreRow(acct, ctx, ch, today, actions = true) {
+  const st = AC.choreStatus(ch, today);
+  return h('div', { class: `chore-row ${st}` },
+    h('button', { class: 'chore-check', 'aria-label': `Mark ${ch.title} done`, title: 'Done', onclick: () => completeChore(acct, ch) }, icon('check')),
+    h('button', { class: 'chore-main', onclick: () => choreEditor(acct, ctx, ch) },
+      h('b', {}, ch.title),
+      h('span', { class: 'muted' }, [AC.dueLabel(ch, today), ch.repeat && ch.repeat !== 'none' ? AC.repeatLabel(ch) : null, ch.assignee ? '@ ' + ch.assignee : null].filter(Boolean).join(' · '))),
+    actions ? h('div', { class: 'chore-acts' }, h('button', { class: 'btn', onclick: () => choreSnooze(acct, ch) }, 'Tomorrow'), h('button', { class: 'btn', onclick: () => choreSkip(acct, ch) }, 'Skip')) : null);
+}
+
+function choreToday(acct, ctx, active, today) {
+  const over = active.filter(c => AC.choreStatus(c, today) === 'overdue').sort(AC.choreSort);
+  const now = active.filter(c => AC.choreStatus(c, today) === 'today').sort(AC.choreSort);
+  if (!over.length && !now.length) return [emptyState(active.length ? 'All caught up' : 'No chores yet', active.length ? 'Nothing is due today. Enjoy it.' : 'Add the first one. Repeating chores come back on their own.')];
+  return [over.length ? h('div', { class: 'aisle' }, h('h4', { class: 'bad' }, 'Overdue', h('span', { class: 'muted' }, ' ' + over.length)), over.map(c => choreRow(acct, ctx, c, today))) : null,
+    now.length ? h('div', { class: 'aisle' }, h('h4', {}, 'Due today', h('span', { class: 'muted' }, ' ' + now.length)), now.map(c => choreRow(acct, ctx, c, today))) : null];
+}
+function choreUpcoming(acct, ctx, active, today) {
+  const soon = active.filter(c => c.due && c.due > today && AC.diffDays(c.due, today) <= 14).sort(AC.choreSort);
+  if (!soon.length) return [emptyState('Nothing coming up', 'No chores in the next two weeks.')];
+  const days = [...new Set(soon.map(c => c.due))];
+  return days.map(d => h('div', { class: 'aisle' }, h('h4', {}, longDate(d)), soon.filter(c => c.due === d).map(c => choreRow(acct, ctx, c, today, false))));
+}
+function choreAll(acct, ctx, active, today, people) {
+  const sel = h('select', { 'aria-label': 'Who', onchange: e => { choreWho = e.target.value; render(true); } }, h('option', { value: 'all' }, 'Everyone'), people.map(p => h('option', { value: p }, p)));
+  sel.value = people.includes(choreWho) ? choreWho : 'all';
+  const list = active.filter(c => choreWho === 'all' || (c.assignee || '').trim() === choreWho).sort(AC.choreSort);
+  return [people.length ? h('div', { class: 'app-row' }, sel) : null, list.length ? list.map(c => choreRow(acct, ctx, c, today, false)) : [emptyState('No chores', 'Nothing here.')]];
+}
+function choreHistory(acct, ctx, today) {
+  const done = [...ctx.apps.done].sort((a, b) => b.ts - a.ts);
+  const stats = AC.choreStats(done, ymOf(today)), max = Math.max(1, ...stats.map(s => s.count));
+  if (!done.length) return [emptyState('Nothing done yet', 'Finished chores show up here.')];
+  const days = [...new Set(done.slice(0, 80).map(d => d.date))];
+  return [stats.length ? h('div', { class: 'cat-bars' }, h('h3', {}, 'This month'), stats.map(s => h('div', { class: 'cat-row' }, h('span', {}, s.who), h('div', { class: 'cat-bar' }, h('i', { style: `width:${Math.max(6, s.count / max * 100)}%` })), h('b', {}, String(s.count))))) : null,
+    days.map(d => h('div', { class: 'aisle' }, h('h4', {}, longDate(d)), done.filter(x => x.date === d).map(x => h('div', { class: 'groc-row' }, h('span', { class: 'groc-name' }, x.title, x.who ? h('span', { class: 'muted' }, ' · ' + x.who) : null), h('button', { class: 'btn', onclick: () => undoChore(acct, ctx, x) }, 'Undo')))))];
+}
+
+function choreEditor(acct, ctx, ch) {
+  const isNew = !ch;
+  const rec = ch ? { ...ch } : { id: uid(), accountId: acct.id, kind: 'chore', title: '', due: todayKey(), repeat: 'none', repeatFrom: 'due', everyDays: 7, assignee: '', notes: '', doneCount: 0, createdAt: Date.now() };
+  const people = [...new Set([...ctx.apps.chore.map(c => (c.assignee || '').trim()), ...ctx.apps.done.map(d => (d.who || '').trim())].filter(Boolean))];
+  const title = h('input', { value: rec.title, maxlength: 80, placeholder: 'What needs doing?', 'aria-label': 'Chore' });
+  const due = h('input', { type: 'date', value: rec.due || '', 'aria-label': 'Due date' });
+  const repeat = h('select', { 'aria-label': 'Repeat' }, AC.REPEATS.map(([v, l]) => h('option', { value: v }, l)));
+  repeat.value = rec.repeat || 'none';
+  const every = h('input', { type: 'number', min: '1', max: '365', step: '1', value: String(rec.everyDays || 7), 'aria-label': 'Days between' });
+  const from = h('select', { 'aria-label': 'Repeat from' }, h('option', { value: 'due' }, 'The due date (fixed schedule)'), h('option', { value: 'done' }, 'When I finish it'));
+  from.value = rec.repeatFrom || 'due';
+  const who = h('input', { value: rec.assignee || '', maxlength: 40, list: 'chore-people', placeholder: 'Anyone', 'aria-label': 'Assigned to' });
+  const dl = h('datalist', { id: 'chore-people' }, people.map(p => h('option', { value: p })));
+  const notes = h('textarea', { rows: 3, maxlength: 2000, 'aria-label': 'Chore notes' }, rec.notes || '');
+  const err = h('p', { class: 'err' });
+  const everyField = fieldEl('Every how many days?', every);
+  const sync = () => { everyField.hidden = repeat.value !== 'days'; fromField.hidden = repeat.value === 'none'; };
+  const fromField = fieldEl('Repeat from', from);
+  repeat.addEventListener('change', sync);
+  const save = h('button', { class: 'btn primary' }, isNew ? 'Add chore' : 'Save');
+  const close = modal(h('div', {},
+    h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => close() }, icon('x')), h('b', {}, isNew ? 'New chore' : 'Edit chore')),
+    h('div', { class: 'mp' }, dl, fieldEl('Chore', title), h('div', { class: 'two' }, fieldEl('Due', due), fieldEl('Assigned to', who)), fieldEl('Repeat', repeat), everyField, fromField, fieldEl('Notes', notes), err,
+      h('div', { class: 'btnrow' }, save, !isNew && h('button', { class: 'btn danger', onclick: async () => { if (!confirm('Delete this chore? Its history stays.')) return; await appDelete(rec.id); close(); render(true); } }, 'Delete')))));
+  sync();
+  save.addEventListener('click', async () => {
+    const n = Number(every.value);
+    if (!title.value.trim()) return void (err.textContent = 'Name the chore.');
+    if (due.value && !AC.isKey(due.value)) return void (err.textContent = 'That is not a date.');
+    if (repeat.value === 'days' && !(Number.isInteger(n) && n >= 1 && n <= 365)) return void (err.textContent = 'Days between is 1 to 365.');
+    const dueKey = due.value || (repeat.value !== 'none' ? todayKey() : '');
+    Object.assign(rec, { title: title.value.trim(), due: dueKey, repeat: repeat.value, repeatFrom: from.value, everyDays: repeat.value === 'days' ? n : (rec.everyDays || 7), assignee: who.value.trim(), notes: notes.value.trim(), anchorDay: dueKey ? AC.parseKey(dueKey).getDate() : null, archived: false, updatedAt: Date.now() });
+    save.disabled = true;
+    if (!(await appSave(acct, rec))) { save.disabled = false; return; }
+    close(); render(true);
+  });
+  setTimeout(() => title.focus(), 0);
 }
