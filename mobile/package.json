@@ -2,6 +2,7 @@
   "name": "anti-social-android",
   "version": "0.7.1",
   "license": "0BSD",
+  "author": "Gamehopper",
   "private": true,
   "description": "Anti-Social for Android (Capacitor wrapper around ../www)",
   "scripts": {

@@ -9,6 +9,7 @@
   },
   "homepage": "https://anti-social.invalid",
   "license": "0BSD",
+  "author": "Gamehopper",
   "private": true,
   "main": "main.js",
   "scripts": {

@@ -138,6 +138,6 @@ as unreadable ciphertext in disk blocks until the system reuses them.
 
 ## License
 
-[0BSD](LICENSE). Use it, copy it, change it, fork it, ship it. No credit needed, no questions asked.
+Anti-Social is created by Gamehopper. Licensed under [0BSD](LICENSE). Use it, copy it, change it, fork it, ship it. No credit needed, no questions asked.
 
 Forks and modified versions are not made, reviewed or endorsed by the original author, and the original author does not track or know about them. Anything you download from anywhere else is used at your own risk.
