@@ -4,12 +4,11 @@
   "version": "0.7.1",
   "description": "Social media with nobody on it.",
   "author": {
-    "name": "Anti-Social",
+    "name": "Gamehopper",
     "email": "nobody@anti-social.invalid"
   },
   "homepage": "https://anti-social.invalid",
   "license": "0BSD",
-  "author": "Gamehopper",
   "private": true,
   "main": "main.js",
   "scripts": {
