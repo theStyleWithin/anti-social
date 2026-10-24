@@ -8,7 +8,7 @@
     "email": "nobody@anti-social.invalid"
   },
   "homepage": "https://anti-social.invalid",
-  "license": "MIT",
+  "license": "0BSD",
   "private": true,
   "main": "main.js",
   "scripts": {
