@@ -478,3 +478,19 @@ body.app-dragging * { user-select: none; -webkit-user-select: none; }
 .app-move .handle { color: var(--muted); display: flex; }
 .app-move .flip svg { transform: scaleX(-1); }
 @media (prefers-reduced-motion: reduce) { .app-card { transition: none !important; } }
+
+/* ---- color themes and background pictures ---- */
+.skins { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin-top: 8px; }
+.skin-opt { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 4px; background: var(--card); color: var(--fg); border: 2px solid var(--line); border-radius: 14px; }
+.skin-opt i { display: block; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); }
+.skin-opt span { font-size: 12px; }
+.skin-opt.on { border-color: var(--accent); }
+.colorpick { display: flex; align-items: center; gap: 8px; }
+.colorpick input[type=color] { width: 44px; height: 36px; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: none; }
+.colorpick.wide { width: 100%; font-size: 12px; color: var(--muted); }
+.colorpick.wide input[type=range] { flex: 1; }
+.bgprev { height: 110px; margin: 8px 0; border-radius: 14px; border: 1px solid var(--line); background-size: cover; background-position: center; }
+#skinbg { position: fixed; inset: 0; z-index: -1; background-size: cover; background-position: center; background-repeat: no-repeat; pointer-events: none; }
+html.has-bg body { background: transparent; }
+html.has-bg .main, html.has-bg .nav { background: color-mix(in srgb, var(--bg) var(--veil, 85%), transparent); }
+html.has-bg .main { backdrop-filter: blur(2px); }

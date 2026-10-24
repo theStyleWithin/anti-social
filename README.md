@@ -6,9 +6,9 @@
 
 ## Status: full featured and complete
 
-Anti-Social v0.7.1 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.8.0 is feature complete. It is a finished app, not a work in progress.
 
-**Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (the v0.7.1 drag-to-reorder is automated-test verified, by mouse and touch, awaiting a hand test); plus automated tests):
+**Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (the v0.7.1 drag-to-reorder and v0.8.0 themes are automated-test verified, awaiting a hand test); plus automated tests):
 - **Android:** installed and used on a real phone, including account switching, Populated mode, Characters, the storage limit and the Apps.
 - **Features:** sign-up with and without a passcode, posting with images, likes, reposts and replies, avatar and banner images, the empty notifications tab, the Explore page that never finds anyone, themes, export and delete.
 - **Vault and duress PIN:** checked end to end. Data on disk is unreadable, it comes back after you unlock, a wrong passcode is rejected, and the duress PIN erases everything.
@@ -54,6 +54,7 @@ is a flat, unblinking **0**.
 
 ## Version history
 
+- **v0.8.0:** color themes (ten presets plus your own two-color custom theme, shareable as a tiny file) and your own picture as the app background, saved on your device and encrypted with your passcode; text is always kept readable
 - **v0.7.1:** drag the Apps around however you like (mouse drag, or touch and hold on a phone), or use Reorder mode with arrow buttons for keyboard and precision; per-account, with a Reset order button
 - **v0.7.0:** Apps gets Groceries (aisles, several lists, quick re-add) and Chores (repeating schedules, assignees, history, undo)
 - **v0.6.0:** Apps: Calendar, Calculator, Banking, Household (with photos and a gallery), Notes and Diary, all offline

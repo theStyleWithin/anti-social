@@ -176,7 +176,8 @@ async function panicWipe() {
   try { (await dbp).close(); } catch { /* already closed */ }
   dbp = undefined;
   await new Promise(res => { const r = indexedDB.deleteDatabase('anti-social'); r.onsuccess = r.onerror = r.onblocked = () => res(); });
-  for (const k of ['as.session', 'as.lockAfter', 'as.theme']) ls(k, null);
+  for (const k of ['as.session', 'as.lockAfter', 'as.theme', 'as.skin', 'as.skin.custom', 'as.skin.veil']) ls(k, null);
+  applyBg(null);
   authMode = { mode: 'signup' };
   history.replaceState(null, '', location.pathname + location.search);
   applyTheme();
@@ -278,7 +279,35 @@ let currentAcct = null;
 
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; });
 
+const SKIN_VARS = ['--bg', '--fg', '--muted', '--line', '--hover', '--card', '--accent', '--accent-fg'];
+// A chosen color theme paints over the plain light/dark look. Returns true when one is active.
+function applySkin() {
+  const root = document.documentElement;
+  const vars = ThemeCore.resolve(ls('as.skin'), ThemeCore.parseCustom(ls('as.skin.custom')));
+  for (const k of SKIN_VARS) root.style.removeProperty(k);
+  root.style.colorScheme = '';
+  if (!vars) return false;
+  for (const k of SKIN_VARS) root.style.setProperty(k, vars[k]);
+  root.dataset.theme = vars.dark ? 'dark' : 'light';
+  root.style.colorScheme = vars.dark ? 'dark' : 'light';
+  $('meta[name="theme-color"]').setAttribute('content', vars['--bg']);
+  return true;
+}
+// The background picture belongs to the account (it is saved, and encrypted, like your posts).
+const bgOf = all => all.find(p => p.kind === 'bg');
+function applyBg(rec) {
+  const root = document.documentElement;
+  let el = document.getElementById('skinbg');
+  if (!rec || !/^data:image\/(jpeg|png|webp);base64,/.test(rec.data || '')) { el?.remove(); root.classList.remove('has-bg'); return; }
+  if (!el) { el = document.createElement('div'); el.id = 'skinbg'; el.setAttribute('aria-hidden', 'true'); document.body.prepend(el); }
+  if (el.dataset.v !== rec.id + rec.updatedAt) { el.style.backgroundImage = `url("${rec.data}")`; el.dataset.v = rec.id + rec.updatedAt; }
+  root.style.setProperty('--veil', ThemeCore.clampVeil(ls('as.skin.veil')) + '%');
+  root.classList.add('has-bg');
+}
+
 function applyTheme() {
+  if (applySkin()) return;
+  document.documentElement.removeAttribute('data-theme');
   const t = ls('as.theme');
   if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
   else delete document.documentElement.dataset.theme;
@@ -1119,13 +1148,59 @@ function storageSection() {
     h('p', { class: 'fine', style: 'padding:8px 0 0' }, 'The meter is approximate. Pictures are shrunk before they are saved and are most of the space. Posts pause at your limit, or sooner if your device is nearly full. The generated crowd is never saved, so it costs nothing. Deleting posts frees space.'));
 }
 
-function settingsView(acct) {
+function settingsView(acct, ctxBg) {
   const theme = ls('as.theme') || 'auto';
-  const themeBtn = (v, label) => h('button', { class: 'btn' + (theme === v ? ' primary' : ''), onclick: () => { ls('as.theme', v === 'auto' ? null : v); applyTheme(); render(true); } }, label);
+  const skin = ls('as.skin') || '';
+  const pickMode = v => { ls('as.skin', null); ls('as.theme', v === 'auto' ? null : v); applyTheme(); render(true); };
+  const themeBtn = (v, label) => h('button', { class: 'btn' + (!skin && theme === v ? ' primary' : ''), onclick: () => pickMode(v) }, label);
+  const swatch = (id, name, bg, accent) => h('button', { class: 'skin-opt' + (skin === id ? ' on' : ''), type: 'button', title: name, 'aria-label': name + ' theme', 'aria-pressed': String(skin === id),
+    onclick: () => { ls('as.skin', id); applyTheme(); render(true); } },
+    h('i', { style: `background:linear-gradient(135deg, ${bg} 55%, ${accent} 55%)` }), h('span', {}, name));
+  const custom = ThemeCore.parseCustom(ls('as.skin.custom'));
+  const colorIn = (label, key) => {
+    const el = h('input', { type: 'color', value: custom[key], 'aria-label': label });
+    el.addEventListener('input', () => { custom[key] = el.value; ls('as.skin.custom', JSON.stringify(custom)); ls('as.skin', 'custom'); applyTheme(); });
+    el.addEventListener('change', () => render(true));
+    return h('label', { class: 'colorpick' }, h('span', {}, label), el);
+  };
+  const themeFile = h('input', { type: 'file', accept: 'application/json,.json', hidden: true });
+  themeFile.addEventListener('change', async () => {
+    const f = themeFile.files[0]; themeFile.value = '';
+    if (!f) return;
+    const t = f.size < 4096 ? ThemeCore.importTheme(await f.text()) : null;
+    if (!t) { toast('That is not an Anti-Social theme file.'); return; }
+    ls('as.skin.custom', JSON.stringify({ bg: t.bg, accent: t.accent })); ls('as.skin', 'custom'); applyTheme(); toast(`Loaded "${t.name}" as your custom theme.`); render(true);
+  });
+  const bgRec = ctxBg;
+  const bgFile = h('input', { type: 'file', accept: 'image/*', hidden: true });
+  bgFile.addEventListener('change', async () => {
+    const f = bgFile.files[0]; bgFile.value = '';
+    if (!f) return;
+    const blocked = await pictureBlocked(f);
+    if (blocked) { toast(blocked); return; }
+    let data;
+    try { data = await downscale(f, 1600); } catch { toast('That picture could not be read.'); return; }
+    if (await appSave(acct, { id: 'bg' + acct.id, accountId: acct.id, kind: 'bg', data, updatedAt: Date.now() })) { toast('Background set.'); render(true); }
+  });
+  const veil = h('input', { type: 'range', min: 30, max: 100, step: 5, value: ThemeCore.clampVeil(ls('as.skin.veil')), 'aria-label': 'How much the theme color covers the picture' });
+  veil.addEventListener('input', () => { ls('as.skin.veil', veil.value); document.documentElement.style.setProperty('--veil', veil.value + '%'); });
 
   const general = [
-    h('section', {}, h('h3', {}, 'Display'), h('p', {}, 'Pick a theme. Nobody will see it.'),
+    h('section', {}, h('h3', {}, 'Display'), h('p', {}, 'Pick a look. Nobody will see it.'),
       h('div', { class: 'btnrow' }, themeBtn('auto', 'Auto'), themeBtn('light', 'Light'), themeBtn('dark', 'Dark'))),
+    h('section', {}, h('h3', {}, 'Color themes'), h('p', {}, 'The text color is picked for you so it always stays readable.'),
+      h('div', { class: 'skins' }, ThemeCore.PRESETS.map(p => swatch(p.id, p.name, p.bg, p.accent)), swatch('custom', 'Custom', custom.bg, custom.accent))),
+    h('section', {}, h('h3', {}, 'Make your own'), h('p', {}, 'Choose two colors. Everything else follows.'),
+      h('div', { class: 'btnrow' }, colorIn('Background', 'bg'), colorIn('Accent', 'accent')),
+      h('div', { class: 'btnrow' },
+        h('button', { class: 'btn', onclick: () => { const blob = new Blob([ThemeCore.exportTheme('My theme', custom.bg, custom.accent)], { type: 'application/json' }); const a = h('a', { href: URL.createObjectURL(blob), download: 'anti-social-theme.json' }); document.body.append(a); a.click(); a.remove(); } }, 'Export theme'),
+        h('button', { class: 'btn', onclick: () => themeFile.click() }, 'Import theme'), themeFile)),
+    h('section', {}, h('h3', {}, 'Background picture'), h('p', {}, bgRec ? 'Your picture is saved on this device' + (acct.vault ? ', encrypted with your passcode.' : '.') : 'Use one of your own pictures behind the app. It stays on this device.'),
+      bgRec && h('div', { class: 'bgprev', style: `background-image:url("${bgRec.data}")` }),
+      h('div', { class: 'btnrow' },
+        h('button', { class: 'btn primary', onclick: () => bgFile.click() }, bgRec ? 'Change picture' : 'Choose a picture'),
+        bgRec && h('button', { class: 'btn', onclick: async () => { await appDelete(bgRec.id); toast('Background removed.'); render(true); } }, 'Remove'), bgFile),
+      bgRec && h('label', { class: 'colorpick wide' }, h('span', {}, 'More picture'), veil, h('span', {}, 'More color'))),
     populatedSection(),
     storageSection(),
     installPrompt && h('section', {}, h('h3', {}, 'Install'), h('p', {}, 'Put Anti-Social on your home screen or desktop. It works offline, because there is nothing to connect to.'),
@@ -1454,21 +1529,22 @@ async function render(keepScroll = false) {
   try {
     const acct = session && await loadAccount(session);
     if (my !== renderId) return;
-    if (!acct || acct.locked) currentAcct = null;
+    if (!acct || acct.locked) { currentAcct = null; applyBg(null); }
     if (acct?.locked) {
       if (authMode.mode !== 'unlock' || authMode.account?.id !== acct.id) authMode = { mode: 'unlock', account: acct };
       document.title = 'Anti-Social';
       root.replaceChildren(await authView());
       return;
     }
-    if (!acct) { session = null; ls('as.session', null); document.title = 'Anti-Social'; root.replaceChildren(await authView()); return; }
+    if (!acct) { applyBg(null); session = null; ls('as.session', null); document.title = 'Anti-Social'; root.replaceChildren(await authView()); return; }
     const all = await loadPosts(acct);
     if (my !== renderId) return;
     currentAcct = acct;
+    applyBg(bgOf(all));
     if (all.bad) console.warn(`${all.bad} post(s) could not be decrypted`);
     // Your likes, reposts and follows of generated accounts live beside your posts but are not posts.
     const posts = all.filter(p => !p.kind);                 // real posts only; everything else is a record of some other kind
-    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [] };
+    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [] };
     for (const p of all) if (apps[p.kind]) apps[p.kind].push(p);
     castMap = new Map(all.filter(p => p.kind === 'cast').map(p => [p.ref, p]));
     const reactions = new Map(all.filter(p => p.kind === 'ghost').map(p => [p.target, p]));
@@ -1479,7 +1555,7 @@ async function render(keepScroll = false) {
     const route = { notifications: 'notifications', explore: 'explore', profile: 'profile', settings: 'settings', post: 'post', u: 'u', apps: 'apps' }[r] || 'home';
     const main = {
       home: () => homeView(acct, ctx), apps: () => appsView(acct, ctx, arg, arg2), explore: () => exploreView(acct, ctx), notifications: notificationsView, u: () => ghostProfileView(acct, ctx, arg),
-      profile: () => profileView(acct, ctx), settings: () => { if (arg === 'security' || arg === 'characters') settingsTab = arg; return settingsView(acct); }, post: () => postView(acct, ctx, arg),
+      profile: () => profileView(acct, ctx), settings: () => { if (arg === 'security' || arg === 'characters') settingsTab = arg; return settingsView(acct, ctx.apps.bg[0]); }, post: () => postView(acct, ctx, arg),
     }[route]();
     document.title = route === 'home' ? 'Home / Anti-Social' : route[0].toUpperCase() + route.slice(1) + ' / Anti-Social';
     root.replaceChildren(shell(acct, route, main));
