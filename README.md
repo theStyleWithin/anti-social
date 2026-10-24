@@ -54,7 +54,7 @@ is a flat, unblinking **0**.
 
 ## Version history
 
-- **v0.9.1:** the Bible app now has the complete Bible (all 66 books, no empty chapters) in two public-domain versions, the World English Bible and the King James Version, alongside the Tanakh; imported Bibles skip chapters that have no text
+- **v0.9.1:** the Bible app no longer ships any Bible text. You bring your own file, so it is exactly the edition you (or your congregation) trust. It reads right-to-left Hebrew files too, and skips chapters that have no text
 - **v0.9.0:** a Bible app (hidden until you turn it on in Settings): the whole Tanakh in Hebrew and the public-domain 1917 JPS English, side by side or one at a time, with search, highlights and notes; or import your own Bible file (USFM, OSIS, JSON, plain text). You can now show or hide any app and rename any of them (call Diary "Captain's Log" if you like)
 - **v0.8.0:** color themes (ten presets plus your own two-color custom theme, shareable as a tiny file) and your own picture as the app background, saved on your device and encrypted with your passcode; text is always kept readable
 - **v0.7.1:** drag the Apps around however you like (mouse drag, or touch and hold on a phone), or use Reorder mode with arrow buttons for keyboard and precision; per-account, with a Reset order button
@@ -145,12 +145,8 @@ Anti-Social is created by Gamehopper. Licensed under [0BSD](LICENSE). Use it, co
 
 Forks and modified versions are not made, reviewed or endorsed by the original author, and the original author does not track or know about them. Anything you download from anywhere else is used at your own risk.
 
-## Texts and credits
+## The Bible app
 
-The included Bibles are public domain:
+Anti-Social does not include any Bible text. In Apps, turn on Bible in Settings, then import your own file: USFM, OSIS XML, JSON, or plain text lines such as `John 3:16 For God so loved...`. That way the text is exactly the edition you trust, whether that is a translation you own or a Hebrew Tanakh your temple has checked. You confirm you have the right to use each file you import, and it stays on your device (encrypted if you use a passcode).
 
-- **World English Bible** (whole Bible, modern English) from [TehShrike/world-english-bible](https://github.com/TehShrike/world-english-bible). Some editions leave out a handful of verses (for example Luke 17:36); those are simply not shown.
-- **King James Version** (whole Bible, 1769 text) from [thiagobodruk/bible](https://github.com/thiagobodruk/bible). The KJV is public domain in most of the world; in the United Kingdom it is under a perpetual Crown patent that allows it to be read and shared freely.
-- **Tanakh**: the English is the 1917 Jewish Publication Society translation, and the Hebrew (with vowel marks) is the Westminster Leningrad Codex text, both as published in the open [Sefaria export](https://github.com/Sefaria/Sefaria-Export). It uses Jewish chapter numbering.
-
-`tools/fetch-bibles.py` and `tools/fetch-tanakh.py` rebuild the data files. Anti-Social does not include the NIV or any other copyrighted Bible. If you import one, you are responsible for having the right to use it.
+v0.9.0 shipped with a Hebrew and 1917 English Tanakh bundled in. v0.9.1 removes it, so there is nothing in the app to verify.

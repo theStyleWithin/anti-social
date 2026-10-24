@@ -1,37 +1,21 @@
 'use strict';
-/* The Bible app: a bundled public-domain Tanakh (Hebrew and the 1917 JPS English), plus any Bible file you bring
-   yourself. Everything is local. Imported text is saved like your posts, so it is encrypted if you use a passcode. */
+/* The Bible app: bring your own Bible file (USFM, OSIS, JSON or plain text). Nothing is bundled, so the text is
+   exactly the edition you trust. Everything is local, and imported text is saved like your posts, so it is
+   encrypted if you use a passcode. */
 const BC = BibleCore;
-// Included texts (all public domain). The Tanakh also carries the Hebrew; the others are whole Bibles.
-const BUNDLED = [
-  { id: 'web', name: 'World English Bible', note: 'Whole Bible, modern English', file: 'bible/web.js' },
-  { id: 'kjv', name: 'King James Version', note: 'Whole Bible, 1769 text', file: 'bible/kjv.js' },
-  { id: 'jps1917', name: 'Tanakh (Hebrew and JPS 1917 English)', note: 'Hebrew Bible, with the Hebrew text', tanakh: true },
-];
 const HL_COLORS = ['#fde68a', '#bbf7d0', '#bfdbfe', '#fbcfe8'];
 const bookTexts = new Map();            // imported book token -> chapters, kept while the app is open
-const scripts = {};
-const loadScript = src => scripts[src] || (scripts[src] = new Promise((res, rej) => {
-  const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => { delete scripts[src]; rej(new Error('missing ' + src)); }; document.head.append(s);
-}));
-const tanakhData = async () => { await Promise.all([loadScript('bible/jps1917.js'), loadScript('bible/tanakh-he.js')]); return { en: BibleData.jps1917.books, he: BibleData['tanakh-he'].books }; };
-
-// The books of a Bible as [{n, ch, s?}] (name, chapter count, section).
+// The books of a Bible as [{n, ch, nums, s}]: name, chapter count, the chapters that have text, and a section.
 async function bibleBooks(info) {
-  const all = (n, ch, ne) => ne || Array.from({ length: ch }, (_, i) => i + 1);
-  if (info.tanakh) return (await tanakhData()).en.map(b => ({ n: b.n, ch: b.c.length, nums: all(0, b.c.length), s: b.s, h: b.h }));
-  if (info.builtin) { await loadScript(info.file); return BibleData[info.id].books.map(b => ({ n: b.n, ch: b.c.length, nums: all(0, b.c.length), s: b.s })); }
-  return info.meta.books.map(b => ({ n: b.n, ch: b.ch, nums: all(0, b.ch, b.ne), s: BC.resolveBook(b.n) >= 39 ? 'New Testament' : 'Old Testament' }));
+  return info.meta.books.map(b => ({ n: b.n, ch: b.ch, nums: b.ne || Array.from({ length: b.ch }, (_, i) => i + 1), s: BC.resolveBook(b.n) >= 39 ? 'New Testament' : 'Old Testament' }));
 }
 async function bookChapters(acct, info, b) {
-  if (info.tanakh) { const d = await tanakhData(); return { en: d.en[b].c, he: d.he[b].c }; }
-  if (info.builtin) { await loadScript(info.file); return { en: BibleData[info.id].books[b].c }; }
   const m = info.meta.books[b]?.m;
   if (!m) return { en: [] };
   if (!bookTexts.has(m)) { const r = (await loadMedia(acct, m))[0]; bookTexts.set(m, r ? r.c : []); }
   return { en: bookTexts.get(m) };
 }
-const bibleInfos = ctx => [...BUNDLED.map(x => ({ ...x, builtin: true })), ...ctx.apps.bible.map(m => ({ id: m.id, name: m.name, meta: m }))];
+const bibleInfos = ctx => ctx.apps.bible.map(m => ({ id: m.id, name: m.name, meta: m }));
 const findBible = (ctx, id) => bibleInfos(ctx).find(i => i.id === id);
 
 // Reading position, display choices, highlights and notes: one small record per account.
@@ -57,8 +41,8 @@ function bibleLibrary(acct, ctx, back) {
   const st = bibleState(acct, ctx);
   const cont = st.pos && findBible(ctx, st.pos.split(':')[0]);
   const card = info => h('div', { class: 'bible-card' },
-    h('a', { class: 'bible-open', href: '#/apps/bible/' + info.id }, h('b', {}, info.name), h('span', { class: 'muted' }, info.builtin ? `Included. ${info.note}. Public domain.` : `Yours. ${info.meta.verses.toLocaleString()} verses.`)),
-    !info.builtin && h('button', { class: 'btn danger', onclick: async () => {
+    h('a', { class: 'bible-open', href: '#/apps/bible/' + info.id }, h('b', {}, info.name), h('span', { class: 'muted' }, `${info.meta.verses.toLocaleString()} verses`)),
+    h('button', { class: 'btn danger', onclick: async () => {
       if (!confirm(`Remove "${info.name}" from this device? You can import the file again later.`)) return;
       for (const b of info.meta.books) { await deleteMedia(acct, b.m); bookTexts.delete(b.m); }
       await appDelete(info.id); toast('Removed.'); render(true);
@@ -67,7 +51,7 @@ function bibleLibrary(acct, ctx, back) {
   file.addEventListener('change', () => { const fs = [...file.files]; file.value = ''; if (fs.length) importBible(acct, fs); });
   return [back('Bible'), h('div', { class: 'app-pad' },
     cont && h('a', { class: 'btn primary', href: '#/apps/bible/' + st.pos, style: 'display:inline-block;margin-bottom:12px' }, 'Continue reading'),
-    h('div', { class: 'bible-list' }, bibleInfos(ctx).map(card)),
+    h('div', { class: 'bible-list' }, bibleInfos(ctx).length ? bibleInfos(ctx).map(card) : emptyState('No Bible yet', 'Anti-Social includes no Bible text. Import a file of your own, so it is exactly the edition you trust.')),
     h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: () => file.click() }, 'Import a Bible file'), file,
       Object.keys(st.marks).length > 0 && h('a', { class: 'btn', href: '#/apps/bible/marks' }, `Highlights and notes (${Object.keys(st.marks).length})`)),
     h('p', { class: 'fine', style: 'padding:12px 0 0' }, 'Bring your own: USFM, OSIS XML, JSON, or plain text lines like "John 3:16 For God so loved...". Only import a Bible you have the right to use. Anti-Social includes only public-domain text, and the NIV, ESV and most modern versions are not.'))];
@@ -118,7 +102,7 @@ function bibleBookList(acct, ctx, back, info) {
     results.append(h('p', { class: 'muted' }, 'Searching...'));
     const books = await bibleBooks(info), heb = /[֐-׿]/.test(text);
     const all = [];
-    for (let i = 0; i < books.length; i++) { const t = await bookChapters(acct, info, i); all.push({ c: heb && t.he ? t.he : t.en }); }
+    for (let i = 0; i < books.length; i++) { const t = await bookChapters(acct, info, i); all.push({ c: t.en }); }
     const hits = BC.search(all, text, 100, heb ? BC.noMarks : undefined);
     results.replaceChildren(...(hits.length ? [h('p', { class: 'fine', style: 'padding:4px 0' }, hits.length >= 100 ? 'Showing the first 100.' : plural(hits.length, 'match').replace('matchs', 'matches')),
       ...hits.map(x => h('a', { class: 'bible-hit', href: `#/apps/bible/${info.id}:${x.b}:${x.c}` }, h('b', {}, `${books[x.b].n} ${x.c}:${x.v}`), h('span', { dir: heb ? 'rtl' : 'ltr' }, x.text)))] : [h('p', { class: 'muted' }, 'Nothing matches.')]));
@@ -128,7 +112,7 @@ function bibleBookList(acct, ctx, back, info) {
     const groups = [...new Set(books.map(b => b.s))];
     box.replaceChildren(h('div', { class: 'app-row' }, q, h('button', { class: 'btn', onclick: runSearch }, 'Search')), results,
       ...groups.map(g => h('section', { class: 'bible-group' }, h('h3', {}, g), h('div', { class: 'bible-books' },
-        books.map((b, i) => b.s === g && h('a', { class: 'btn', href: `#/apps/bible/${info.id}:${i}:1` }, b.n, b.h && h('span', { class: 'he', lang: 'he' }, b.h)))))));
+        books.map((b, i) => b.s === g && h('a', { class: 'btn', href: `#/apps/bible/${info.id}:${i}:1` }, b.n))))));
   }).catch(() => box.replaceChildren(h('p', { class: 'err' }, 'Could not load this Bible.')));
   return [back(info.name), box];
 }
@@ -142,9 +126,9 @@ function bibleReader(acct, ctx, back, info, b, c) {
     const books = await bibleBooks(info);
     if (!(b >= 0 && b < books.length) || !books[b].nums.includes(c)) { box.replaceChildren(emptyState('Not found', 'That chapter does not exist.')); return; }
     const txt = await bookChapters(acct, info, b);
-    const en = txt.en[c - 1] || [], he = txt.he ? txt.he[c - 1] || [] : null;
+    const en = txt.en[c - 1] || [];
+    const rtl = /[\u0590-\u05ff]/.test(en.find(Boolean) || '');   // a Hebrew (or similar) Bible reads right to left
     st.pos = `${info.id}:${b}:${c}`; saveBibleState(acct, st);
-    const mode = he ? st.mode : 'en';
     const set = (k, v) => { st[k] = v; saveBibleState(acct, st, true).then(() => render(true)); };
     const flat = books.flatMap((x, i) => x.nums.map(n => [i, n])), at = flat.findIndex(([i, n]) => i === b && n === c);
     const pick = k => flat[k] ? { b: flat[k][0], c: flat[k][1] } : null;
@@ -152,21 +136,17 @@ function bibleReader(acct, ctx, back, info, b, c) {
     const nav = (to, label) => to ? h('a', { class: 'btn', href: `#/apps/bible/${info.id}:${to.b}:${to.c}` }, label) : h('span');
     const sel = h('select', { 'aria-label': 'Chapter' }, books[b].nums.map(n => h('option', { value: n }, 'Chapter ' + n)));
     sel.value = c; sel.addEventListener('change', () => go(`/apps/bible/${info.id}:${b}:${sel.value}`));
-    const seg = (v, label) => h('button', { class: 'btn' + (mode === v ? ' primary' : ''), onclick: () => set('mode', v) }, label);
-    const verses = Array.from({ length: Math.max(en.length, he ? he.length : 0) }, (_, i) => {
+    const verses = Array.from({ length: en.length }, (_, i) => {
       const v = i + 1, mk = st.marks[keyOf(v)];
-      if (!en[i] && !(he && he[i])) return null;   // a verse some editions leave out
-      const lines = [];
-      if (mode !== 'he') lines.push(h('span', { class: 'v-en' }, en[i] || ''));
-      if (he && mode !== 'en') lines.push(h('span', { class: 'v-he', lang: 'he', dir: 'rtl' }, he[i] || ''));
+      if (!en[i]) return null;   // a verse some editions leave out
       return h('div', { class: 'verse' + (mk && mk.hl !== undefined ? ' hl' : ''), role: 'button', tabindex: '0', style: mk && mk.hl !== undefined ? `--hl:${HL_COLORS[mk.hl] || HL_COLORS[0]}` : '', 'aria-label': `Verse ${v}`,
-        onclick: () => verseMenu(acct, st, info, books, b, c, v, en[i], he && he[i], keyOf(v)),
+        onclick: () => verseMenu(acct, st, info, books, b, c, v, en[i], rtl, keyOf(v)),
         onkeydown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } } },
-        h('sup', {}, String(v)), h('div', {}, ...lines), mk && mk.note && h('div', { class: 'v-note' }, icon('notes'), ' ', mk.note));
+        h('sup', {}, String(v)), h('div', { class: rtl ? 'v-he' : 'v-en', lang: rtl ? 'he' : undefined, dir: rtl ? 'rtl' : undefined }, en[i]), mk && mk.note && h('div', { class: 'v-note' }, icon('notes'), ' ', mk.note));
     });
     box.replaceChildren(
-      h('div', { class: 'bible-bar' }, h('a', { class: 'bible-title', href: '#/apps/bible/' + info.id }, books[b].n + ' ' + c, books[b].h && h('span', { class: 'he', lang: 'he' }, books[b].h)), sel,
-        h('div', { class: 'btnrow' }, he && [seg('en', 'English'), seg('he', 'עברית'), seg('both', 'Both')],
+      h('div', { class: 'bible-bar' }, h('a', { class: 'bible-title', href: '#/apps/bible/' + info.id }, books[b].n + ' ' + c), sel,
+        h('div', { class: 'btnrow' },
           h('button', { class: 'btn', 'aria-label': 'Smaller text', disabled: st.size <= 0.8, onclick: () => set('size', Math.round((st.size - 0.1) * 10) / 10) }, 'A-'),
           h('button', { class: 'btn', 'aria-label': 'Bigger text', disabled: st.size >= 1.8, onclick: () => set('size', Math.round((st.size + 0.1) * 10) / 10) }, 'A+'))),
       h('div', { class: 'verses', style: `font-size:${Math.max(0.8, Math.min(1.8, st.size || 1))}em` }, verses.some(Boolean) ? verses.filter(Boolean) : emptyState('Empty chapter', 'There is no text here.')),
@@ -176,7 +156,7 @@ function bibleReader(acct, ctx, back, info, b, c) {
   return [back(info.name), box];
 }
 
-function verseMenu(acct, st, info, books, b, c, v, enText, heText, key) {
+function verseMenu(acct, st, info, books, b, c, v, enText, rtl, key) {
   const mk = st.marks[key] || {};
   let hl = mk.hl;
   const note = h('textarea', { rows: 3, placeholder: 'A note, only for you', 'aria-label': 'Note' }, mk.note || '');
@@ -184,14 +164,14 @@ function verseMenu(acct, st, info, books, b, c, v, enText, heText, key) {
   const label = `${books[b].n} ${c}:${v}`;
   const close = modal(h('div', {},
     h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => close() }, icon('x')), h('b', {}, label)),
-    h('div', { class: 'mp' }, h('p', {}, enText || ''), heText && h('p', { lang: 'he', dir: 'rtl', class: 'v-he' }, heText), h('div', { class: 'field' }, h('span', {}, 'Highlight'), dots), fieldEl('Note', note),
+    h('div', { class: 'mp' }, h('p', { class: rtl ? 'v-he' : '', dir: rtl ? 'rtl' : undefined }, enText || ''), h('div', { class: 'field' }, h('span', {}, 'Highlight'), dots), fieldEl('Note', note),
       h('div', { class: 'btnrow' },
         h('button', { class: 'btn primary', onclick: async () => {
           const n = note.value.trim().slice(0, 5000);
           if (hl === undefined && !n) delete st.marks[key]; else st.marks[key] = { ...(hl !== undefined ? { hl } : {}), ...(n ? { note: n } : {}) };
           await saveBibleState(acct, st, true); close(); render(true);
         } }, 'Save'),
-        h('button', { class: 'btn', onclick: async () => { try { await navigator.clipboard.writeText(`${label} ${enText || ''}${heText ? '\n' + heText : ''}`); toast('Copied.'); } catch { toast('Could not copy.'); } } }, 'Copy')))));
+        h('button', { class: 'btn', onclick: async () => { try { await navigator.clipboard.writeText(`${label} ${enText || ''}`); toast('Copied.'); } catch { toast('Could not copy.'); } } }, 'Copy')))));
 }
 
 function bibleMarks(acct, ctx, back) {
