@@ -40,6 +40,14 @@ const ICONS = {
   plus: '<path d="M12 5v14M5 12h14"/>',
   check: '<path d="M5 13l4 4L19 7"/>',
   globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  calc: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h1M12 12h1M16 12h0M8 16h1M12 16h1M16 16h0"/>',
+  wallet: '<path d="M3 7a2 2 0 0 1 2-2h13v4"/><path d="M3 7v10a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2z"/><circle cx="16.5" cy="14" r="1"/>',
+  notes: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>',
+  book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>',
+  pin: '<path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3z"/>',
+  box: '<path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
   camera: '<path d="M3 8h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13" r="4"/>',
 };
 function icon(name) {
@@ -203,15 +211,18 @@ async function updateAccount(id, fields) {
   const cur = await unseal(vault.key, raw.profile, 'profile:' + id);
   return db.put('accounts', { ...raw, profile: await seal(vault.key, { ...cur, ...fields }, 'profile:' + id) });
 }
+// Records with an `m` token are bulky media (item photos). The token is random and says only which
+// records belong together; what they are stays inside the ciphertext. Normal loads skip them, so
+// big photos are never held in memory unless something asks for them.
 async function savePost(acct, post) {
   if (!acct.vault) return db.put('posts', post);
   const { iv, ct } = await seal(vault.key, post, `post:${acct.id}:${post.id}`);
   postCache.delete(post.id);
-  return db.put('posts', { id: post.id, accountId: acct.id, v: 1, iv, ct });
+  return db.put('posts', { id: post.id, accountId: acct.id, v: 1, iv, ct, ...(post.m ? { m: post.m } : {}) });
 }
-async function loadPosts(acct) {
-  const raw = await db.postsOf(acct.id);
-  if (!acct.vault) return raw;
+async function loadPosts(acct, opts = {}) {
+  const raw = (await db.postsOf(acct.id)).filter(r => !r.m || opts.media || r.m === opts.m);
+  if (!acct.vault) { raw.bad = 0; return raw; }
   const out = [];
   out.bad = 0;
   for (const r of raw) {
@@ -224,10 +235,23 @@ async function loadPosts(acct) {
   }
   return out;
 }
+// Just the media records that share one token (an item's full-size photos), decrypted on demand and never cached.
+async function loadMedia(acct, token) {
+  const raw = (await db.postsOf(acct.id)).filter(r => r.m && r.m === token);
+  if (!acct.vault) return raw;
+  const out = [];
+  for (const r of raw) { try { out.push(await unseal(vault.key, r, `post:${acct.id}:${r.id}`)); } catch { /* skip unreadable */ } }
+  return out;
+}
+async function deleteMedia(acct, token) {
+  if (!token) return;
+  for (const r of (await db.postsOf(acct.id)).filter(x => x.m === token)) await db.del('posts', r.id);
+}
+
 // Re-encrypt the whole account (and every post) under a new passcode, in a single transaction,
 // so a crash can never leave half the posts under the old key.
 async function rekeyAccount(acct, pass) {
-  const posts = await loadPosts(acct);
+  const posts = await loadPosts(acct, { media: true });
   if (posts.bad) throw new Error('unreadable posts');
   const raw = await db.get('accounts', acct.id);
   const { key, meta } = await makeVault(acct.id, pass);
@@ -236,7 +260,7 @@ async function rekeyAccount(acct, pass) {
   const recs = [];
   for (const p of posts) {
     const { iv, ct } = await seal(key, p, `post:${acct.id}:${p.id}`);
-    recs.push({ id: p.id, accountId: acct.id, v: 1, iv, ct });
+    recs.push({ id: p.id, accountId: acct.id, v: 1, iv, ct, ...(p.m ? { m: p.m } : {}) });
   }
   await db.batch([account], recs);
   vault.id = acct.id; vault.key = key; postCache.clear();
@@ -841,7 +865,7 @@ function passcodeModal(acct) {
 }
 
 async function removeVault(acct) {
-  const posts = await loadPosts(acct);
+  const posts = await loadPosts(acct, { media: true });
   if (posts.bad) throw new Error('unreadable posts');
   const raw = await db.get('accounts', acct.id);
   const account = { id: raw.id, handle: raw.handle, createdAt: raw.createdAt, salt: null, hash: null,
@@ -1229,7 +1253,7 @@ async function wipeEverything() {
 async function exportData(acct) {
   if (acct.vault && !confirm('The export file is NOT encrypted. Anyone who gets it can read your posts. Export anyway?')) return;
   const { salt, hash, vault: _v, profile: _p, locked, ...account } = acct;
-  const posts = await loadPosts(acct);
+  const posts = await loadPosts(acct, { media: true });
   const blob = new Blob([JSON.stringify({ app: 'anti-social', exportedAt: new Date().toISOString(), account, posts }, null, 2)], { type: 'application/json' });
   const a = h('a', { href: URL.createObjectURL(blob), download: 'anti-social-export.json' });
   document.body.append(a); a.click(); a.remove();
@@ -1399,11 +1423,11 @@ async function authView() {
 
 /* ---------- shell ---------- */
 function shell(acct, route, main) {
-  const link = (path, name, label) => h('a', { href: '#' + path, class: route === name ? 'active' : '', 'aria-label': label, 'aria-current': route === name ? 'page' : null }, icon({ profile: 'user', explore: 'search', notifications: 'bell' }[name] || name), h('span', {}, label));
+  const link = (path, name, label) => h('a', { href: '#' + path, class: route === name ? 'active' : '', 'aria-label': label, 'aria-current': route === name ? 'page' : null }, icon({ profile: 'user', explore: 'search', notifications: 'bell', apps: 'grid' }[name] || name), h('span', {}, label));
   return h('div', { class: 'shell' },
     h('nav', { class: 'nav', 'aria-label': 'Main' },
       h('a', { class: 'brand', href: '#/', 'aria-label': 'Anti-Social home' }, icon('logo')),
-      link('/', 'home', 'Home'), link('/explore', 'explore', 'Explore'), link('/notifications', 'notifications', 'Notifications'),
+      link('/', 'home', 'Home'), link('/apps', 'apps', 'Apps'), link('/explore', 'explore', 'Explore'), link('/notifications', 'notifications', 'Notifications'),
       link('/profile', 'profile', 'Profile'), link('/settings', 'settings', 'Settings'),
       h('button', { class: 'postbtn', 'aria-label': 'Post', onclick: () => composeModal(acct) }, icon('compose'), h('span', {}, 'Post')),
       h('button', { class: 'me', 'aria-haspopup': 'menu', 'aria-label': 'Accounts', onclick: e => openAccountMenu(e.currentTarget, acct) }, avatar(acct, 'sm'),
@@ -1441,16 +1465,18 @@ async function render(keepScroll = false) {
     currentAcct = acct;
     if (all.bad) console.warn(`${all.bad} post(s) could not be decrypted`);
     // Your likes, reposts and follows of generated accounts live beside your posts but are not posts.
-    const posts = all.filter(p => p.kind !== 'ghost' && p.kind !== 'cast');
+    const posts = all.filter(p => !p.kind);                 // real posts only; everything else is a record of some other kind
+    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [] };
+    for (const p of all) if (apps[p.kind]) apps[p.kind].push(p);
     castMap = new Map(all.filter(p => p.kind === 'cast').map(p => [p.ref, p]));
     const reactions = new Map(all.filter(p => p.kind === 'ghost').map(p => [p.target, p]));
-    const ctx = { posts, reactions, following: [...reactions.values()].filter(x => x.followed).length, byId: new Map(posts.map(p => [p.id, p])), replyCount: new Map() };
+    const ctx = { posts, apps, reactions, following: [...reactions.values()].filter(x => x.followed).length, byId: new Map(posts.map(p => [p.id, p])), replyCount: new Map() };
     for (const p of posts) if (p.parentId) ctx.replyCount.set(p.parentId, (ctx.replyCount.get(p.parentId) || 0) + 1);
 
-    const [, r = '', arg] = location.hash.split('/');
-    const route = { notifications: 'notifications', explore: 'explore', profile: 'profile', settings: 'settings', post: 'post', u: 'u' }[r] || 'home';
+    const [, r = '', arg, arg2] = location.hash.split('/');
+    const route = { notifications: 'notifications', explore: 'explore', profile: 'profile', settings: 'settings', post: 'post', u: 'u', apps: 'apps' }[r] || 'home';
     const main = {
-      home: () => homeView(acct, ctx), explore: () => exploreView(acct, ctx), notifications: notificationsView, u: () => ghostProfileView(acct, ctx, arg),
+      home: () => homeView(acct, ctx), apps: () => appsView(acct, ctx, arg, arg2), explore: () => exploreView(acct, ctx), notifications: notificationsView, u: () => ghostProfileView(acct, ctx, arg),
       profile: () => profileView(acct, ctx), settings: () => { if (arg === 'security' || arg === 'characters') settingsTab = arg; return settingsView(acct); }, post: () => postView(acct, ctx, arg),
     }[route]();
     document.title = route === 'home' ? 'Home / Anti-Social' : route[0].toUpperCase() + route.slice(1) + ' / Anti-Social';

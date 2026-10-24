@@ -1,6 +1,6 @@
 {
   "name": "anti-social-android",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "description": "Anti-Social for Android (Capacitor wrapper around ../www)",
   "scripts": {

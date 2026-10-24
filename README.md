@@ -6,7 +6,7 @@
 
 ## Status: full featured and complete
 
-Anti-Social v0.5.0 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.6.0 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android by hand through v0.5.0, including Characters; Linux by hand through v0.4.0, with v0.5.0 covered by automated tests and a run of the desktop app):
 - **Android:** installed and used on a real phone, including account switching, Populated mode, the storage limit and Characters.
@@ -38,6 +38,13 @@ is a flat, unblinking **0**.
 - **Duress PIN** (needs the vault): a second PIN that looks like a normal unlock but silently erases everything
 - **Populated mode (optional):** a procedurally generated crowd fills Home, Explore and the side column, in the spirit of No Man's Sky. One seed makes the whole world, nothing is saved for it, and nobody in it can ever reply, like, follow or message you. Every generated profile carries a "Procedurally generated" tag above its banner. Share a seed and a friend sees the same crowd
 - **Characters:** Settings, Characters lets you shape the population. Add people of your own (name, handle, bio, avatar, banner, follower numbers, how often they post, how they sound, or write their posts yourself), and edit anyone in the generated crowd with **Edit this person**: their look changes everywhere at once, and a new posting style applies to what they post from then on. Show your cast alongside the crowd or on its own. Custom characters are tagged "Custom character · made by you", edited strangers "Procedurally generated · edited by you", and none of them can ever respond to anything
+- **Apps (offline, between Home and Explore):** be anti-social productively. Six small tools that never touch the network:
+  - **Calendar:** month view, events with times, colors and weekly/monthly/yearly repeats, and dots for days you wrote in the diary
+  - **Calculator:** plain and scientific, typed or tapped, with history. A real parser, no `eval`, so it can't run code. `50 + 10%` is 55
+  - **Banking:** a notebook, not a bank. Accounts, receipts (with photos), monthly in/out and category bars, CSV export, plus tip and split, tax and discount, percent change, loan payment, savings growth and a manual currency converter. Money is stored in whole cents, so it never drifts
+  - **Household:** a home inventory. Log what you own, where it lives, what it cost, serial numbers and warranties, and add up to six photos per item (or take one with your phone camera). Totals by room and category, an estimate of what it is worth now, warranty reminders, a gallery grouped by room, a swipeable photo viewer and an insurance-friendly CSV
+  - **Notes:** pin, search, autosave. **No length limit** on the text
+  - **Diary:** one page a day with a mood, a gentle prompt, a streak, search and no length limit
 - **Multiple accounts:** click your account at the bottom left on desktop, or your avatar at the top left on a phone, to switch or add one, with a joke about it
 - Light, dark or auto theme
 - Export your data as JSON, or delete it all
@@ -45,6 +52,7 @@ is a flat, unblinking **0**.
 
 ## Version history
 
+- **v0.6.0:** Apps: Calendar, Calculator, Banking, Household (with photos and a gallery), Notes and Diary, all offline
 - **v0.5.0:** Characters: edit anyone in the population, add people of your own, a searchable Population list, eight posting styles
 - **v0.4.0:** Populated mode, and a posting limit you control with a storage meter
 - **v0.3.x:** account switching on desktop and phone, with jokes
@@ -107,6 +115,8 @@ Destroying data you are legally required to keep (a court order, a preservation 
 be a crime, and so can lying to officers about what a PIN does. This is a privacy tool, not legal advice.
 
 **Populated mode.** The crowd is calculated on screen from a short seed code (same seed, same people) and is never written to disk, so it uses no storage. Generated accounts are scenery: they have no way to respond to anything. You can reply to, like and follow them, and nothing ever comes back. Your own replies, likes and follows are saved like any post, so with a passcode they are encrypted too, including which stranger you reacted to.
+
+**Apps.** Everything in Apps is saved like your posts, so with a passcode it is encrypted too: notes, diary entries, events, receipts, household items and their photos. Household photos are stored as separate records tied to their item by a random token. The token shows that some records belong together, nothing about what they are. Apps use only your own device and count toward your storage limit. The Banking app is a notebook and connects to nothing.
 
 **Characters.** Your characters and your edits to generated people are saved like your posts, so with a passcode they are encrypted too: names, bios, pictures and the fact that they exist. Characters are private to the account that made them. Images you add count toward your storage limit. There is no way to share a character with anyone else; they are included only in your own data export. A custom character never carries the "procedurally generated" label, so it can never pass as a generated stranger.
 
