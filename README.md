@@ -15,7 +15,7 @@ Anti-Social v0.7.0 is feature complete. It is a finished app, not a work in prog
 - **Linux desktop:** installed and used on a real Linux desktop, including account switching, Populated mode, Characters, the storage limit and the Apps.
 - **Windows desktop:** built and packaged, but **not tested on a real Windows machine**, because the developer runs Linux. **Windows testers wanted:** please try the installer or portable `.exe` and report what you find by opening an issue on this repo. Windows may show a "protected your PC" warning because the app isn't signed with a paid certificate: choose More info, then Run anyway.
 
-The v0.4.0 Android APK was scanned on VirusTotal with 0 detections. Check the SHA-256 on the release page against any file you download.
+The v0.7.0 Android APK was scanned on VirusTotal with 0 detections. Check the SHA-256 on the release page against any file you download.
 
 Sign up. Post your hottest takes. Post your nudes. Post your 3 a.m. thoughts about
 whether a hot dog is a sandwich.
