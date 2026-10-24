@@ -465,7 +465,7 @@ function appsHome(acct, ctx) {
     ['groceries', 'cart', 'Groceries', (() => { const n = A.groc.filter(i => !i.archived && !i.checked).length; return n ? `${n} to buy` : 'Nothing to buy'; })()],
     ['chores', 'tasks', 'Chores', (() => { const act = A.chore.filter(c => !c.archived); if (!act.length) return 'No chores yet'; const d = act.filter(c => ['overdue', 'today'].includes(AC.choreStatus(c, today))).length; return d ? `${d} to do today` : 'All caught up'; })()],
     ['notes', 'notes', 'Notes', A.note.length ? plural(A.note.length, 'note') : 'Nothing written yet'],
-    ['bible', 'scroll', 'Bible', A.bible.length ? `Tanakh and ${plural(A.bible.length, 'other')}` : 'Tanakh, plus your own'],
+    ['bible', 'scroll', 'Bible', A.bible.length ? `The whole Bible, plus ${A.bible.length} of yours` : 'The whole Bible, offline'],
     ['diary', 'book', 'Diary', st ? `${plural(st, 'day')} in a row` : dset.size ? plural(dset.size, 'entry').replace('entrys', 'entries') : 'A page for today'],
   ];
   cards.splice(0, cards.length, ...cards.filter(c => !hidden.has(c[0])));

@@ -6,7 +6,7 @@
 
 ## Status: full featured and complete
 
-Anti-Social v0.9.0 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.9.1 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (the v0.7.1 drag-to-reorder and v0.8.0 themes and v0.9.0 Bible are automated-test verified, awaiting a hand test); plus automated tests):
 - **Android:** installed and used on a real phone, including account switching, Populated mode, Characters, the storage limit and the Apps.
@@ -54,6 +54,7 @@ is a flat, unblinking **0**.
 
 ## Version history
 
+- **v0.9.1:** the Bible app now has the complete Bible (all 66 books, no empty chapters) in two public-domain versions, the World English Bible and the King James Version, alongside the Tanakh; imported Bibles skip chapters that have no text
 - **v0.9.0:** a Bible app (hidden until you turn it on in Settings): the whole Tanakh in Hebrew and the public-domain 1917 JPS English, side by side or one at a time, with search, highlights and notes; or import your own Bible file (USFM, OSIS, JSON, plain text). You can now show or hide any app and rename any of them (call Diary "Captain's Log" if you like)
 - **v0.8.0:** color themes (ten presets plus your own two-color custom theme, shareable as a tiny file) and your own picture as the app background, saved on your device and encrypted with your passcode; text is always kept readable
 - **v0.7.1:** drag the Apps around however you like (mouse drag, or touch and hold on a phone), or use Reorder mode with arrow buttons for keyboard and precision; per-account, with a Reset order button
@@ -146,4 +147,10 @@ Forks and modified versions are not made, reviewed or endorsed by the original a
 
 ## Texts and credits
 
-The included Tanakh is public domain: the English is the 1917 Jewish Publication Society translation, and the Hebrew (with vowel marks) is the Westminster Leningrad Codex text, both as published in the open [Sefaria export](https://github.com/Sefaria/Sefaria-Export). `tools/fetch-tanakh.py` rebuilds the data files and checks the license of each one. Anti-Social does not include the NIV or any other copyrighted Bible. If you import one, you are responsible for having the right to use it.
+The included Bibles are public domain:
+
+- **World English Bible** (whole Bible, modern English) from [TehShrike/world-english-bible](https://github.com/TehShrike/world-english-bible). Some editions leave out a handful of verses (for example Luke 17:36); those are simply not shown.
+- **King James Version** (whole Bible, 1769 text) from [thiagobodruk/bible](https://github.com/thiagobodruk/bible). The KJV is public domain in most of the world; in the United Kingdom it is under a perpetual Crown patent that allows it to be read and shared freely.
+- **Tanakh**: the English is the 1917 Jewish Publication Society translation, and the Hebrew (with vowel marks) is the Westminster Leningrad Codex text, both as published in the open [Sefaria export](https://github.com/Sefaria/Sefaria-Export). It uses Jewish chapter numbering.
+
+`tools/fetch-bibles.py` and `tools/fetch-tanakh.py` rebuild the data files. Anti-Social does not include the NIV or any other copyrighted Bible. If you import one, you are responsible for having the right to use it.
