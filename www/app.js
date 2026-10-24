@@ -45,6 +45,7 @@ const ICONS = {
   calc: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h1M12 12h1M16 12h0M8 16h1M12 16h1M16 16h0"/>',
   wallet: '<path d="M3 7a2 2 0 0 1 2-2h13v4"/><path d="M3 7v10a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2z"/><circle cx="16.5" cy="14" r="1"/>',
   notes: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>',
+  scroll: '<path d="M6 4h12v13a3 3 0 0 0 3 3H9a3 3 0 0 1-3-3z"/><path d="M6 4a2 2 0 0 0-2 2v1h2M10 9h6M10 13h6"/>',
   book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>',
   pin: '<path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3z"/>',
   cart: '<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11l2-8H6"/>',
@@ -1201,6 +1202,12 @@ function settingsView(acct, ctxBg) {
         h('button', { class: 'btn primary', onclick: () => bgFile.click() }, bgRec ? 'Change picture' : 'Choose a picture'),
         bgRec && h('button', { class: 'btn', onclick: async () => { await appDelete(bgRec.id); toast('Background removed.'); render(true); } }, 'Remove'), bgFile),
       bgRec && h('label', { class: 'colorpick wide' }, h('span', {}, 'More picture'), veil, h('span', {}, 'More color'))),
+    h('section', {}, h('h3', {}, 'Apps'), h('p', {}, 'Choose which apps show up in Apps. Hiding one keeps its data; it all comes back when you turn it on.'),
+      h('div', { class: 'toggles' }, APP_LIST.map(([id, label]) => {
+        const box = h('input', { type: 'checkbox', checked: !hiddenApps(acct).has(id), 'aria-label': 'Show ' + label });
+        box.addEventListener('change', () => { const hid = hiddenApps(acct); if (box.checked) hid.delete(id); else hid.add(id); ls(hiddenKey(acct), JSON.stringify([...hid])); toast(`${label} is ${box.checked ? 'shown' : 'hidden'}.`); });
+        return h('label', { class: 'check' }, box, ' ' + label);
+      }))),
     populatedSection(),
     storageSection(),
     installPrompt && h('section', {}, h('h3', {}, 'Install'), h('p', {}, 'Put Anti-Social on your home screen or desktop. It works offline, because there is nothing to connect to.'),
@@ -1544,7 +1551,7 @@ async function render(keepScroll = false) {
     if (all.bad) console.warn(`${all.bad} post(s) could not be decrypted`);
     // Your likes, reposts and follows of generated accounts live beside your posts but are not posts.
     const posts = all.filter(p => !p.kind);                 // real posts only; everything else is a record of some other kind
-    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [] };
+    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [] };
     for (const p of all) if (apps[p.kind]) apps[p.kind].push(p);
     castMap = new Map(all.filter(p => p.kind === 'cast').map(p => [p.ref, p]));
     const reactions = new Map(all.filter(p => p.kind === 'ghost').map(p => [p.target, p]));

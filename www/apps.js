@@ -456,6 +456,7 @@ function appsHome(acct, ctx) {
   const dset = new Set(A.diary.filter(d => (d.body || '').trim()).map(d => d.date));
   const st = AC.streak(dset, today);
   const total = A.acct.length ? AC.sum(A.acct.map(a => AC.balance(a.startCents, A.txn.filter(t => t.acctId === a.id)))) : null;
+  const hidden = hiddenApps(acct);
   const cards = [
     ['calendar', 'calendar', 'Calendar', todayN ? `${plural(todayN, 'event')} today` : 'Nothing today'],
     ['calc', 'calc', 'Calculator', 'Plain and scientific'],
@@ -464,8 +465,10 @@ function appsHome(acct, ctx) {
     ['groceries', 'cart', 'Groceries', (() => { const n = A.groc.filter(i => !i.archived && !i.checked).length; return n ? `${n} to buy` : 'Nothing to buy'; })()],
     ['chores', 'tasks', 'Chores', (() => { const act = A.chore.filter(c => !c.archived); if (!act.length) return 'No chores yet'; const d = act.filter(c => ['overdue', 'today'].includes(AC.choreStatus(c, today))).length; return d ? `${d} to do today` : 'All caught up'; })()],
     ['notes', 'notes', 'Notes', A.note.length ? plural(A.note.length, 'note') : 'Nothing written yet'],
+    ['bible', 'scroll', 'Bible', A.bible.length ? `Tanakh and ${plural(A.bible.length, 'other')}` : 'Tanakh, plus your own'],
     ['diary', 'book', 'Diary', st ? `${plural(st, 'day')} in a row` : dset.size ? plural(dset.size, 'entry').replace('entrys', 'entries') : 'A page for today'],
   ];
+  cards.splice(0, cards.length, ...cards.filter(c => !hidden.has(c[0])));
   // your own order (saved per account on this device), with anything new tacked on the end
   document.querySelectorAll('.app-drag-clone').forEach(x => x.remove());
   let saved = null;
@@ -500,6 +503,14 @@ function appsHome(acct, ctx) {
 
 /* ---- rearranging the launcher: drag with a mouse, or touch and hold on a phone ---- */
 let appsReorder = false;
+// Every app, for the Settings list that shows or hides them. The Bible starts hidden; turn it on if you want it.
+const APP_LIST = [['calendar', 'Calendar'], ['calc', 'Calculator'], ['bank', 'Banking'], ['inventory', 'Household'], ['groceries', 'Groceries'], ['chores', 'Chores'], ['notes', 'Notes'], ['bible', 'Bible'], ['diary', 'Diary']];
+const hiddenKey = acct => 'as.hiddenapps.' + acct.id;
+function hiddenApps(acct) {
+  let v = null;
+  try { v = JSON.parse(ls(hiddenKey(acct)) || 'null'); } catch { /* use the default */ }
+  return new Set(Array.isArray(v) ? v.filter(x => typeof x === 'string') : ['bible']);
+}
 const appOrderKey = acct => 'as.apporder.' + acct.id;
 function enableAppDrag(grid, acct) {
   let st = null, suppress = false;
@@ -585,6 +596,7 @@ function appsView(acct, ctx, sub, arg) {
     case 'chores': return choresView(acct, ctx, back);
     case 'notes': return notesView(acct, ctx, back, arg);
     case 'diary': return diaryView(acct, ctx, back, arg);
+    case 'bible': return bibleView(acct, ctx, back, arg);
     default: return appsHome(acct, ctx);
   }
 }

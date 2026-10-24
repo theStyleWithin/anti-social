@@ -1,6 +1,6 @@
 // Cache the app shell so Anti-Social works offline. There is no network API to call.
-const CACHE = 'anti-social-v6';
-const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'theme.js', 'ghost.js', 'apps.js', 'manifest.webmanifest',
+const CACHE = 'anti-social-v7';
+const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'theme.js', 'ghost.js', 'apps.js', 'bible.js', 'bibleapp.js', 'manifest.webmanifest',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {

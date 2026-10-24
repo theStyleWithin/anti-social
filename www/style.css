@@ -63,7 +63,7 @@ svg { width: 1.25em; height: 1.25em; fill: none; stroke: currentColor; stroke-wi
   .main { padding-bottom: 0; }
 }
 @media (min-width: 1000px) {
-  .shell { grid-template-columns: 260px 600px 330px; }
+  .shell { grid-template-columns: 260px minmax(0, 600px) minmax(0, 330px); max-width: 1190px; }
   .nav { align-items: stretch; padding: 4px 12px 12px; }
   .nav .brand { width: 52px; }
   .nav a, .nav button.navbtn { width: auto; border-radius: 999px; justify-content: flex-start; padding: 0 20px 0 13px; font-size: 19px; align-self: flex-start; }
@@ -494,3 +494,29 @@ body.app-dragging * { user-select: none; -webkit-user-select: none; }
 html.has-bg body { background: transparent; }
 html.has-bg .main, html.has-bg .nav { background: color-mix(in srgb, var(--bg) var(--veil, 85%), transparent); }
 html.has-bg .main { backdrop-filter: blur(2px); }
+
+/* ---- Bible ---- */
+.bible-list { display: grid; gap: 8px; margin-bottom: 12px; }
+.bible-card { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; }
+.bible-open { flex: 1; display: flex; flex-direction: column; gap: 2px; color: var(--fg); }
+.bible-group h3 { margin: 16px 0 8px; }
+.bible-books { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.bible-books .btn { display: flex; justify-content: space-between; align-items: center; gap: 8px; text-align: left; }
+.he { font-family: "SBL Hebrew", "Ezra SIL", "Times New Roman", serif; direction: rtl; }
+.bible-bar { position: sticky; top: 53px; z-index: 4; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 16px; background: var(--bg); border-bottom: 1px solid var(--line); }
+.bible-title { font-size: 18px; font-weight: 700; color: var(--fg); display: flex; gap: 10px; align-items: baseline; flex: 1; min-width: 160px; }
+.bible-bar select { padding: 6px 10px; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 999px; }
+.verses { padding: 12px 16px; line-height: 1.7; }
+.verse { padding: 4px 6px; margin: 0 -6px; border-radius: 8px; cursor: pointer; }
+.verse:hover { background: var(--hover); }
+.verse.hl { background: var(--hl, #fde68a); color: #0f1419; }
+.verse sup { color: var(--muted); font-size: .65em; margin-right: 6px; font-weight: 700; }
+.verse.hl sup { color: #475569; }
+.v-he { display: block; direction: rtl; text-align: right; font-family: "SBL Hebrew", "Ezra SIL", "Times New Roman", serif; font-size: 1.25em; line-height: 1.9; }
+.v-en + .v-he { margin-top: 4px; }
+.v-note { margin-top: 4px; font-size: .85em; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+.verse.hl .v-note { color: #334155; }
+.bible-pager { display: flex; justify-content: space-between; padding: 8px 16px 24px; }
+.bible-hit { display: flex; flex-direction: column; gap: 2px; padding: 10px 4px; border-bottom: 1px solid var(--line); color: var(--fg); }
+.toggles { display: grid; gap: 4px; margin-top: 8px; }
+.check { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
