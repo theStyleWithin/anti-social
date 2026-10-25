@@ -4,7 +4,7 @@
 
 > get offline
 
-## Status: full featured and complete
+## Status: fully featured and complete
 
 Anti-Social v0.9.1 is feature complete. It is a finished app, not a work in progress.
 
