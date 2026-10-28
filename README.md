@@ -6,7 +6,7 @@
 
 ## Status: fully featured and complete
 
-Anti-Social v0.14.0 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.14.1 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (drag-to-reorder, themes, the Bible, Travel Log, Cookbook and the v0.12.0 account features are automated-test verified, awaiting a hand test; the Android file saver in v0.12.0 is new native code and has not yet been run on a real phone); plus automated tests):
 - **Android:** installed and used on a real phone, including account switching, Populated mode, Characters, the storage limit and the Apps.
@@ -54,6 +54,7 @@ is a flat, unblinking **0**.
 
 ## Version history
 
+- **v0.14.1:** in Chat Rooms the server now has its own name, separate from your account. It starts as "<you>'s Server"; right-click the name (or the server icon) to rename it, or use Rename server in its menu. Clear the name to go back to the default
 - **v0.14.0:** a second template, Classic Blue: a blue bar on top with a search box, a shortcuts column on the left (your apps are listed there too), a News Feed with an Update Status box, Like / Comment / Share links, a Timeline profile with a cover photo, and People You May Know on the right. Wording changes with it (Explore becomes Find Friends, Follow becomes Add Friend, Likes become Unlike when you press them) and times read the old way ("about an hour ago", "Yesterday at 3:04pm"). It has a light and a dark version and works with color themes
 - **v0.13.0:** Templates (Settings, above Color themes). Chat Rooms makes the app look like a chat server: a server rail, channels you can create, a chat column where posts become messages (oldest first, Enter to send), and a member list. In Populated mode the generated people become server members, and they only ever talk in #general, however many channels you add; your own channels hold only your messages. Wording changes too (Explore becomes Discover, Notifications becomes Inbox, Like becomes React). It is appearance only, your data does not change, and it combines with color themes
 - **v0.12.0:** accounts get more ways in and out. Import an account from a file on the create-account screen; Eject account (Settings, next to Export) saves everything to a file and takes the account off the device, and it comes back whenever you import the file; Continue as guest skips the handle and passcode (claim it as a real account later in Settings); and with two or more accounts you can hide one, then unhide it from the Hidden accounts list in Settings. On Android, exports now really save into Downloads (the old download link did nothing in the Android app), and so do the CSV and theme exports
