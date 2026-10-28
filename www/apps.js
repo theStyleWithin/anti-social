@@ -469,6 +469,8 @@ function appsHome(acct, ctx) {
     ['diary', 'book', 'Diary', st ? `${plural(st, 'day')} in a row` : dset.size ? plural(dset.size, 'entry').replace('entrys', 'entries') : 'A page for today'],
     ['travel', 'globe', 'Travel Log', (() => { const t = TravelCore.stats(A.place); return t.places ? `${plural(t.places, 'place')} · ${plural(t.countries, 'country').replace('countrys', 'countries')}` : 'Mark where you have been'; })()],
     ['cookbook', 'pot', 'Cookbook', A.recipe.length ? `${plural(A.recipe.length, 'recipe')} of yours, plus the classics` : 'American favorites, then the world'],
+    ['pokedex', 'pokeball', 'Pokédex', (() => { const m = PokeCore.normMarks(A.dexmark[0] && A.dexmark[0].marks).national || {}, c = Object.values(m).filter(v => v & 1).length; return c ? `${c} of 1025 caught` : 'Every Pokémon, and what you have caught'; })()],
+    ['pokebank', 'box', 'Pokémon Bank', A.pkbank.length ? `${plural(A.pkm.length, 'Pokémon')} in ${plural(A.pkbank.length, 'bank')}` : 'Boxes for the Pokémon you keep'],
   ];
   cards.splice(0, cards.length, ...cards.filter(c => !hidden.has(c[0])));
   // your own order (saved per account on this device), with anything new tacked on the end
@@ -506,7 +508,7 @@ function appsHome(acct, ctx) {
 /* ---- rearranging the launcher: drag with a mouse, or touch and hold on a phone ---- */
 let appsReorder = false;
 // Every app, for the Settings list that shows or hides them. The Bible starts hidden; turn it on if you want it.
-const APP_LIST = [['calendar', 'Calendar'], ['calc', 'Calculator'], ['bank', 'Banking'], ['inventory', 'Household'], ['groceries', 'Groceries'], ['chores', 'Chores'], ['notes', 'Notes'], ['bible', 'Bible'], ['diary', 'Diary'], ['travel', 'Travel Log'], ['cookbook', 'Cookbook']];
+const APP_LIST = [['calendar', 'Calendar'], ['calc', 'Calculator'], ['bank', 'Banking'], ['inventory', 'Household'], ['groceries', 'Groceries'], ['chores', 'Chores'], ['notes', 'Notes'], ['bible', 'Bible'], ['diary', 'Diary'], ['travel', 'Travel Log'], ['cookbook', 'Cookbook'], ['pokedex', 'Pokédex'], ['pokebank', 'Pokémon Bank']];
 const hiddenKey = acct => 'as.hiddenapps.' + acct.id;
 // Every app can be given your own name (per account). An empty name means the original one.
 const namesKey = acct => 'as.appnames.' + acct.id;
@@ -613,6 +615,8 @@ function appsView(acct, ctx, sub, arg) {
     case 'bible': return bibleView(acct, ctx, back, arg);
     case 'travel': return travelView(acct, ctx, back, arg);
     case 'cookbook': return cookbookView(acct, ctx, back, arg);
+    case 'pokedex': return pokedexView(acct, ctx, back, arg);
+    case 'pokebank': return pokebankView(acct, ctx, back);
     default: return appsHome(acct, ctx);
   }
 }

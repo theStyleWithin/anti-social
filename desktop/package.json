@@ -1,14 +1,14 @@
 {
   "name": "anti-social",
   "productName": "Anti-Social",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Social media with nobody on it.",
   "author": {
     "name": "Gamehopper",
     "email": "nobody@anti-social.invalid"
   },
   "homepage": "https://anti-social.invalid",
-  "license": "0BSD",
+  "license": "GPL-2.0-only",
   "private": true,
   "main": "main.js",
   "scripts": {

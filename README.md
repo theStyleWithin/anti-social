@@ -6,7 +6,7 @@
 
 ## Status: fully featured and complete
 
-Anti-Social v0.16.0 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.17.0 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (drag-to-reorder, themes, the Bible, Travel Log, Cookbook and the v0.12.0 account features are automated-test verified, awaiting a hand test; the Android file saver in v0.12.0 is new native code and has not yet been run on a real phone); plus automated tests):
 - **Android:** installed and used on a real phone, including account switching, Populated mode, Characters, the storage limit and the Apps.
@@ -38,7 +38,7 @@ is a flat, unblinking **0**.
 - **Duress PIN** (needs the vault): a second PIN that looks like a normal unlock but silently erases everything
 - **Populated mode (optional):** a procedurally generated crowd fills Home, Explore and the side column, in the spirit of No Man's Sky. One seed makes the whole world, nothing is saved for it, and nobody in it can ever reply, like, follow or message you. Every generated profile carries a "Procedurally generated" tag above its banner. Share a seed and a friend sees the same crowd
 - **Characters:** Settings, Characters lets you shape the population. Add people of your own (name, handle, bio, avatar, banner, follower numbers, how often they post, how they sound, or write their posts yourself), and edit anyone in the generated crowd with **Edit this person**: their look changes everywhere at once, and a new posting style applies to what they post from then on. Show your cast alongside the crowd or on its own. Custom characters are tagged "Custom character · made by you", edited strangers "Procedurally generated · edited by you", and none of them can ever respond to anything
-- **Apps (offline, between Home and Explore):** be anti-social productively. Eight small tools that never touch the network:
+- **Apps (offline, between Home and Explore):** be anti-social productively. Small tools that never touch the network:
   - **Calendar:** month view, events with times, colors and weekly/monthly/yearly repeats, and dots for days you wrote in the diary
   - **Calculator:** plain and scientific, typed or tapped, with history. A real parser, no `eval`, so it can't run code. `50 + 10%` is 55
   - **Banking:** a notebook, not a bank. Accounts, receipts (with photos), monthly in/out and category bars, CSV export, plus tip and split, tax and discount, percent change, loan payment, savings growth and a manual currency converter. Money is stored in whole cents, so it never drifts
@@ -47,6 +47,8 @@ is a flat, unblinking **0**.
   - **Chores:** Today, Upcoming, All and History tabs. Chores repeat on a schedule (daily, weekly, every N days, monthly on the same date...), either from the due date or from when you finish. Assign them to people, mark done, push to tomorrow, skip, undo, and see who has done what this month. No nagging: there are no reminders or notifications, just the lists
   - **Notes:** pin, search, autosave. **No length limit** on the text
   - **Diary:** one page a day with a mood, a gentle prompt, a streak, search and no length limit
+  - **Pokédex:** every Pokémon by game (Let's Go, FireRed/LeafGreen, Brilliant Diamond/Shining Pearl, Legends: Arceus, Sword/Shield and both expansions, Scarlet/Violet and both expansions, Legends: Z-A and its expansion) plus the National Pokédex. Search, a page for each Pokémon with its types, evolutions, where to find it and a shiny view, and a tracker for Caught, Shiny, Alpha and Shiny Alpha with bulk actions and multi-select. Data and pictures from pkDex (GPL-2.0)
+  - **Pokémon Bank:** banks of boxes in the layout of each game family (32 boxes of 30, 40 of 25 for Let's Go, and so on), in the spirit of pkHouse. Two panels side by side to move Pokémon between boxes and banks (click, pick up and put down, or drag), a details bar, search across every bank, sorting, and per-Pokémon details you type in (nature, ability, moves, IVs, EVs, trainer, notes). Import `.pk8`, `.pk9`, `.pa8`, `.pb7` and `.pk3` files from PKHeX or pkHouse and pkHouse bank files (`.bin`), and export them back unchanged. Trade by sending a card file (`.json`) to a friend. It never reads or changes a game's save file
 - **Multiple accounts:** click your account at the bottom left on desktop, or your avatar at the top left on a phone, to switch or add one, with a joke about it
 - Light, dark or auto theme
 - Export your data as JSON, or delete it all
@@ -54,6 +56,7 @@ is a flat, unblinking **0**.
 
 ## Version history
 
+- **v0.17.0:** two new apps, the Pokédex and the Pokémon Bank (see Apps). Because they include data and pictures from the GPL-2.0 projects pkDex and pkHouse, Anti-Social is now licensed under the GPL-2.0 (see NOTICE.md); releases up to 0.16.0 stay 0BSD
 - **v0.16.0:** the Android app can now run AI members on the phone itself: pick a small `.gguf` model file (1 to 3 billion parameters works best) in Settings, AI members; llama.cpp runs it on the processor, with no network. Away chat on a phone runs while the app is open and can fill in what you missed when you return. Also: the README now explains antivirus false alarms, and Android no longer includes app data in automatic cloud backups (so an API key is never copied there)
 - **v0.15.0:** AI members in Chat Rooms. Make characters (picture, banner, bio, personality, greeting) that live on your private server. They answer only when you write `@Name` spelled exactly, and always in their own private chat; you choose which channels each may speak in. Modes per channel: one at a time, taking turns, or away chat where they talk to each other while you are gone (with pace, an hourly cap, charging and battery guards). Character cards export and import (JSON, or a PNG with the card inside, compatible with other chat tools). Desktop apps run model files (.gguf) you download yourself, fully on your computer (llama.cpp, in its own process with no network access). Optional: use TokenReply instead (see below)
 - **v0.14.1:** in Chat Rooms the server now has its own name, separate from your account. It starts as "<you>'s Server"; right-click the name (or the server icon) to rename it, or use Rename server in its menu. Clear the name to go back to the default
@@ -166,7 +169,7 @@ as unreadable ciphertext in disk blocks until the system reuses them.
 
 ## License
 
-Anti-Social is created by Gamehopper. Licensed under [0BSD](LICENSE). Use it, copy it, change it, fork it, ship it. No credit needed, no questions asked.
+Anti-Social is created by Gamehopper and licensed under the [GNU GPL, version 2](LICENSE) (releases up to 0.16.0 were 0BSD). It includes Pokédex data and pictures from [pkDex](https://github.com/Insektaure/pkDex) and tables from [pkHouse](https://github.com/Insektaure/pkHouse), both GPL-2.0. See [NOTICE.md](NOTICE.md) for everything that comes from other projects. Pokémon is a trademark of Nintendo, Creatures, GAME FREAK and The Pokémon Company; this app is not affiliated with them.
 
 Forks and modified versions are not made, reviewed or endorsed by the original author, and the original author does not track or know about them. Anything you download from anywhere else is used at your own risk.
 
