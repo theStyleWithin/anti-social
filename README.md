@@ -6,7 +6,7 @@
 
 ## Status: fully featured and complete
 
-Anti-Social v0.14.1 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.15.0 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (drag-to-reorder, themes, the Bible, Travel Log, Cookbook and the v0.12.0 account features are automated-test verified, awaiting a hand test; the Android file saver in v0.12.0 is new native code and has not yet been run on a real phone); plus automated tests):
 - **Android:** installed and used on a real phone, including account switching, Populated mode, Characters, the storage limit and the Apps.
@@ -54,6 +54,7 @@ is a flat, unblinking **0**.
 
 ## Version history
 
+- **v0.15.0:** AI members in Chat Rooms. Make characters (picture, banner, bio, personality, greeting) that live on your private server. They answer only when you write `@Name` spelled exactly, and always in their own private chat; you choose which channels each may speak in. Modes per channel: one at a time, taking turns, or away chat where they talk to each other while you are gone (with pace, an hourly cap, charging and battery guards). Character cards export and import (JSON, or a PNG with the card inside, compatible with other chat tools). Desktop apps run model files (.gguf) you download yourself, fully on your computer (llama.cpp, in its own process with no network access). Optional: use TokenReply instead (see below)
 - **v0.14.1:** in Chat Rooms the server now has its own name, separate from your account. It starts as "<you>'s Server"; right-click the name (or the server icon) to rename it, or use Rename server in its menu. Clear the name to go back to the default
 - **v0.14.0:** a second template, Classic Blue: a blue bar on top with a search box, a shortcuts column on the left (your apps are listed there too), a News Feed with an Update Status box, Like / Comment / Share links, a Timeline profile with a cover photo, and People You May Know on the right. Wording changes with it (Explore becomes Find Friends, Follow becomes Add Friend, Likes become Unlike when you press them) and times read the old way ("about an hour ago", "Yesterday at 3:04pm"). It has a light and a dark version and works with color themes
 - **v0.13.0:** Templates (Settings, above Color themes). Chat Rooms makes the app look like a chat server: a server rail, channels you can create, a chat column where posts become messages (oldest first, Enter to send), and a member list. In Populated mode the generated people become server members, and they only ever talk in #general, however many channels you add; your own channels hold only your messages. Wording changes too (Explore becomes Discover, Notifications becomes Inbox, Like becomes React). It is appearance only, your data does not change, and it combines with color themes
@@ -72,11 +73,17 @@ is a flat, unblinking **0**.
 - **v0.2.x:** the encrypted vault (optional passcode), duress PIN, auto-lock, Privacy & Security settings
 - **v0.1.0:** the first release. Post to nobody
 
-## Always offline
+## Always offline (unless you choose otherwise)
 
-Anti-Social never touches the internet. The page ships with a rule that blocks
-every network request (`connect-src 'none'`), so it *can't* phone home even if it wanted to.
-You can download this folder and double-click `index.html` with Wi-Fi off. It works. The Android app has no internet permission at all, and the desktop apps only hand a link to your own browser if you click one.
+Anti-Social does not touch the internet. The page ships with a rule that blocks
+every network request except one optional address, so it *can't* phone home even if it wanted to.
+You can download this folder and double-click `index.html` with Wi-Fi off. It works. The desktop apps only hand a link to your own browser if you click one.
+
+The one exception is off until you turn it on: in Chat Rooms, Settings, AI members, you can let a service called
+TokenReply write your AI members' replies instead of a model file on your device. The page's rule allows exactly
+`https://api.tokenreply.com` and nothing else. If you turn it on, your API key, the character's description and the recent
+chat are sent there; switch back to "On this device" and nothing is sent. Your key stays on your device and is not part of exported accounts.
+Because of this, the Android app now carries the internet permission; it is used for nothing else.
 
 ## Get the apps
 

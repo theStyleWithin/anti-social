@@ -38,7 +38,8 @@
         </provider>
     </application>
 
-    <!-- Deliberately no INTERNET permission: this app cannot go online. -->
+    <!-- Internet is used only by the optional TokenReply setting for AI members (api.tokenreply.com, nothing else; the page's security policy allows no other address). Off unless you turn it on. -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <!-- Pulled in by a library we do not need; strip it so the app asks for nothing. -->
     <uses-permission android:name="android.permission.DUMP" tools:node="remove" />

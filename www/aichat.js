@@ -25,7 +25,7 @@ async function aiEnsure() {
   const st = await e.status();
   if (!st.loaded || st.path !== want.path || st.ctx !== want.ctx || st.gpu !== want.gpu) {
     aiLoading = true; aiRefresh();
-    try { await e.load(want); } catch (err) { throw aiErr('load-failed', 'The model could not be loaded: ' + (err && err.message || err)); } finally { aiLoading = false; }
+    try { await e.load(want); } catch (err) { throw aiErr('load-failed', 'The model could not be loaded: ' + (err && err.message || err)); } finally { aiLoading = false; aiRefresh(); }
   }
   return e;
 }

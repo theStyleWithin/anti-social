@@ -128,7 +128,7 @@ function aiLocalPanel(acct) {
   };
   refresh();
   return h('section', {}, h('h3', {}, 'Model on this device'),
-    h('p', {}, 'Download a model file yourself (a ".gguf" file) and point Anti-Social at it. The app never connects to the internet, so it cannot fetch one for you. Bigger models write better and need more memory: phones do well with small ones (1 to 3 billion parameters), computers can run much larger ones.'),
+    h('p', {}, 'Download a model file yourself (a ".gguf" file) and point Anti-Social at it. The app does not download models for you; with a model file nothing leaves this device. Bigger models write better and need more memory: phones do well with small ones (1 to 3 billion parameters), computers can run much larger ones.'),
     model,
     h('div', { class: 'btnrow' },
       h('button', { class: 'btn primary', type: 'button', onclick: async () => { try { const m = await e.pickModel(); if (!m) return; aiSaveConfig({ ...aiConfig(), model: m }); toast('Model chosen.'); render(true); } catch (x) { toast('That file could not be used: ' + (x && x.message || x)); } } }, cfg.model ? 'Choose a different model' : 'Choose model file'),
