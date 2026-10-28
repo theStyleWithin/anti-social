@@ -22,12 +22,14 @@ function drawer(side) { document.querySelector('.shell')?.classList.toggle(side 
 const closeDrawers = () => document.querySelector('.shell')?.classList.remove('left-open', 'right-open');
 
 function shellChat(acct, route, main, ctx, chId) {
+  const title = TP.serverTitle(acct, ctx.apps.srv[0] && ctx.apps.srv[0].name);
+  const rename = () => serverNameEditor(acct, ctx);
   const chans = [...ctx.apps.chan].sort((a, b) => a.createdAt - b.createdAt);
   const home = route === 'home';
   const cur = home ? (chans.find(c => c.id === chId) ? chId : 'general') : '';
   const railBtn = (href, label, ic, on) => h('a', { class: 'rail-btn' + (on ? ' active' : ''), href: '#' + href, title: label, 'aria-label': label, 'aria-current': on ? 'page' : null, onclick: closeDrawers }, icon(ic));
   const rail = h('nav', { class: 'rail', 'aria-label': 'Servers' },
-    h('a', { class: 'rail-btn server' + (['home', 'profile', 'post', 'u'].includes(route) ? ' active' : ''), href: '#/', title: TP.serverName(acct), 'aria-label': TP.serverName(acct), onclick: closeDrawers }, TP.initials(acct.name || acct.handle)),
+    h('a', { class: 'rail-btn server' + (['home', 'profile', 'post', 'u'].includes(route) ? ' active' : ''), href: '#/', title: title + ' (right-click to rename)', 'aria-label': title, oncontextmenu: e => { e.preventDefault(); rename(); }, onclick: closeDrawers }, TP.serverInitials(title, acct)),
     h('div', { class: 'rail-sep' }),
     railBtn('/apps', W('navApps'), 'grid', route === 'apps'), railBtn('/explore', W('navExplore'), 'compass', route === 'explore'), railBtn('/notifications', W('navNotifications'), 'bell', route === 'notifications'),
     h('button', { class: 'rail-btn add', type: 'button', title: 'Add a server', 'aria-label': 'Add a server', onclick: () => toast('There is no one to invite. Servers need other people.') }, icon('plus')));
@@ -45,7 +47,7 @@ function shellChat(acct, route, main, ctx, chId) {
     h('a', { class: 'ub', href: '#/settings', 'aria-label': W('navSettings'), title: W('navSettings'), onclick: closeDrawers }, icon('settings')));
   const left = h('div', { class: 'chat-left' }, rail,
     h('aside', { class: 'chan-col', 'aria-label': 'Channels' },
-      h('button', { class: 'server-head', type: 'button', 'aria-haspopup': 'menu', onclick: e => serverMenu(e.currentTarget, acct, ctx) }, h('b', {}, TP.serverName(acct)), icon('chevron')),
+      h('button', { class: 'server-head', type: 'button', 'aria-haspopup': 'menu', title: 'Right-click to rename', oncontextmenu: e => { e.preventDefault(); rename(); }, onclick: e => serverMenu(e.currentTarget, acct, ctx) }, h('b', {}, title), icon('chevron')),
       h('div', { class: 'chan-scroll' },
         h('div', { class: 'chan-cat' }, h('span', {}, 'Text channels'), h('button', { type: 'button', 'aria-label': 'Create channel', title: 'Create channel', onclick: () => channelEditor(acct, ctx, null) }, icon('plus'))),
         chanRow(null), chans.map(chanRow),
@@ -66,7 +68,7 @@ function serverMenu(anchor, acct, ctx) {
   const esc = e => { if (e.key === 'Escape') close(); };
   const row = (label, ic, fn) => h('button', { class: 'pop-row', role: 'menuitem', onclick: () => { close(); fn(); } }, h('span', { class: 'pop-plus' }, icon(ic)), h('b', {}, label));
   const pop = h('div', { class: 'popover server-menu', role: 'menu', 'aria-label': 'Server' },
-    row('Create channel', 'plus', () => channelEditor(acct, ctx, null)), row(W('navProfile'), 'user', () => go('/profile')), row(W('navSettings'), 'settings', () => go('/settings')));
+    row('Rename server', 'notes', () => serverNameEditor(acct, ctx)), row('Create channel', 'plus', () => channelEditor(acct, ctx, null)), row(W('navProfile'), 'user', () => go('/profile')), row(W('navSettings'), 'settings', () => go('/settings')));
   document.body.append(pop);
   const r = anchor.getBoundingClientRect();
   pop.style.left = Math.max(8, Math.min(r.left + 8, innerWidth - pop.offsetWidth - 8)) + 'px'; pop.style.top = (r.bottom + 4) + 'px';
@@ -183,6 +185,31 @@ function shellBlue(acct, route, main, ctx) {
     sideBlocks(), h('p', { class: 'fine' }, 'Anti-Social © 2026 · No servers · No tracking · No audience'));
   const page = ['apps', 'settings', 'explore', 'notifications'].includes(route);      // plain pages sit on one white card; the feed is a stack of cards
   return h('div', { class: 'shell fb' }, bar, h('div', { class: 'fb-page' }, left, h('main', { class: 'main' + (page ? ' fb-card' : '') }, main), right));
+}
+
+// Rename the server. It is its own setting, separate from your account; until you choose a name it is "<you>'s Server".
+function serverNameEditor(acct, ctx) {
+  const rec = ctx.apps.srv[0], current = TP.serverTitle(acct, rec && rec.name);
+  const name = h('input', { value: rec ? rec.name : '', maxlength: TP.MAX_SERVER_NAME, placeholder: TP.serverName(acct), 'aria-label': 'Server name' });
+  const preview = h('span', { class: 'rail-btn server preview' }, TP.serverInitials(current, acct));
+  name.addEventListener('input', () => { preview.textContent = TP.serverInitials(TP.serverTitle(acct, name.value), acct); });
+  const save = h('button', { class: 'btn primary' }, 'Save');
+  const close = modal(h('div', {},
+    h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => close() }, icon('x')), h('b', {}, 'Rename server')),
+    h('div', { class: 'mp' },
+      h('p', { class: 'fine', style: 'padding:0 0 10px' }, `The server has its own name, separate from your account. Leave it empty to use the default, "${TP.serverName(acct)}".`),
+      h('div', { class: 'server-edit' }, preview, h('label', { class: 'field', style: 'flex:1;margin:0' }, h('span', {}, 'Server name'), name)),
+      h('div', { class: 'btnrow', style: 'margin-top:12px' }, save, rec && h('button', { class: 'btn', onclick: async () => { await appDelete(rec.id); close(); toast('Back to the default name.'); render(true); } }, 'Use the default name')))));
+  const submit = async () => {
+    const n = TP.cleanServerName(name.value);
+    save.disabled = true;
+    if (!n) { if (rec) await appDelete(rec.id); close(); render(true); return; }
+    if (!(await appSave(acct, { id: rec ? rec.id : 'srv' + acct.id, accountId: acct.id, kind: 'srv', name: n, updatedAt: Date.now() }))) { save.disabled = false; return; }
+    close(); toast(`Your server is now called ${n}.`); render(true);
+  };
+  save.addEventListener('click', submit);
+  name.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+  setTimeout(() => { name.focus(); name.select(); }, 0);
 }
 
 /* ---------- the picker in Settings ---------- */

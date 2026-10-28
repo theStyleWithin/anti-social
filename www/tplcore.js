@@ -80,6 +80,16 @@ const TemplateCore = (() => {
   // Generated members only ever talk in #general; every other channel holds nothing but your own messages.
   const crowdMayPost = id => !id || id === 'general';
   const serverName = acct => { const n = String((acct && (acct.name || acct.handle)) || 'My').trim().slice(0, 24); return n.endsWith('s') ? `${n}' Server` : `${n}'s Server`; };
+  const MAX_SERVER_NAME = 40;
+  const cleanServerName = raw => String(raw == null ? '' : raw).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, MAX_SERVER_NAME).trim();
+  // The server's name: the one you chose, or "<you>'s Server" until you do.
+  const serverTitle = (acct, custom) => cleanServerName(custom) || serverName(acct);
+  // "Cozy Cave" -> "CC"; the default "Ann's Server" -> "A" style initials of the owner, never "AS".
+  const serverInitials = (title, acct) => {
+    const t = cleanServerName(title);
+    if (!t || t === serverName(acct)) return initials((acct && (acct.name || acct.handle)) || '?');
+    return initials(t);
+  };
   const initials = s => String(s || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
 
   /* ---------- chat: the member list (generated people only, never real) ---------- */
@@ -118,6 +128,6 @@ const TemplateCore = (() => {
   const firstName = acct => String((acct && (acct.name || acct.handle)) || '').trim().split(/\s+/)[0] || '';
   const countLabel = (n, one, many) => n === 1 ? `1 ${one}` : `${n} ${many}`;
 
-  return { TEMPLATES, get, valid, word, WORDS, MAX_CHANNELS, channelName, channelError, isGeneral, inChannel, crowdMayPost, serverName, initials, roleFor, ROLE_COLOR, memberGroups, messageOrder, firstName, countLabel, fbTime };
+  return { TEMPLATES, get, valid, word, WORDS, MAX_CHANNELS, channelName, channelError, isGeneral, inChannel, crowdMayPost, serverName, serverTitle, cleanServerName, serverInitials, MAX_SERVER_NAME, initials, roleFor, ROLE_COLOR, memberGroups, messageOrder, firstName, countLabel, fbTime };
 })();
 if (typeof module !== 'undefined') module.exports = TemplateCore;

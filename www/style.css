@@ -824,3 +824,5 @@ html[data-tpl="blue"] .settings, html[data-tpl="blue"] .app-pad { background: tr
 }
 html[data-tpl="blue"] .pinfo .top .avbtn { border-radius: 3px; }
 @media (hover: none) { html[data-tpl="blue"] .act:hover { text-decoration: none; } }
+.server-edit { display: flex; align-items: flex-end; gap: 12px; }
+.rail-btn.preview { cursor: default; flex: none; border-radius: 16px; background: var(--accent); color: var(--accent-fg); }
