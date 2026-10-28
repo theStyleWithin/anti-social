@@ -145,3 +145,5 @@ const PokeCore = (() => {
     FAMILIES, boxName, inBank, slotsOf, countIn, firstFree, moveTo, SORTS, sortPlan, filterMons, BANK_FORMAT, CARD_FORMAT, exportBank, importBank, exportCard, importCard };
 })();
 if (typeof module !== 'undefined') module.exports = PokeCore;
+// "1 Pokémon", "3 Pokémon" (the word does not take an s)
+const pkCount = n => (n === 1 ? '1' : Number(n).toLocaleString()) + ' Pokémon';

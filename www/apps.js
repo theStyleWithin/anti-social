@@ -470,7 +470,7 @@ function appsHome(acct, ctx) {
     ['travel', 'globe', 'Travel Log', (() => { const t = TravelCore.stats(A.place); return t.places ? `${plural(t.places, 'place')} · ${plural(t.countries, 'country').replace('countrys', 'countries')}` : 'Mark where you have been'; })()],
     ['cookbook', 'pot', 'Cookbook', A.recipe.length ? `${plural(A.recipe.length, 'recipe')} of yours, plus the classics` : 'American favorites, then the world'],
     ['pokedex', 'pokeball', 'Pokédex', (() => { const m = PokeCore.normMarks(A.dexmark[0] && A.dexmark[0].marks).national || {}, c = Object.values(m).filter(v => v & 1).length; return c ? `${c} of 1025 caught` : 'Every Pokémon, and what you have caught'; })()],
-    ['pokebank', 'box', 'Pokémon Bank', A.pkbank.length ? `${plural(A.pkm.length, 'Pokémon')} in ${plural(A.pkbank.length, 'bank')}` : 'Boxes for the Pokémon you keep'],
+    ['pokebank', 'box', 'Pokémon Bank', A.pkbank.length ? `${pkCount(A.pkm.length)} in ${plural(A.pkbank.length, 'bank')}` : 'Boxes for the Pokémon you keep'],
   ];
   cards.splice(0, cards.length, ...cards.filter(c => !hidden.has(c[0])));
   // your own order (saved per account on this device), with anything new tacked on the end

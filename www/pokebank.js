@@ -23,6 +23,7 @@ function pokebankView(acct, ctx, back) {
   const box = h('div', {}, h('p', { class: 'muted', style: 'padding:16px' }, 'Loading...'));
   loadPokedex().then(D => {
     const banks = pkBanks(ctx), bank = banks.find(b => b.id === bankId);
+    if (bankId === 'sd') return box.replaceChildren(...pkSdView(acct, ctx, D, banks).filter(Boolean));
     if (bankId && !bank) return box.replaceChildren(emptyState('Bank not found', 'That bank is gone.'));
     box.replaceChildren(...(bank ? pkBankView(acct, ctx, D, bank, banks) : pkHome(acct, ctx, D, banks)).filter(Boolean));
   }).catch(() => box.replaceChildren(h('p', { class: 'err', style: 'padding:16px' }, 'The Pokémon list could not be loaded.')));
@@ -47,7 +48,7 @@ function pkHome(acct, ctx, D, banks) {
   return [
     h('div', { class: 'app-pad' },
       h('p', { class: 'muted', style: 'margin-top:0' }, 'A bank is a set of boxes for one game family, like in the games. Keep your Pokémon here, move them between boxes and banks, and trade them by sending a card file.'),
-      h('div', { class: 'btnrow' }, h('button', { class: 'btn primary', type: 'button', onclick: () => pkNewBank(acct, ctx) }, 'New bank'), h('button', { class: 'btn', type: 'button', onclick: () => pkImportBank(acct, ctx) }, 'Import bank file'), h('button', { class: 'btn', type: 'button', onclick: () => pkImportCard(acct, ctx, D, null) }, 'Import Pokémon card'), h('button', { class: 'btn', type: 'button', onclick: () => pkImportBin(acct, ctx) }, 'Import pkHouse bank (.bin)'), h('button', { class: 'btn', type: 'button', onclick: () => pkImportFiles(acct, ctx, D, null) }, 'Import game files'), h('button', { class: 'btn', type: 'button', onclick: pkGuide }, 'How to swap with a Switch or emulator')),
+      h('div', { class: 'btnrow' }, h('button', { class: 'btn primary', type: 'button', onclick: () => pkNewBank(acct, ctx) }, 'New bank'), h('button', { class: 'btn', type: 'button', onclick: () => pkImportBank(acct, ctx) }, 'Import bank file'), h('button', { class: 'btn', type: 'button', onclick: () => pkImportCard(acct, ctx, D, null) }, 'Import Pokémon card'), h('button', { class: 'btn', type: 'button', onclick: () => pkImportBin(acct, ctx) }, 'Import pkHouse bank (.bin)'), h('button', { class: 'btn', type: 'button', onclick: () => pkImportFiles(acct, ctx, D, null) }, 'Import game files'), h('a', { class: 'btn primary', href: '#/apps/pokebank/sd' }, 'Switch SD card'), h('button', { class: 'btn', type: 'button', onclick: pkGuide }, 'How to swap with a Switch or emulator')),
       banks.length ? [h('div', { style: 'height:12px' }), q, res] : null),
     banks.length ? h('div', { class: 'app-pad' }, h('div', { class: 'pd-regions' }, tiles)) : h('div', { class: 'app-pad' }, emptyState('No banks yet', 'Make your first bank, then add Pokémon one by one, or import a bank or card file.')),
     h('p', { class: 'fine pd-credit' }, 'Inspired by ', h('b', {}, 'pkHouse'), ' by Insektaure (GPL-2.0). This app does not read or change any game save file. Pokémon is a trademark of Nintendo, Creatures, GAME FREAK and The Pokémon Company; this app is not affiliated with them.'),
@@ -239,7 +240,7 @@ function pkRenameBank(acct, bank) {
 }
 async function pkDeleteBank(acct, ctx, bank) {
   const mine = pkMons(ctx).filter(m => m.bank === bank.id);
-  if (!confirm(mine.length ? `Delete "${bank.name}" and the ${plural(mine.length, 'Pokémon')} in it? Export it first if you want a copy. There is no undo.` : `Delete the empty bank "${bank.name}"?`)) return;
+  if (!confirm(mine.length ? `Delete "${bank.name}" and the ${pkCount(mine.length)} in it? Export it first if you want a copy. There is no undo.` : `Delete the empty bank "${bank.name}"?`)) return;
   for (const m of mine) await db.del('posts', m.id);
   await db.del('posts', bank.id); pkSel = null; pkHold = null; toast('Bank deleted.'); go('/apps/pokebank');
 }
@@ -293,7 +294,7 @@ function pkImportBank(acct, ctx) {
     const r = PK.importBank(await f.text()); if (!r.ok) return toast(r.error);
     const id = uid(), t = Date.now(); await pkSave(acct, { id, kind: 'pkbank', name: r.bank.name, family: r.bank.family, boxNames: r.bank.boxNames });
     for (const e of r.mons) await savePost(acct, { id: uid(), accountId: acct.id, kind: 'pkm', bank: id, box: e.box, slot: e.slot, createdAt: t, ...e.mon });
-    toast(`Imported ${r.bank.name} with ${plural(r.mons.length, 'Pokémon')}${r.skipped ? ` (${r.skipped} could not be used)` : ''}.`); go('/apps/pokebank/' + id);
+    toast(`Imported ${r.bank.name} with ${pkCount(r.mons.length)}${r.skipped ? ` (${r.skipped} could not be used)` : ''}.`); go('/apps/pokebank/' + id);
   });
 }
 function pkImportCard(acct, ctx, D, bank) {
@@ -326,26 +327,33 @@ function pkImportFiles(acct, ctx, D, bank) {
       const free = PK.firstFree(await pkLive(acct, tb), tb); if (!free) { full++; continue; }
       const id = uid(); await pkSave(acct, { id, kind: 'pkm', bank: tb.id, ...free, ...PK.normMon({ ...p.mon, raw: p.raw, rawFmt: p.fmt }) }); added++; last = { id, tb };
     }
-    toast([added ? `Added ${plural(added, 'Pokémon')}.` : '', bad ? `${bad} file${bad === 1 ? ' was' : 's were'} not a readable Pokémon file.` : '', full ? 'The bank is full.' : ''].filter(Boolean).join(' ') || 'Nothing was added.');
+    toast([added ? `Added ${pkCount(added)}.` : '', bad ? `${bad} file${bad === 1 ? ' was' : 's were'} not a readable Pokémon file.` : '', full ? 'The bank is full.' : ''].filter(Boolean).join(' ') || 'Nothing was added.');
     if (last) { pkSel = last.id; pkLeft = { bank: last.tb.id, box: 0 }; go('/apps/pokebank/' + last.tb.id); }
   }, true);
 }
 const pkLive = async (acct, bank) => (await loadPosts(acct)).filter(p => p.kind === 'pkm');
-function pkImportBin(acct, ctx) {
-  pkPickFile('.bin,application/octet-stream', async f => {
-    const X = await loadPkData(), bytes = await bytesOf(f), parsed = X.parseBank(bytes);
-    if (!parsed.ok) return toast(parsed.error);
-    const choose = parsed.families.length > 1 ? await new Promise(res => {
-      const sel = h('select', { 'aria-label': 'Which game' }, parsed.families.map(k => h('option', { value: k }, pkFamilyName(k)))); sel.value = parsed.defaultFamily;
-      const close = modal(h('div', {}, h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => { close(); res(null); } }, icon('x')), h('b', {}, 'Which game is this bank for?')),
-        h('div', { class: 'mp' }, h('p', { class: 'muted', style: 'margin-top:0' }, 'pkHouse uses the same file layout for several games. Pick the one it belongs to.'), aiField('Game', sel), h('div', { class: 'btnrow' }, h('button', { class: 'btn primary', type: 'button', onclick: () => { close(); res(sel.value); } }, 'Import')))));
-    }) : parsed.families[0];
-    if (!choose) return;
-    const r = X.readBank(parsed, choose), id = uid(), t = Date.now();
-    await pkSave(acct, { id, kind: 'pkbank', name: f.name.replace(/\.bin$/i, '').slice(0, 40) || 'pkHouse bank', family: choose, boxNames: r.boxNames });
-    for (const e of r.entries) await savePost(acct, { id: uid(), accountId: acct.id, kind: 'pkm', bank: id, box: e.box, slot: e.slot, createdAt: t, ...PK.normMon({ ...e.mon, raw: e.raw, rawFmt: e.fmt }) });
-    toast(`Imported ${plural(r.entries.length, 'Pokémon')}${r.skipped ? ` (${r.skipped} slots could not be read)` : ''}.`); go('/apps/pokebank/' + id);
+async function pkChooseFamily(parsed) {
+  if (parsed.families.length === 1) return parsed.families[0];
+  return new Promise(res => {
+    const sel = h('select', { 'aria-label': 'Which game' }, parsed.families.map(k => h('option', { value: k }, pkFamilyName(k)))); sel.value = parsed.defaultFamily;
+    const close = modal(h('div', {}, h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => { close(); res(null); } }, icon('x')), h('b', {}, 'Which game is this bank for?')),
+      h('div', { class: 'mp' }, h('p', { class: 'muted', style: 'margin-top:0' }, 'pkHouse uses the same file layout for several games. Pick the one it belongs to.'), aiField('Game', sel), h('div', { class: 'btnrow' }, h('button', { class: 'btn primary', type: 'button', onclick: () => { close(); res(sel.value); } }, 'Import')))));
   });
+}
+// bytes of a pkHouse bank file -> a new bank in the app. `family` is known when the file came from a game folder.
+async function pkImportBinBytes(acct, bytes, fileName, family) {
+  const X = await loadPkData(), parsed = X.parseBank(bytes);
+  if (!parsed.ok) { toast(parsed.error); return null; }
+  const choose = family && parsed.families.includes(family) ? family : await pkChooseFamily(parsed);
+  if (!choose) return null;
+  const r = X.readBank(parsed, choose), id = uid(), t = Date.now();
+  await pkSave(acct, { id, kind: 'pkbank', name: fileName.replace(/\.bin$/i, '').slice(0, 40) || 'pkHouse bank', family: choose, boxNames: r.boxNames });
+  for (const e of r.entries) await savePost(acct, { id: uid(), accountId: acct.id, kind: 'pkm', bank: id, box: e.box, slot: e.slot, createdAt: t, ...PK.normMon({ ...e.mon, raw: e.raw, rawFmt: e.fmt }) });
+  toast(`Imported ${pkCount(r.entries.length)}${r.skipped ? ` (${r.skipped} slots could not be read)` : ''}.`);
+  return id;
+}
+function pkImportBin(acct, ctx) {
+  pkPickFile('.bin,application/octet-stream', async f => { const id = await pkImportBinBytes(acct, await bytesOf(f), f.name, null); if (id) go('/apps/pokebank/' + id); });
 }
 async function pkExportGameFile(m, D) {
   const bytes = PkmParse.unb64(m.raw), name = pkFile(PK.monName(m, D.national)) + '.' + PkmParse.fileExt(m.rawFmt);
@@ -354,7 +362,7 @@ async function pkExportGameFile(m, D) {
 async function pkExportBin(bank, mons) {
   const mine = mons.filter(m => m.bank === bank.id), built = PkmParse.buildBank(bank.family, mine.map(m => ({ box: m.box, slot: m.slot, raw: m.raw, fmt: m.rawFmt })), bank.boxNames || []);
   const r = await saveFile(pkFile(bank.name) + '.bin', 'application/octet-stream', built.bytes);
-  toast(r.ok ? `Saved ${plural(built.written, 'Pokémon')} to ${r.where}.${mine.length > built.written ? ` ${mine.length - built.written} that were typed in by hand are not in it.` : ''}` : r.where);
+  toast(r.ok ? `Saved ${pkCount(built.written)} to ${r.where}.${mine.length > built.written ? ` ${mine.length - built.written} that were typed in by hand are not in it.` : ''}` : r.where);
 }
 
 function pkGuide() {
