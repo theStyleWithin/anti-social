@@ -79,7 +79,7 @@ JNIEXPORT jstring JNICALL Java_com_antisocial_app_LlamaEngine_load(JNIEnv* env, 
   std::lock_guard<std::mutex> lock(g_mu);
   freeAll();
   static bool inited = false;
-  if (!inited) { llama_backend_init(); inited = true; }
+  if (!inited) { llama_log_set([](ggml_log_level, const char*, void*) {}, nullptr); llama_backend_init(); inited = true; }   // the engine's chatter is not wanted in the phone's log
   llama_model_params mp = llama_model_default_params();
   mp.n_gpu_layers = 0;
   g_model = llama_model_load_from_file(str(env, jpath).c_str(), mp);

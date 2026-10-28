@@ -6,7 +6,7 @@
 
 ## Status: fully featured and complete
 
-Anti-Social v0.15.0 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.16.0 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (drag-to-reorder, themes, the Bible, Travel Log, Cookbook and the v0.12.0 account features are automated-test verified, awaiting a hand test; the Android file saver in v0.12.0 is new native code and has not yet been run on a real phone); plus automated tests):
 - **Android:** installed and used on a real phone, including account switching, Populated mode, Characters, the storage limit and the Apps.
@@ -54,6 +54,7 @@ is a flat, unblinking **0**.
 
 ## Version history
 
+- **v0.16.0:** the Android app can now run AI members on the phone itself: pick a small `.gguf` model file (1 to 3 billion parameters works best) in Settings, AI members; llama.cpp runs it on the processor, with no network. Away chat on a phone runs while the app is open and can fill in what you missed when you return. Also: the README now explains antivirus false alarms, and Android no longer includes app data in automatic cloud backups (so an API key is never copied there)
 - **v0.15.0:** AI members in Chat Rooms. Make characters (picture, banner, bio, personality, greeting) that live on your private server. They answer only when you write `@Name` spelled exactly, and always in their own private chat; you choose which channels each may speak in. Modes per channel: one at a time, taking turns, or away chat where they talk to each other while you are gone (with pace, an hourly cap, charging and battery guards). Character cards export and import (JSON, or a PNG with the card inside, compatible with other chat tools). Desktop apps run model files (.gguf) you download yourself, fully on your computer (llama.cpp, in its own process with no network access). Optional: use TokenReply instead (see below)
 - **v0.14.1:** in Chat Rooms the server now has its own name, separate from your account. It starts as "<you>'s Server"; right-click the name (or the server icon) to rename it, or use Rename server in its menu. Clear the name to go back to the default
 - **v0.14.0:** a second template, Classic Blue: a blue bar on top with a search box, a shortcuts column on the left (your apps are listed there too), a News Feed with an Update Status box, Like / Comment / Share links, a Timeline profile with a cover photo, and People You May Know on the right. Wording changes with it (Explore becomes Find Friends, Follow becomes Add Friend, Likes become Unlike when you press them) and times read the old way ("about an hour ago", "Yesterday at 3:04pm"). It has a light and a dark version and works with color themes
