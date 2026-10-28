@@ -930,9 +930,7 @@ function bankTransactions(acct, ctx) {
   const exportCsv = () => {
     const all = A.txn.filter(t => bankAcct === 'all' || t.acctId === bankAcct).sort((a, b) => a.date.localeCompare(b.date));
     const csv = AC.toCsv([['Date', 'Account', 'Merchant', 'Category', 'Amount', 'Note'], ...all.map(t => [t.date, accName(t.acctId), t.merchant, t.category, (t.cents / 100).toFixed(2), t.note || ''])]);
-    const link = h('a', { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: 'anti-social-receipts.csv' });
-    document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-    toast('Exported. A spreadsheet can open it.');
+    saveFile('anti-social-receipts.csv', 'text/csv', csv).then(r => toast(r.ok ? `Saved to ${r.where}. A spreadsheet can open it.` : r.where));
   };
   const net = AC.sum(rows.map(t => t.cents));
   return [monthNav(),
@@ -1073,9 +1071,7 @@ function invExport(items) {
   const today = todayKey();
   const csv = AC.toCsv([['Item', 'Room', 'Category', 'Quantity', 'Price each', 'Total paid', 'Purchase date', 'Store', 'Serial or model', 'Warranty ends', 'Value each', 'Total value', 'Photos', 'Notes'],
     ...[...items].sort((a, b) => (a.room || '').localeCompare(b.room || '') || a.name.localeCompare(b.name)).map(i => [i.name, i.room || '', i.category || '', AC.unitsOf(i), (i.cents / 100).toFixed(2), (AC.paidOf(i) / 100).toFixed(2), i.date || '', i.store || '', i.serial || '', i.warrantyEnd || '', (AC.unitValue(i, today) / 100).toFixed(2), (AC.worthOf(i, today) / 100).toFixed(2), photoCount(i), i.note || ''])]);
-  const link = h('a', { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: 'anti-social-household.csv' });
-  document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-  toast('Exported. Handy for an insurance list.');
+  saveFile('anti-social-household.csv', 'text/csv', csv).then(r => toast(r.ok ? `Saved to ${r.where}. Handy for an insurance list.` : r.where));
 }
 
 function invOverview(acct, ctx) {

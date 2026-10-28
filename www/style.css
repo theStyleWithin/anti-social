@@ -558,3 +558,8 @@ html.has-bg .main { backdrop-filter: blur(2px); }
 .cb-steps { padding-left: 22px; line-height: 1.55; }
 .cb-steps li { padding: 6px 4px; cursor: pointer; border-radius: 8px; }
 .cb-steps li.done { color: var(--muted); text-decoration: line-through; }
+
+/* ---- accounts: hidden list ---- */
+.hidden-list { display: grid; gap: 8px; margin-top: 8px; }
+.hidden-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; }
+.hidden-row .who { flex: 1; min-width: 0; }

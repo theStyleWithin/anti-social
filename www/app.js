@@ -115,6 +115,7 @@ const db = {
   put: async (n, v) => req((await store(n, 'readwrite')).put(v)),
   del: async (n, k) => req((await store(n, 'readwrite')).delete(k)),
   clear: async n => req((await store(n, 'readwrite')).clear()),
+  keys: async n => req((await store(n)).getAllKeys()),
   postsOf: async id => req((await store('posts')).index('accountId').getAll(id)),
 };
 
@@ -262,7 +263,7 @@ async function rekeyAccount(acct, pass) {
   const raw = await db.get('accounts', acct.id);
   const { key, meta } = await makeVault(acct.id, pass);
   const profile = Object.fromEntries(PROFILE_KEYS.map(k => [k, acct[k] ?? null]));
-  const account = { id: raw.id, handle: raw.handle, createdAt: raw.createdAt, vault: { ...meta, alt: raw.vault?.alt || meta.alt }, profile: await seal(key, profile, 'profile:' + raw.id) };
+  const account = { id: raw.id, handle: raw.handle, createdAt: raw.createdAt, ...AcctCore.flagsOf(raw), vault: { ...meta, alt: raw.vault?.alt || meta.alt }, profile: await seal(key, profile, 'profile:' + raw.id) };
   const recs = [];
   for (const p of posts) {
     const { iv, ct } = await seal(key, p, `post:${acct.id}:${p.id}`);
@@ -902,7 +903,7 @@ async function removeVault(acct) {
   const posts = await loadPosts(acct, { media: true });
   if (posts.bad) throw new Error('unreadable posts');
   const raw = await db.get('accounts', acct.id);
-  const account = { id: raw.id, handle: raw.handle, createdAt: raw.createdAt, salt: null, hash: null,
+  const account = { id: raw.id, handle: raw.handle, createdAt: raw.createdAt, ...AcctCore.flagsOf(raw), salt: null, hash: null,
     ...Object.fromEntries(PROFILE_KEYS.filter(k => k !== 'duress').map(k => [k, acct[k] ?? null])) };
   await db.batch([account], posts);
   lockVault();
@@ -1196,7 +1197,7 @@ function settingsView(acct, ctxBg) {
     h('section', {}, h('h3', {}, 'Make your own'), h('p', {}, 'Choose two colors. Everything else follows.'),
       h('div', { class: 'btnrow' }, colorIn('Background', 'bg'), colorIn('Accent', 'accent')),
       h('div', { class: 'btnrow' },
-        h('button', { class: 'btn', onclick: () => { const blob = new Blob([ThemeCore.exportTheme('My theme', custom.bg, custom.accent)], { type: 'application/json' }); const a = h('a', { href: URL.createObjectURL(blob), download: 'anti-social-theme.json' }); document.body.append(a); a.click(); a.remove(); } }, 'Export theme'),
+        h('button', { class: 'btn', onclick: () => saveFile('anti-social-theme.json', 'application/json', ThemeCore.exportTheme('My theme', custom.bg, custom.accent)).then(r => toast(r.ok ? `Saved to ${r.where}.` : r.where)) }, 'Export theme'),
         h('button', { class: 'btn', onclick: () => themeFile.click() }, 'Import theme'), themeFile)),
     h('section', {}, h('h3', {}, 'Background picture'), h('p', {}, bgRec ? 'Your picture is saved on this device' + (acct.vault ? ', encrypted with your passcode.' : '.') : 'Use one of your own pictures behind the app. It stays on this device.'),
       bgRec && h('div', { class: 'bgprev', style: `background-image:url("${bgRec.data}")` }),
@@ -1217,13 +1218,16 @@ function settingsView(acct, ctxBg) {
     installPrompt && h('section', {}, h('h3', {}, 'Install'), h('p', {}, 'Put Anti-Social on your home screen or desktop. It works offline, because there is nothing to connect to.'),
       h('button', { class: 'btn primary', onclick: async () => { installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; render(true); } }, 'Install app')),
     h('section', {}, h('h3', {}, 'Your data'), h('p', {}, 'It lives on this device and nowhere else. Clearing the app or site data deletes it. There is no recovery because there is no one to recover it.'),
-      h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: () => exportData(acct) }, 'Export my data (JSON)'))),
+      h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: () => exportData(acct) }, 'Export my data (JSON)'),
+        h('button', { class: 'btn', onclick: () => ejectAccount(acct) }, 'Eject account'))),
     h('section', {}, h('h3', {}, 'Account'),
       h('div', { class: 'btnrow' },
         h('button', { class: 'btn', onclick: logout }, 'Switch account'),
         h('button', { class: 'btn', onclick: () => addAccount(acct) }, 'Add account'),
         h('button', { class: 'btn danger', onclick: () => deleteAccount(acct) }, 'Delete this account'),
         h('button', { class: 'btn danger', onclick: wipeEverything }, 'Delete all data on this device'))),
+    acct.guest ? h('section', {}, h('h3', {}, 'Guest account'), h('p', {}, 'You walked in as a guest: no handle chosen, no passcode. Anyone who opens this device can open this account. Make it a real account to pick a name and handle, and a passcode if you want one.'), h('button', { class: 'btn primary', onclick: () => claimGuest(acct) }, 'Make this a real account')) : null,
+    accountListSection(acct),
     h('section', {}, h('h3', {}, 'Terms of Use'), h('p', {}, 'TOUCH GRASS.'),
       h('p', { class: 'fine', style: 'padding:0' }, 'No servers. No tracking. No audience. Go outside.')),
   ];
@@ -1296,7 +1300,8 @@ async function addAccount(acct) {
 
 async function openAccountMenu(anchor, acct) {
   document.querySelector('.popover')?.remove();
-  const accounts = (await db.all('accounts')).sort((a, b) => a.createdAt - b.createdAt);
+  const accounts = AcctCore.listed((await db.all('accounts')).sort((a, b) => a.createdAt - b.createdAt));
+  if (!accounts.some(a => a.id === acct.id)) accounts.push(acct);
   const close = () => { pop.remove(); document.removeEventListener('mousedown', outside, true); document.removeEventListener('keydown', esc, true); };
   const outside = e => { if (!pop.contains(e.target) && !anchor.contains(e.target)) close(); };
   const esc = e => { if (e.key === 'Escape') close(); };
@@ -1336,17 +1341,6 @@ async function wipeEverything() {
   if (!confirm('Delete ALL accounts and posts on this device? There are no backups. There is no one.')) return;
   await db.clear('posts'); await db.clear('accounts');
   logout();
-}
-
-async function exportData(acct) {
-  if (acct.vault && !confirm('The export file is NOT encrypted. Anyone who gets it can read your posts. Export anyway?')) return;
-  const { salt, hash, vault: _v, profile: _p, locked, ...account } = acct;
-  const posts = await loadPosts(acct, { media: true });
-  const blob = new Blob([JSON.stringify({ app: 'anti-social', exportedAt: new Date().toISOString(), account, posts }, null, 2)], { type: 'application/json' });
-  const a = h('a', { href: URL.createObjectURL(blob), download: 'anti-social-export.json' });
-  document.body.append(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  toast('Exported. Now you have a copy of everything nobody saw.');
 }
 
 function editProfile(acct) {
@@ -1400,7 +1394,8 @@ function composeModal(acct) {
 
 /* ---------- auth ---------- */
 async function authView() {
-  const accounts = (await db.all('accounts')).sort((a, b) => a.createdAt - b.createdAt);
+  const everyone = (await db.all('accounts')).sort((a, b) => a.createdAt - b.createdAt);
+  const accounts = AcctCore.listed(everyone);          // hidden accounts are left out of the list
   if (!accounts.length && authMode.mode === 'pick') authMode = { mode: 'signup' };
   const wrap = (body, top) => h('div', { class: 'auth' }, h('div', { class: 'box' },
     top,
@@ -1456,7 +1451,7 @@ async function authView() {
       err.textContent = '';
       const hd = handle.value.trim().replace(/^@/, '');
       if (!/^\w{1,15}$/.test(hd)) { err.textContent = 'Handle: 1-15 letters, numbers or underscores.'; return; }
-      if (accounts.some(a => a.handle.toLowerCase() === hd.toLowerCase())) { err.textContent = 'That handle is taken. By you. Earlier.'; return; }
+      if (everyone.some(a => a.handle.toLowerCase() === hd.toLowerCase())) { err.textContent = 'That handle is taken. By you. Earlier.'; return; }
       if (!pass.value && !pass2.value) {
         // No passcode: a plain local account. Nothing is encrypted and the app opens straight away.
         const id = uid();
@@ -1490,6 +1485,8 @@ async function authView() {
       h('label', { class: 'field' }, h('span', {}, 'Type it again'), pass2),
       err,
       h('div', { class: 'stack' }, btn,
+        h('button', { type: 'button', class: 'btn', onclick: () => startGuest() }, 'Continue as guest'),
+        importAccountButton(),
         !from && accounts.length > 0 && h('button', { type: 'button', class: 'btn', onclick: () => { authMode = { mode: 'pick' }; render(); } }, 'Back')),
       h('p', { class: 'fine', style: 'padding:12px 0 0' }, 'Leave the passcode blank and the app just opens, with nothing encrypted. Set one and everything you post is encrypted with it, with no recovery if you forget it. You can add or remove it later in Settings. No email needed. There is nobody to send it.'),
       from && h('div', { class: 'was-on' },
@@ -1506,7 +1503,8 @@ async function authView() {
       avatar(a, 'sm'),
       h('div', {}, h('b', {}, a.name || '@' + a.handle), h('div', { class: 'muted' }, a.name ? '@' + a.handle : 'Locked')),
       (a.vault || a.hash) && h('span', { class: 'muted', style: 'margin-left:auto;display:flex' }, icon('lock')))),
-    h('button', { class: 'btn primary', onclick: () => { authMode = { mode: 'signup' }; render(); } }, 'Create account')));
+    h('button', { class: 'btn primary', onclick: () => { authMode = { mode: 'signup' }; render(); } }, 'Create account'),
+    h('button', { type: 'button', class: 'btn', onclick: () => startGuest() }, 'Continue as guest'), importAccountButton()));
 }
 
 /* ---------- shell ---------- */
