@@ -47,7 +47,7 @@ function pkHome(acct, ctx, D, banks) {
   return [
     h('div', { class: 'app-pad' },
       h('p', { class: 'muted', style: 'margin-top:0' }, 'A bank is a set of boxes for one game family, like in the games. Keep your Pokémon here, move them between boxes and banks, and trade them by sending a card file.'),
-      h('div', { class: 'btnrow' }, h('button', { class: 'btn primary', type: 'button', onclick: () => pkNewBank(acct, ctx) }, 'New bank'), h('button', { class: 'btn', type: 'button', onclick: () => pkImportBank(acct, ctx) }, 'Import bank file'), h('button', { class: 'btn', type: 'button', onclick: () => pkImportCard(acct, ctx, D, null) }, 'Import Pokémon card'), h('button', { class: 'btn', type: 'button', onclick: () => pkImportBin(acct, ctx) }, 'Import pkHouse bank (.bin)'), h('button', { class: 'btn', type: 'button', onclick: () => pkImportFiles(acct, ctx, D, null) }, 'Import game files')),
+      h('div', { class: 'btnrow' }, h('button', { class: 'btn primary', type: 'button', onclick: () => pkNewBank(acct, ctx) }, 'New bank'), h('button', { class: 'btn', type: 'button', onclick: () => pkImportBank(acct, ctx) }, 'Import bank file'), h('button', { class: 'btn', type: 'button', onclick: () => pkImportCard(acct, ctx, D, null) }, 'Import Pokémon card'), h('button', { class: 'btn', type: 'button', onclick: () => pkImportBin(acct, ctx) }, 'Import pkHouse bank (.bin)'), h('button', { class: 'btn', type: 'button', onclick: () => pkImportFiles(acct, ctx, D, null) }, 'Import game files'), h('button', { class: 'btn', type: 'button', onclick: pkGuide }, 'How to swap with a Switch or emulator')),
       banks.length ? [h('div', { style: 'height:12px' }), q, res] : null),
     banks.length ? h('div', { class: 'app-pad' }, h('div', { class: 'pd-regions' }, tiles)) : h('div', { class: 'app-pad' }, emptyState('No banks yet', 'Make your first bank, then add Pokémon one by one, or import a bank or card file.')),
     h('p', { class: 'fine pd-credit' }, 'Inspired by ', h('b', {}, 'pkHouse'), ' by Insektaure (GPL-2.0). This app does not read or change any game save file. Pokémon is a trademark of Nintendo, Creatures, GAME FREAK and The Pokémon Company; this app is not affiliated with them.'),
@@ -355,4 +355,18 @@ async function pkExportBin(bank, mons) {
   const mine = mons.filter(m => m.bank === bank.id), built = PkmParse.buildBank(bank.family, mine.map(m => ({ box: m.box, slot: m.slot, raw: m.raw, fmt: m.rawFmt })), bank.boxNames || []);
   const r = await saveFile(pkFile(bank.name) + '.bin', 'application/octet-stream', built.bytes);
   toast(r.ok ? `Saved ${plural(built.written, 'Pokémon')} to ${r.where}.${mine.length > built.written ? ` ${mine.length - built.written} that were typed in by hand are not in it.` : ''}` : r.where);
+}
+
+function pkGuide() {
+  const step = (t, d) => h('li', {}, h('b', {}, t), h('div', { class: 'muted' }, d));
+  const close = modal(h('div', {}, h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => close() }, icon('x')), h('b', {}, 'Swapping with a Switch or an emulator')),
+    h('div', { class: 'mp' },
+      h('p', { class: 'muted', style: 'margin-top:0' }, 'This app never opens a game save. Pokémon travel as files, and PKHeX or pkHouse put them in and out of the save.'),
+      h('ol', { class: 'pk-guide' },
+        step('Switch to phone', 'In pkHouse on the Switch, your banks are the .bin files in its banks folder on the SD card. Copy them to the phone, then press "Import pkHouse bank (.bin)" here. Pokémon you export from a save with pkHouse (.pk8, .pk9 ...) come in with "Import game files".'),
+        step('Organise on the phone', 'Sort, search, move between boxes and banks, rename boxes. Leave a Pokémon unedited if you want it to go back into a game file unchanged: editing it here makes it a plain record.'),
+        step('Phone to Switch', 'Open the bank and press "Export pkHouse bank", then copy the .bin back into pkHouse\'s banks folder on the SD card. On the Switch, pkHouse moves the Pokémon into the game. Keep a copy of the old file first.'),
+        step('Emulators', 'An emulator keeps its own save. Use PKHeX on a computer to export Pokémon from it as .pk files (or import ours), and bring those in here with "Import game files". The same files work for a real Switch save, so that is how Pokémon move between the two.'),
+        step('Sending one to a friend', 'Press "Export card" on a Pokémon and send them the file; they use "Import Pokémon card".')),
+      h('p', { class: 'fine' }, 'Always back up your saves before changing them with any tool.'))));
 }
