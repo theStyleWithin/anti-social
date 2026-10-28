@@ -62,6 +62,7 @@ const ICONS = {
   cart: '<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11l2-8H6"/>',
   tasks: '<path d="M9 6h11M9 12h11M9 18h11M3.5 6l1.5 1.5L7.5 5M3.5 12l1.5 1.5L7.5 10M3.5 18l1.5 1.5L7.5 16"/>',
   box: '<path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+  sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 2.1L22 19l-2.3.9L19 22l-.7-2.1L16 19l2.3-.9z"/>',
   camera: '<path d="M3 8h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13" r="4"/>',
 };
 function icon(name) {
@@ -497,7 +498,7 @@ function topbar(title, { back = false, sub = '', action = null } = {}) {
     action && h('div', { class: 'tbact' }, action));
 }
 
-function composer(acct, { placeholder, parentId = null, onDone, autofocus = false, label = W('send'), channel = null, enterSends = false, heading = '' }) {
+function composer(acct, { placeholder, parentId = null, onDone, autofocus = false, label = W('send'), channel = null, enterSends = false, heading = '', mentionBots = null, onSent = null, customSave = null }) {
   let images = [];
   const ta = h('textarea', { placeholder, rows: 1, 'aria-label': placeholder });
   const previews = h('div', { class: 'previews' });
@@ -521,16 +522,19 @@ function composer(acct, { placeholder, parentId = null, onDone, autofocus = fals
       submit.disabled = false;
       return;
     }
+    const sentText = ta.value.trim();
     try {
-      await savePost(acct, { id: uid(), accountId: acct.id, text: ta.value.trim(), images, createdAt: Date.now(), parentId, liked: false, reposted: false, ...(channel && channel !== 'general' ? { channel } : {}) });
+      if (customSave) await customSave({ text: sentText, images });
+      else await savePost(acct, { id: uid(), accountId: acct.id, text: sentText, images, createdAt: Date.now(), parentId, liked: false, reposted: false, ...(channel && channel !== 'general' ? { channel } : {}) });
     } catch (e) {
       console.error(e);
       toast(isQuotaError(e) ? 'Out of space, so that post was not saved. Free some room and try again.' : 'That post could not be saved.');
       submit.disabled = false;
       return;
     }
-    toast(pick(TOASTS));
+    if (!customSave) toast(pick(TOASTS));
     onDone?.();
+    if (onSent) onSent(sentText);
   };
   ta.addEventListener('input', sync);
   ta.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey || (enterSends && !e.shiftKey && !e.isComposing))) { e.preventDefault(); send(); } });
@@ -550,6 +554,7 @@ function composer(acct, { placeholder, parentId = null, onDone, autofocus = fals
       h('div', { class: 'row' },
         h('button', { class: 'tool', 'aria-label': 'Add image', onclick: () => images.length < 4 && file.click() }, icon('image')),
         file, h('span', { style: 'margin-left:auto' }), submit)));
+  if (mentionBots) el.querySelector('.body').append(attachMentions(ta, mentionBots));
   if (autofocus) setTimeout(() => ta.focus(), 0);
   return el;
 }
@@ -1173,7 +1178,7 @@ function storageSection() {
     h('p', { class: 'fine', style: 'padding:8px 0 0' }, 'The meter is approximate. Pictures are shrunk before they are saved and are most of the space. Posts pause at your limit, or sooner if your device is nearly full. The generated crowd is never saved, so it costs nothing. Deleting posts frees space.'));
 }
 
-function settingsView(acct, ctxBg) {
+function settingsView(acct, ctxBg, ctx) {
   const theme = ls('as.theme') || 'auto';
   const skin = ls('as.skin') || '';
   const pickMode = v => { ls('as.skin', null); ls('as.theme', v === 'auto' ? null : v); applyTheme(); render(true); };
@@ -1284,8 +1289,8 @@ function settingsView(acct, ctxBg) {
   const tab = (k, label) => h('button', { role: 'tab', 'aria-selected': String(settingsTab === k), class: settingsTab === k ? 'active' : '', onclick: () => { settingsTab = k; render(true); } }, label);
   return [
     topbar('Settings'),
-    h('div', { class: 'tabs', role: 'tablist' }, tab('general', 'General'), tab('characters', 'Characters'), tab('security', 'Privacy & Security')),
-    h('div', { class: 'settings' }, settingsTab === 'security' ? security : settingsTab === 'characters' ? charactersTab(acct) : general),
+    h('div', { class: 'tabs', role: 'tablist' }, tab('general', 'General'), tab('characters', 'Characters'), tplId() === 'chat' ? tab('ai', 'AI members') : null, tab('security', 'Privacy & Security')),
+    h('div', { class: 'settings' }, settingsTab === 'security' ? security : settingsTab === 'characters' ? charactersTab(acct) : settingsTab === 'ai' && tplId() === 'chat' ? aiTab(acct, ctx) : general),
   ];
 }
 
@@ -1588,7 +1593,7 @@ async function render(keepScroll = false) {
     if (all.bad) console.warn(`${all.bad} post(s) could not be decrypted`);
     // Your likes, reposts and follows of generated accounts live beside your posts but are not posts.
     const posts = all.filter(p => !p.kind);                 // real posts only; everything else is a record of some other kind
-    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], srv: [] };
+    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], srv: [], bot: [], aimsg: [], aimode: [] };
     for (const p of all) if (apps[p.kind]) apps[p.kind].push(p);
     castMap = new Map(all.filter(p => p.kind === 'cast').map(p => [p.ref, p]));
     const reactions = new Map(all.filter(p => p.kind === 'ghost').map(p => [p.target, p]));
@@ -1596,11 +1601,11 @@ async function render(keepScroll = false) {
     for (const p of posts) if (p.parentId) ctx.replyCount.set(p.parentId, (ctx.replyCount.get(p.parentId) || 0) + 1);
 
     const [, r = '', arg, arg2] = location.hash.split('/');
-    const route = { notifications: 'notifications', explore: 'explore', profile: 'profile', settings: 'settings', post: 'post', u: 'u', apps: 'apps', channel: 'home' }[r] || 'home';
+    const route = { notifications: 'notifications', explore: 'explore', profile: 'profile', settings: 'settings', post: 'post', u: 'u', apps: 'apps', channel: 'home', dm: 'dm', bot: 'bot' }[r] || 'home';
     const chId = r === 'channel' ? arg : '';
     const main = {
-      home: () => homeView(acct, ctx, chId), apps: () => appsView(acct, ctx, arg, arg2), explore: () => exploreView(acct, ctx), notifications: notificationsView, u: () => ghostProfileView(acct, ctx, arg),
-      profile: () => profileView(acct, ctx), settings: () => { if (arg === 'security' || arg === 'characters') settingsTab = arg; return settingsView(acct, ctx.apps.bg[0]); }, post: () => postView(acct, ctx, arg),
+      home: () => homeView(acct, ctx, chId), dm: () => dmView(acct, ctx, arg), bot: () => botPage(acct, ctx, arg), apps: () => appsView(acct, ctx, arg, arg2), explore: () => exploreView(acct, ctx), notifications: notificationsView, u: () => ghostProfileView(acct, ctx, arg),
+      profile: () => profileView(acct, ctx), settings: () => { if (arg === 'security' || arg === 'characters' || (arg === 'ai' && tplId() === 'chat')) settingsTab = arg; return settingsView(acct, ctx.apps.bg[0], ctx); }, post: () => postView(acct, ctx, arg),
     }[route]();
     document.title = route === 'home' ? 'Home / Anti-Social' : route[0].toUpperCase() + route.slice(1) + ' / Anti-Social';
     root.replaceChildren(shell(acct, route, main, ctx, chId));
@@ -1647,4 +1652,5 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
 }
+aiInit();
 render();

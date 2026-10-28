@@ -10,7 +10,7 @@ async function saveFile(name, mime, text) {
   const saver = window.AntiSocialSaver;
   if (saver) {
     try {
-      const bytes = new TextEncoder().encode(text);
+      const bytes = typeof text === 'string' ? new TextEncoder().encode(text) : text;
       const opened = String(saver.open(name, mime));
       if (!opened.startsWith('ok')) return { ok: false, where: opened.replace(/^error:/, '') };
       for (let i = 0; i < bytes.length; i += 600 * 1024) {

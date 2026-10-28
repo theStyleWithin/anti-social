@@ -25,7 +25,7 @@ function shellChat(acct, route, main, ctx, chId) {
   const title = TP.serverTitle(acct, ctx.apps.srv[0] && ctx.apps.srv[0].name);
   const rename = () => serverNameEditor(acct, ctx);
   const chans = [...ctx.apps.chan].sort((a, b) => a.createdAt - b.createdAt);
-  const home = route === 'home';
+  const home = route === 'home', dm = route === 'dm', dmId = dm ? location.hash.split('/')[2] : '';
   const cur = home ? (chans.find(c => c.id === chId) ? chId : 'general') : '';
   const railBtn = (href, label, ic, on) => h('a', { class: 'rail-btn' + (on ? ' active' : ''), href: '#' + href, title: label, 'aria-label': label, 'aria-current': on ? 'page' : null, onclick: closeDrawers }, icon(ic));
   const rail = h('nav', { class: 'rail', 'aria-label': 'Servers' },
@@ -51,12 +51,13 @@ function shellChat(acct, route, main, ctx, chId) {
       h('div', { class: 'chan-scroll' },
         h('div', { class: 'chan-cat' }, h('span', {}, 'Text channels'), h('button', { type: 'button', 'aria-label': 'Create channel', title: 'Create channel', onclick: () => channelEditor(acct, ctx, null) }, icon('plus'))),
         chanRow(null), chans.map(chanRow),
+        aiDmRows(acct, ctx, dmId),
         h('div', { class: 'chan-cat' }, h('span', {}, 'Voice channels')), voice('Lounge'), voice('AFK')),
       userbar));
   const showMembers = home;
   return h('div', { class: 'shell chat' + (showMembers ? '' : ' no-members') },
     left,
-    h('main', { class: 'main' + (home ? ' chat-page' : '') }, main),
+    h('main', { class: 'main' + (home || dm ? ' chat-page' : '') }, main),
     showMembers ? memberPanel(acct, ctx) : null,
     h('div', { class: 'chat-backdrop', onclick: closeDrawers }));
 }
@@ -81,7 +82,7 @@ function memberPanel(acct, ctx) {
   const row = (who, opts = {}) => h('a', { class: 'member' + (opts.online === false ? ' off' : ''), href: who.id ? '#/u/' + who.id : '#/profile', onclick: closeDrawers },
     h('span', { class: 'av-wrap' }, who.id ? ghostAvatar(who, 'sm') : avatar(acct, 'sm'), h('i', { class: 'dot ' + (opts.online === false ? 'offline' : 'online') })),
     h('span', { class: 'names' }, h('b', { class: opts.role ? 'role-' + opts.role.toLowerCase() : '' }, who.name, opts.crown ? h('span', { class: 'crown', title: 'Server owner' }, icon('crown')) : null), who.activity ? h('small', {}, who.activity) : null));
-  rows.push(h('div', { class: 'member-cat' }, 'Owner — 1'), row(acct, { crown: true, role: 'Admin' }));
+  rows.push(h('div', { class: 'member-cat' }, 'Owner — 1'), row(acct, { crown: true, role: 'Admin' }), aiMemberRows(acct, ctx));
   let note;
   if (populated()) {
     const list = Ghost.members(worldSeed(), 80, { ...poolOpts(), now: Date.now() });
@@ -108,23 +109,24 @@ function chatHome(acct, ctx, chId) {
     items = [...crowd.map(g => ({ ts: g.ts, el: () => ghostPostEl(g, acct, ctx) })), ...mine.filter(p => p.createdAt >= cutoff).map(p => ({ ts: p.createdAt, el: () => postEl(p, acct, ctx) }))];
     older = feedCount < FEED_MAX && crowd.length >= feedCount;
   } else items = mine.map(p => ({ ts: p.createdAt, el: () => postEl(p, acct, ctx) }));
-  items = TP.messageOrder(items);
+  items = TP.messageOrder([...items, ...aiMessageItems(acct, ctx, cid)]);
   const topic = ch ? (ch.topic || '') : 'Where everyone is, and nobody talks.';
   const head = h('div', { class: 'chat-head' },
     h('button', { class: 'hamburger', type: 'button', 'aria-label': 'Open channels', onclick: () => drawer('left') }, icon('menu')),
     h('span', { class: 'hash' }, icon('hash')), h('h1', {}, name), topic && h('span', { class: 'topic' }, topic),
     h('span', { style: 'margin-left:auto' }),
     acct.vault && h('button', { class: 'ub', type: 'button', 'aria-label': 'Lock vault', title: 'Lock vault', onclick: () => { lockVault(); render(); } }, icon('lock')),
+    h('button', { class: 'ub', type: 'button', 'aria-label': 'AI members in this channel', title: 'AI members in this channel', onclick: () => channelAiModal(acct, ctx, cid, name) }, icon('sparkle')),
     ch && h('button', { class: 'ub', type: 'button', 'aria-label': 'Edit channel', title: 'Edit channel', onclick: () => channelEditor(acct, ctx, ch) }, icon('settings')),
     h('button', { class: 'ub members-btn', type: 'button', 'aria-label': 'Show members', title: 'Member list', onclick: () => drawer('right') }, icon('users')));
   const welcome = h('div', { class: 'chat-welcome' }, h('div', { class: 'big-hash' }, icon('hash')), h('h2', {}, `Welcome to #${name}!`),
     h('p', {}, `This is the start of the #${name} channel.`), !crowdHere && h('p', { class: 'muted' }, ch ? (populated() ? 'Only you can post here. The server members only talk in #general.' : 'Only you can post here.') : 'Nobody has said anything here yet. Say something. Nobody will read it.'));
   const list = h('div', { class: 'chat-list', role: 'log', 'aria-label': `Messages in #${name}`, 'aria-live': 'off' },
     older ? h('div', { class: 'empty-note' }, h('button', { class: 'btn', onclick: () => { feedCount += 25; render(true); } }, 'Load older messages')) : welcome,
-    items.map(x => x.el()));
+    items.map(x => x.el()), aiRun && aiRun.channel === cid ? aiTypingRow() : null, aiNoticeRow(cid));
   const vaultNote = !acct.vault && !ls('as.hidenote.' + acct.id) && h('div', { class: 'vault-note' }, h('span', {}, "Your messages aren't encrypted. That's fine for a local app, or you can lock them with a passcode."),
     h('div', { class: 'btnrow' }, h('button', { class: 'btn primary', onclick: () => passcodeModal(acct) }, 'Set up vault'), h('button', { class: 'btn', onclick: () => { ls('as.hidenote.' + acct.id, '1'); render(true); } }, 'No thanks')));
-  return [head, vaultNote, list, composer(acct, { placeholder: `Message #${name}`, channel: ch ? ch.id : null, enterSends: true, label: W('send'), onDone: () => render(true) })];
+  return [head, vaultNote, list, composer(acct, { placeholder: `Message #${name}`, channel: ch ? ch.id : null, enterSends: true, label: W('send'), mentionBots: () => aiBots(ctx), onSent: t => aiAfterUser(acct, cid, t), onDone: () => render(true) })];
 }
 
 // Create, rename or delete a channel. Deleting a channel deletes the messages you wrote in it.
