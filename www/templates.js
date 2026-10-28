@@ -13,6 +13,7 @@ function stamp(ts) {
     const diff = Math.round((day(now) - day(d)) / 864e5);
     return diff === 0 ? `Today at ${t}` : diff === 1 ? `Yesterday at ${t}` : `${d.toLocaleDateString(undefined, { month: '2-digit', day: '2-digit', year: 'numeric' })} ${t}`;
   }
+  if (id === 'blue') return TP.fbTime(ts);
   return '· ' + timeAgo(ts);
 }
 
@@ -152,6 +153,36 @@ function channelEditor(acct, ctx, ch) {
     close(); go('/channel/' + rec.id);
   });
   setTimeout(() => name.focus(), 0);
+}
+
+/* ---------- Classic Blue ---------- */
+const APP_ICONS = { calendar: 'calendar', calc: 'calc', bank: 'wallet', inventory: 'box', groceries: 'cart', chores: 'tasks', notes: 'notes', bible: 'scroll', diary: 'book', travel: 'globe', cookbook: 'pot' };
+function shellBlue(acct, route, main, ctx) {
+  const hidden = hiddenApps(acct);
+  const ic = (href, label, name, ico, cls = '') => h('a', { class: 'fb-icon ' + cls + (route === name ? ' active' : ''), href: '#' + href, title: label, 'aria-label': label, 'aria-current': route === name ? 'page' : null }, icon(ico));
+  const search = h('input', { type: 'search', placeholder: W('searchBlurb'), 'aria-label': 'Search' });
+  const bar = h('header', { class: 'fb-bar' }, h('div', { class: 'fb-bar-in' },
+    h('a', { class: 'fb-logo', href: '#/', 'aria-label': 'Anti-Social home' }, 'anti-social'),
+    h('form', { class: 'fb-search', role: 'search', onsubmit: e => { e.preventDefault(); go('/explore'); } }, search, h('button', { type: 'submit', 'aria-label': 'Search' }, icon('search'))),
+    h('nav', { class: 'fb-top', 'aria-label': 'Main' },
+      h('a', { class: 'fb-text fb-name' + (route === 'profile' ? ' active' : ''), href: '#/profile' }, avatar(acct, 'sm'), h('span', {}, TP.firstName(acct))),
+      h('a', { class: 'fb-text' + (route === 'home' ? ' active' : ''), href: '#/' }, h('span', {}, 'Home')),
+      ic('/', 'Home', 'home', 'home', 'only-mobile'), ic('/profile', W('navProfile'), 'profile', 'user', 'only-mobile'),
+      ic('/apps', W('navApps'), 'apps', 'grid'), ic('/explore', W('navExplore'), 'explore', 'users'), ic('/notifications', W('navNotifications'), 'notifications', 'bell'),
+      ic('/settings', W('navSettings'), 'settings', 'settings', 'only-mobile'),
+      h('button', { class: 'fb-icon fb-acct', type: 'button', 'aria-haspopup': 'menu', 'aria-label': 'Account menu', title: 'Accounts', onclick: e => openAccountMenu(e.currentTarget, acct) }, icon('chevron')))));
+  const nav = (href, label, name, ico) => h('a', { class: 'fb-nav' + (route === name ? ' active' : ''), href: '#' + href, 'aria-current': route === name ? 'page' : null }, h('span', { class: 'fb-ico' }, icon(ico)), h('span', {}, label));
+  const left = h('aside', { class: 'fb-left', 'aria-label': 'Shortcuts' },
+    h('a', { class: 'fb-me', href: '#/profile' }, avatar(acct, 'sm'), h('b', {}, acct.name)),
+    nav('/', W('navHome'), 'home', 'home'), nav('/profile', W('navProfile'), 'profile', 'user'), nav('/apps', W('navApps'), 'apps', 'grid'),
+    nav('/explore', W('navExplore'), 'explore', 'users'), nav('/notifications', W('navNotifications'), 'notifications', 'bell'), nav('/settings', W('navSettings'), 'settings', 'settings'),
+    h('div', { class: 'fb-head' }, 'Apps'),
+    APP_LIST.filter(([id]) => !hidden.has(id)).map(([id]) => h('a', { class: 'fb-nav', href: '#/apps/' + id }, h('span', { class: 'fb-ico app' }, icon(APP_ICONS[id] || 'grid')), h('span', {}, appName(acct, id)))));
+  const right = h('aside', { class: 'fb-right', 'aria-label': 'More' },
+    h('div', { class: 'card fb-ad' }, h('h3', {}, 'Sponsored'), h('p', {}, 'Your attention is on the house. Nobody is bidding on it, because there is nobody.')),
+    sideBlocks(), h('p', { class: 'fine' }, 'Anti-Social © 2026 · No servers · No tracking · No audience'));
+  const page = ['apps', 'settings', 'explore', 'notifications'].includes(route);      // plain pages sit on one white card; the feed is a stack of cards
+  return h('div', { class: 'shell fb' }, bar, h('div', { class: 'fb-page' }, left, h('main', { class: 'main' + (page ? ' fb-card' : '') }, main), right));
 }
 
 /* ---------- the picker in Settings ---------- */

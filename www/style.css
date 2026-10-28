@@ -703,3 +703,124 @@ html[data-tpl="chat"] .vault-note { display: flex; flex-wrap: wrap; align-items:
 html[data-tpl="chat"] .vault-note .btn { padding: 4px 12px; font-size: 13px; border-radius: 4px; }
 html[data-tpl="chat"] .toast { bottom: 90px; background: var(--accent); }
 .tpl-art, .tpl-art * { stroke: none; stroke-width: 0; }
+
+/* =====================================================================
+   Template: Classic Blue  (a blue bar, shortcuts on the left, News Feed and Timeline)
+   ===================================================================== */
+html[data-tpl="blue"][data-theme="light"] { --bg: #e9ebee; --fg: #1d2129; --muted: #90949c; --line: #dddfe2; --hover: rgba(0, 0, 0, 0.045); --card: #ffffff; --accent: #3b5998; --accent-fg: #ffffff; --danger: #c0392b; --like: #3b5998; --repost: #3b5998; --bar: #3b5998; --link: #3b5998; }
+html[data-tpl="blue"][data-theme="dark"] { --bg: #18191a; --fg: #e4e6eb; --muted: #b0b3b8; --line: #3e4042; --hover: rgba(255, 255, 255, 0.07); --card: #242526; --accent: #2d88ff; --accent-fg: #ffffff; --danger: #ff6b5e; --like: #4599ff; --repost: #4599ff; --bar: #242526; --link: #6da7ff; }
+html[data-tpl="blue"], html[data-tpl="blue"] body { background: var(--bg); }
+html[data-tpl="blue"] body { font-family: "lucida grande", tahoma, verdana, arial, sans-serif; font-size: 13px; line-height: 1.34; color: var(--fg); }
+html[data-tpl="blue"] a { color: var(--link, var(--accent)); }
+html[data-tpl="blue"] .shell.fb { display: block; max-width: none; min-height: 100vh; margin: 0; }
+.fb-bar { position: fixed; z-index: 30; top: 0; left: 0; right: 0; height: 44px; background: var(--bar, var(--accent)); border-bottom: 1px solid rgba(0, 0, 0, 0.25); }
+.fb-bar-in { max-width: 980px; height: 100%; margin: 0 auto; padding: 0 8px; display: flex; align-items: center; gap: 12px; }
+.fb-logo { color: #fff !important; font-size: 24px; font-weight: 800; letter-spacing: -1.5px; text-decoration: none; line-height: 1; padding: 0 4px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.fb-search { display: flex; align-items: center; flex: 0 1 380px; height: 26px; background: #fff; border-radius: 2px; overflow: hidden; }
+.fb-search input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; padding: 0 8px; font-size: 12px; background: #fff; color: #1d2129; }
+.fb-search button { height: 100%; width: 32px; border: 0; border-left: 1px solid #dddfe2; background: #f6f7f9; color: #4b4f56; display: flex; align-items: center; justify-content: center; }
+.fb-search svg { width: 15px; height: 15px; }
+.fb-top { margin-left: auto; display: flex; align-items: center; gap: 2px; height: 100%; }
+.fb-text { display: flex; align-items: center; gap: 6px; height: 100%; padding: 0 10px; color: #fff !important; font-weight: 700; font-size: 12px; }
+.fb-text:hover, .fb-text.active { background: rgba(0, 0, 0, 0.16); }
+.fb-text .avatar { width: 24px; height: 24px; border-radius: 2px; font-size: 11px; }
+.fb-icon { height: 100%; width: 40px; display: flex; align-items: center; justify-content: center; background: none; border: 0; color: #fff !important; }
+.fb-icon:hover, .fb-icon.active { background: rgba(0, 0, 0, 0.16); }
+.fb-icon svg { width: 20px; height: 20px; }
+.fb-top .only-mobile { display: none; }
+.fb-page { max-width: 980px; margin: 0 auto; padding: 56px 8px 24px; display: grid; grid-template-columns: 180px minmax(0, 520px) 250px; gap: 12px; align-items: start; justify-content: center; }
+.fb-left { position: sticky; top: 56px; display: flex; flex-direction: column; gap: 1px; max-height: calc(100vh - 64px); overflow-y: auto; padding-bottom: 12px; }
+.fb-me, .fb-nav { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 2px; color: var(--fg) !important; font-size: 12px; text-decoration: none; }
+.fb-me { margin-bottom: 4px; }
+.fb-me b { font-size: 13px; }
+.fb-me .avatar { width: 32px; height: 32px; border-radius: 2px; }
+.fb-nav:hover { background: var(--hover); }
+.fb-nav.active { background: color-mix(in srgb, var(--accent) 12%, transparent); font-weight: 700; }
+.fb-ico { width: 20px; height: 20px; flex: none; display: flex; align-items: center; justify-content: center; border-radius: 3px; background: var(--accent); color: #fff; }
+.fb-ico svg { width: 13px; height: 13px; }
+.fb-ico.app { background: color-mix(in srgb, var(--accent) 70%, #fff); }
+.fb-head { margin: 12px 6px 4px; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 3px; }
+html[data-tpl="blue"] .main { min-width: 0; padding: 0; border: 0; background: transparent; }
+html[data-tpl="blue"] .main.fb-card { background: var(--card); border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+html[data-tpl="blue"] .topbar { position: static; height: auto; padding: 9px 12px; gap: 10px; background: var(--card); backdrop-filter: none; border: 1px solid var(--line); border-radius: 3px; margin-bottom: 10px; }
+html[data-tpl="blue"] .main.fb-card .topbar { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; margin: 0; background: color-mix(in srgb, var(--card) 94%, var(--fg)); }
+html[data-tpl="blue"] .topbar h1 { font-size: 14px; font-weight: 700; }
+html[data-tpl="blue"] .tb-me { display: none; }
+html[data-tpl="blue"] .btn { border-radius: 3px; padding: 4px 10px; font-size: 12px; font-weight: 700; background: color-mix(in srgb, var(--card) 85%, var(--fg)); border: 1px solid var(--line); color: var(--fg); }
+html[data-tpl="blue"] .btn:hover { background: color-mix(in srgb, var(--card) 78%, var(--fg)); }
+html[data-tpl="blue"] .btn.primary { background: #4267b2; border-color: #365899; color: #fff; }
+html[data-tpl="blue"][data-theme="dark"] .btn.primary { background: #2d88ff; border-color: #2d88ff; }
+html[data-tpl="blue"] .btn.primary:hover { filter: brightness(1.08); }
+html[data-tpl="blue"] .composer { display: block; padding: 0; margin-bottom: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 3px; }
+html[data-tpl="blue"] .composer > .avatar { display: none; }
+html[data-tpl="blue"] .comp-head { padding: 8px 12px; font-weight: 700; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--card) 94%, var(--fg)); border-bottom: 1px solid var(--line); }
+html[data-tpl="blue"] .composer textarea { font-size: 13px; padding: 10px 12px; min-height: 56px; }
+html[data-tpl="blue"] .composer .row { border: 0; padding: 4px 8px 8px; margin: 0; justify-content: flex-start; background: color-mix(in srgb, var(--card) 96%, var(--fg)); }
+html[data-tpl="blue"] .composer .previews { margin: 0 12px 8px; }
+html[data-tpl="blue"] .modal .composer { border: 0; margin: 0; }
+html[data-tpl="blue"] .tabs { background: var(--card); border: 1px solid var(--line); border-radius: 3px; margin-bottom: 10px; }
+html[data-tpl="blue"] .main.fb-card .tabs { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; margin: 0; }
+html[data-tpl="blue"] .tabs button { padding: 10px 0; font-size: 12px; }
+html[data-tpl="blue"] .tabs button.active::after { height: 3px; width: 100%; background: var(--accent); border-radius: 0; }
+html[data-tpl="blue"] .post { gap: 10px; padding: 12px; margin-bottom: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 3px; cursor: default; }
+html[data-tpl="blue"] .post:hover { background: var(--card); }
+html[data-tpl="blue"] .post .avatar { width: 50px; height: 50px; border-radius: 2px; font-size: 20px; }
+html[data-tpl="blue"] .post .head { flex-direction: column; gap: 0; align-items: flex-start; }
+html[data-tpl="blue"] .post .name { font-weight: 700; font-size: 13px; color: var(--link, var(--accent)); }
+html[data-tpl="blue"] .post .handle { display: none; }
+html[data-tpl="blue"] .post .time { font-size: 11px; color: var(--muted); }
+html[data-tpl="blue"] .post .text { font-size: 13px; line-height: 1.38; margin-top: 8px; }
+html[data-tpl="blue"] .post.detail .text { font-size: 14px; }
+html[data-tpl="blue"] .post .replying { font-size: 11px; }
+html[data-tpl="blue"] .media { border-radius: 2px; }
+html[data-tpl="blue"] .actions { justify-content: flex-start; gap: 0; margin: 8px 0 0; padding-top: 6px; max-width: none; border-top: 1px solid var(--line); }
+html[data-tpl="blue"] .post.detail .actions { justify-content: flex-start; padding: 6px 0 0; border-bottom: 0; }
+html[data-tpl="blue"] .act { min-width: 0; padding: 0 8px 0 0; gap: 4px; font-size: 12px; font-weight: 700; color: var(--link, var(--accent)); border-radius: 0; background: none !important; }
+html[data-tpl="blue"] .act svg { display: none; }
+html[data-tpl="blue"] .act::after { content: attr(data-label); order: 0; }
+html[data-tpl="blue"] .act .cnt { order: 1; font-weight: 400; color: var(--muted); }
+html[data-tpl="blue"] .act .cnt::before { content: "("; }
+html[data-tpl="blue"] .act .cnt::after { content: ")"; }
+html[data-tpl="blue"] .act:not(:first-child)::before { content: "·"; order: -1; margin: 0 8px 0 0; color: var(--muted); font-weight: 400; }
+html[data-tpl="blue"] .act:hover { text-decoration: underline; }
+html[data-tpl="blue"] .act.views { display: none; }
+html[data-tpl="blue"] .act.del { color: var(--muted); margin-left: auto; padding: 0; }
+html[data-tpl="blue"] .act.del::before { display: none; }
+html[data-tpl="blue"] .act.like.on, html[data-tpl="blue"] .act.repost.on { color: var(--link, var(--accent)); }
+html[data-tpl="blue"] .stats { padding: 8px 0; margin-top: 8px; font-size: 12px; }
+html[data-tpl="blue"] .banner { height: 200px; border-radius: 3px 3px 0 0; }
+html[data-tpl="blue"] .pinfo { padding: 0 12px 12px; background: var(--card); border: 1px solid var(--line); border-top: 0; border-radius: 0 0 3px 3px; margin-bottom: 10px; }
+html[data-tpl="blue"] .pinfo .top .avbtn { margin-top: -68px; }
+html[data-tpl="blue"] .avatar.lg { width: 130px; height: 130px; border-radius: 3px; border: 4px solid var(--card); font-size: 52px; }
+html[data-tpl="blue"] .pinfo h2 { font-size: 22px; margin-top: 4px; }
+html[data-tpl="blue"] .gen-tag { margin: 0 0 8px; border-radius: 3px; }
+html[data-tpl="blue"] .empty { padding: 28px 16px; }
+html[data-tpl="blue"] .empty-note { background: var(--card); border: 1px solid var(--line); border-radius: 3px; margin-bottom: 10px; }
+html[data-tpl="blue"] .vault-note { margin: 0 0 10px; border-radius: 3px; }
+html[data-tpl="blue"] .modal, html[data-tpl="blue"] .popover { background: var(--card); border-radius: 3px; }
+html[data-tpl="blue"] .toast { background: #323232; color: #fff; border-radius: 3px; }
+.fb-right { position: sticky; top: 56px; align-self: start; max-height: calc(100vh - 64px); overflow-y: auto; }
+html[data-tpl="blue"] .fb-right .card { background: var(--card); border: 1px solid var(--line); border-radius: 3px; margin-bottom: 10px; }
+html[data-tpl="blue"] .fb-right .card h3 { padding: 8px 12px; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line); }
+html[data-tpl="blue"] .fb-right .card p { padding: 10px 12px; font-size: 12px; }
+html[data-tpl="blue"] .fb-right .side-trend, html[data-tpl="blue"] .fb-right .side-who { padding: 6px 12px; font-size: 12px; }
+html[data-tpl="blue"] .fb-right .fine { padding: 0 4px; font-size: 11px; }
+html[data-tpl="blue"] .explore-block { background: var(--card); }
+html[data-tpl="blue"] .settings, html[data-tpl="blue"] .app-pad { background: transparent; }
+@media (max-width: 999px) {
+  .fb-page { grid-template-columns: 170px minmax(0, 1fr); }
+  .fb-right { display: none; }
+}
+@media (max-width: 759px) {
+  .fb-page { grid-template-columns: minmax(0, 1fr); padding: 52px 4px 16px; }
+  .fb-left { display: none; }
+  .fb-search, .fb-text { display: none; }
+  .fb-top { margin: 0; flex: 1; justify-content: space-around; }
+  .fb-top .only-mobile { display: flex; }
+  .fb-icon { flex: 1; width: auto; max-width: 56px; }
+  .fb-bar-in { gap: 4px; padding: 0 4px; }
+  .fb-logo { font-size: 20px; }
+  html[data-tpl="blue"] .banner { height: 140px; }
+}
+html[data-tpl="blue"] .pinfo .top .avbtn { border-radius: 3px; }
+@media (hover: none) { html[data-tpl="blue"] .act:hover { text-decoration: none; } }

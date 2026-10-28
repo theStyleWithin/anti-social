@@ -497,7 +497,7 @@ function topbar(title, { back = false, sub = '', action = null } = {}) {
     action && h('div', { class: 'tbact' }, action));
 }
 
-function composer(acct, { placeholder, parentId = null, onDone, autofocus = false, label = W('send'), channel = null, enterSends = false }) {
+function composer(acct, { placeholder, parentId = null, onDone, autofocus = false, label = W('send'), channel = null, enterSends = false, heading = '' }) {
   let images = [];
   const ta = h('textarea', { placeholder, rows: 1, 'aria-label': placeholder });
   const previews = h('div', { class: 'previews' });
@@ -546,7 +546,7 @@ function composer(acct, { placeholder, parentId = null, onDone, autofocus = fals
   });
 
   const el = h('div', { class: 'composer' }, avatar(acct),
-    h('div', { class: 'body' }, ta, previews,
+    h('div', { class: 'body' }, heading ? h('div', { class: 'comp-head' }, heading) : null, ta, previews,
       h('div', { class: 'row' },
         h('button', { class: 'tool', 'aria-label': 'Add image', onclick: () => images.length < 4 && file.click() }, icon('image')),
         file, h('span', { style: 'margin-left:auto' }), submit)));
@@ -572,13 +572,14 @@ function postEl(p, acct, ctx, { detail = false } = {}) {
     if (detail) go(p.parentId ? '/post/' + p.parentId : '/'); else refresh();
   };
   const act = (name, count, label, onclick, cls = '', on = false) =>
-    h('button', { class: `act ${cls}${on ? ' on' : ''}`, 'aria-label': label, 'data-label': label, 'aria-pressed': cls === 'like' || cls === 'repost' ? String(on) : null, onclick: e => { e.stopPropagation(); onclick(); } },
-      icon(name), count ? String(count) : '');
+    h('button', { class: `act ${cls}${on ? ' on' : ''}`, 'aria-label': label, 'data-label': cls === 'like' && on ? W('actLikeOn') : label, 'aria-pressed': cls === 'like' || cls === 'repost' ? String(on) : null, onclick: e => { e.stopPropagation(); onclick(); } },
+      icon(name), count ? h('span', { class: 'cnt' }, String(count)) : '');
 
+  const bReply = act('reply', replies, W('actReply'), () => detail ? $('.composer textarea')?.focus() : go('/post/' + p.id));
+  const bRepost = act('repost', p.reposted ? 1 : 0, W('actRepost'), () => patch({ reposted: !p.reposted }), 'repost', p.reposted);
+  const bLike = act('heart', p.liked ? 1 : 0, W('actLike'), () => patch({ liked: !p.liked }), 'like', p.liked);
   const actions = h('div', { class: 'actions' },
-    act('reply', replies, W('actReply'), () => detail ? $('.composer textarea')?.focus() : go('/post/' + p.id)),
-    act('repost', p.reposted ? 1 : 0, W('actRepost'), () => patch({ reposted: !p.reposted }), 'repost', p.reposted),
-    act('heart', p.liked ? 1 : 0, W('actLike'), () => patch({ liked: !p.liked }), 'like', p.liked),
+    ...(tplId() === 'blue' ? [bLike, bReply, bRepost] : [bReply, bRepost, bLike]),      // Like comes first in Classic Blue
     h('span', { class: 'act views', title: 'Views', 'aria-label': '0 views' }, icon('chart'), '0'),
     act('trash', 0, W('actDelete'), remove, 'del'));
 
@@ -647,8 +648,8 @@ const FEED_MAX = 500;      // the on-screen crowd is capped, so memory and time 
 const fmt = n => n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1000 ? (n / 1000).toFixed(n < 10000 ? 1 : 0) + 'K' : String(n);
 
 const actBtn = (name, count, label, onclick, cls = '', on = false) =>
-  h('button', { class: `act ${cls}${on ? ' on' : ''}`, 'aria-label': label, 'data-label': label, 'aria-pressed': cls === 'like' || cls === 'repost' ? String(on) : null, onclick: e => { e.stopPropagation(); onclick(); } },
-    icon(name), count ? String(count) : '');
+  h('button', { class: `act ${cls}${on ? ' on' : ''}`, 'aria-label': label, 'data-label': cls === 'like' && on ? W('actLikeOn') : label, 'aria-pressed': cls === 'like' || cls === 'repost' ? String(on) : null, onclick: e => { e.stopPropagation(); onclick(); } },
+    icon(name), count ? h('span', { class: 'cnt' }, String(count)) : '');
 
 // Your reaction to a generated post or person (like, repost, follow). Stored like any post, so the vault covers it.
 // The record id is random on purpose: ids are stored in the clear, and which stranger you liked must stay inside the ciphertext.
@@ -665,10 +666,11 @@ function ghostPostEl(g, acct, ctx, { detail = false } = {}) {
   const rx = ctx.reactions.get(g.id) || {};
   const replies = ctx.replyCount.get(g.id) || 0;     // only your own replies exist
   const reposts = g.reposts + (rx.reposted ? 1 : 0), likes = g.likes + (rx.liked ? 1 : 0);
+  const gReply = actBtn('reply', replies, W('actReply'), () => detail ? $('.composer textarea')?.focus() : go('/post/' + g.id));
+  const gRepost = actBtn('repost', fmt(reposts), W('actRepost'), () => setReaction(acct, ctx, g.id, 'reposted'), 'repost', !!rx.reposted);
+  const gLike = actBtn('heart', fmt(likes), W('actLike'), () => setReaction(acct, ctx, g.id, 'liked'), 'like', !!rx.liked);
   const actions = h('div', { class: 'actions' },
-    actBtn('reply', replies, W('actReply'), () => detail ? $('.composer textarea')?.focus() : go('/post/' + g.id)),
-    actBtn('repost', fmt(reposts), W('actRepost'), () => setReaction(acct, ctx, g.id, 'reposted'), 'repost', !!rx.reposted),
-    actBtn('heart', fmt(likes), W('actLike'), () => setReaction(acct, ctx, g.id, 'liked'), 'like', !!rx.liked),
+    ...(tplId() === 'blue' ? [gLike, gReply, gRepost] : [gReply, gRepost, gLike]),
     h('span', { class: 'act views', title: 'Views', 'aria-label': fmt(g.views) + ' views' }, icon('chart'), fmt(g.views)));
   const name = h('a', { class: 'name' + (tplId() === 'chat' ? ' role-' + TemplateCore.roleFor(who.id).toLowerCase() : ''), href: '#/u/' + who.id }, who.name);
   const handle = h('a', { class: 'handle', href: '#/u/' + who.id }, '@' + who.handle);
@@ -739,7 +741,7 @@ function homeView(acct, ctx, chId) {
       h('div', { class: 'btnrow' },
         h('button', { class: 'btn primary', onclick: () => passcodeModal(acct) }, 'Set up vault'),
         h('button', { class: 'btn', onclick: () => { ls('as.hidenote.' + acct.id, '1'); render(true); } }, 'No thanks'))),
-    composer(acct, { placeholder: W('composePlaceholder'), onDone: () => render(true) }),
+    composer(acct, { placeholder: W('composePlaceholder'), heading: W('composeHeading'), onDone: () => render(true) }),
   ];
   if (pop && homeTab === 'foryou') {
     const crowd = GW.feed(worldSeed(), Date.now(), feedCount);
@@ -1528,9 +1530,21 @@ async function authView() {
 }
 
 /* ---------- shell ---------- */
+// What sits in the right-hand column (shared by the original look and Classic Blue).
+function sideBlocks() {
+  return (
+      populated()
+        ? [h('div', { class: 'card' }, h('h3', {}, W('sideHappening')),
+            Ghost.trending(worldSeed(), Date.now(), 3).map((t, k) => h('div', { class: 'side-trend' }, h('div', { class: 'muted' }, `${k + 1} · ${W('sideTrending')}`), h('b', {}, t.tag ? '#' + t.tag : t.topic), h('div', { class: 'muted' }, fmt(t.posts) + ' posts')))),
+           h('div', { class: 'card' }, h('h3', {}, W('sideWho')),
+            GW.suggestions(worldSeed(), Date.now(), 3).map(p => h('a', { class: 'side-who', href: '#/u/' + p.id }, ghostAvatar(p, 'sm'), h('div', {}, h('b', {}, p.name), h('div', { class: 'muted' }, '@' + p.handle)))))]
+        : [h('div', { class: 'card' }, h('h3', {}, W('sideHappening')), h('p', {}, W('sideEmptyHappening'))),
+           h('div', { class: 'card' }, h('h3', {}, W('sideWho')), h('p', {}, W('sideEmptyWho')))]);
+}
 function shell(acct, route, main, ctx, chId) {
   const id = tplId();
   if (id === 'chat') return shellChat(acct, route, main, ctx, chId);
+  if (id === 'blue') return shellBlue(acct, route, main, ctx);
   return shellDefault(acct, route, main);
 }
 function shellDefault(acct, route, main) {
@@ -1546,13 +1560,7 @@ function shellDefault(acct, route, main) {
     h('main', { class: 'main' }, main),
     h('aside', { class: 'side' },
       h('div', { class: 'search' }, icon('search'), h('span', {}, W('searchBlurb'))),
-      populated()
-        ? [h('div', { class: 'card' }, h('h3', {}, W('sideHappening')),
-            Ghost.trending(worldSeed(), Date.now(), 3).map((t, k) => h('div', { class: 'side-trend' }, h('div', { class: 'muted' }, `${k + 1} · ${W('sideTrending')}`), h('b', {}, t.tag ? '#' + t.tag : t.topic), h('div', { class: 'muted' }, fmt(t.posts) + ' posts')))),
-           h('div', { class: 'card' }, h('h3', {}, W('sideWho')),
-            GW.suggestions(worldSeed(), Date.now(), 3).map(p => h('a', { class: 'side-who', href: '#/u/' + p.id }, ghostAvatar(p, 'sm'), h('div', {}, h('b', {}, p.name), h('div', { class: 'muted' }, '@' + p.handle)))))]
-        : [h('div', { class: 'card' }, h('h3', {}, W('sideHappening')), h('p', {}, W('sideEmptyHappening'))),
-           h('div', { class: 'card' }, h('h3', {}, W('sideWho')), h('p', {}, W('sideEmptyWho')))],
+      sideBlocks(),
       h('p', { class: 'fine' }, 'No servers · No tracking · No audience · Terms: TOUCH GRASS')));
 }
 

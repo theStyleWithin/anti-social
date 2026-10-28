@@ -14,9 +14,9 @@ const TemplateCore = (() => {
   const DEFAULT = {
     navHome: 'Home', navApps: 'Apps', navExplore: 'Explore', navNotifications: 'Notifications', navProfile: 'Profile', navSettings: 'Settings',
     titleHome: 'Home', titleExplore: 'Explore', titleNotifications: 'Notifications', titlePost: 'Post',
-    composePlaceholder: "What's happening?", send: 'Post', reply: 'Reply',
+    composePlaceholder: "What's happening?", composeHeading: '', send: 'Post', reply: 'Reply',
     replyGhostPlaceholder: 'Post your reply (they will not answer)', replySelfPlaceholder: 'Post your reply (to yourself)',
-    actReply: 'Reply', actRepost: 'Repost', actLike: 'Like', actViews: 'Views', actDelete: 'Delete post',
+    actReply: 'Reply', actRepost: 'Repost', actLike: 'Like', actLikeOn: 'Like', actViews: 'Views', actDelete: 'Delete post',
     statReplies: 'Replies', statReposts: 'Reposts', statLikes: 'Likes',
     youReposted: 'You reposted yourself', replyingSelf: 'Replying to yourself, as usual', replyingTo: 'Replying to',
     following: 'Following', followers: 'Followers', follow: 'Follow', unfollow: 'Following',
@@ -33,7 +33,7 @@ const TemplateCore = (() => {
     titleHome: 'general', titleExplore: 'Discover servers', titleNotifications: 'Inbox', titlePost: 'Message',
     composePlaceholder: 'Message #general', send: 'Send', reply: 'Reply',
     replyGhostPlaceholder: 'Reply to this message (they will not answer)', replySelfPlaceholder: 'Reply to your own message',
-    actReply: 'Reply', actRepost: 'Forward', actLike: 'React', actViews: 'Seen by', actDelete: 'Delete message',
+    actReply: 'Reply', actRepost: 'Forward', actLike: 'React', actLikeOn: 'React', actViews: 'Seen by', actDelete: 'Delete message',
     statReplies: 'Replies', statReposts: 'Forwards', statLikes: 'Reactions',
     youReposted: 'You forwarded your own message', replyingSelf: 'Replying to yourself', replyingTo: 'Replying to',
     following: 'Friends', followers: 'Servers', follow: 'Add Friend', unfollow: 'Friends',
@@ -48,12 +48,12 @@ const TemplateCore = (() => {
     ...DEFAULT,
     navHome: 'News Feed', navExplore: 'Find Friends', navProfile: 'Timeline',
     titleHome: 'News Feed', titleExplore: 'Find Friends', titleNotifications: 'Notifications', titlePost: 'Status',
-    composePlaceholder: "What's on your mind?", send: 'Post', reply: 'Comment',
+    composePlaceholder: "What's on your mind?", composeHeading: 'Update Status', send: 'Post', reply: 'Comment',
     replyGhostPlaceholder: 'Write a comment... (they will not answer)', replySelfPlaceholder: 'Write a comment on your own status...',
-    actReply: 'Comment', actRepost: 'Share', actLike: 'Like', actViews: 'Seen by', actDelete: 'Delete',
+    actReply: 'Comment', actRepost: 'Share', actLike: 'Like', actLikeOn: 'Unlike', actViews: 'Seen by', actDelete: 'Delete',
     statReplies: 'Comments', statReposts: 'Shares', statLikes: 'Likes',
     youReposted: 'You shared your own status', replyingSelf: 'You commented on your own status', replyingTo: 'In reply to',
-    following: 'Friends', followers: 'Friends', follow: 'Add Friend', unfollow: 'Friends',
+    following: 'Friends', followers: 'Followers', follow: 'Add Friend', unfollow: 'Friends',
     tabPosts: 'Timeline', tabReplies: 'Comments', tabMedia: 'Photos', tabForYou: 'Top Stories', tabYours: 'Your Posts', editProfile: 'Update Info',
     sideHappening: 'Trending', sideTrending: 'Trending', sideWho: 'People You May Know', sideEmptyWho: 'No one. Zero mutual friends.', sideEmptyHappening: 'Nothing. Nobody is here.',
     exploreEmptyTitle: 'No friends found', exploreSearching: 'Looking for friends...', searchAgain: 'Search again', exploreDiscover: 'Find Friends', discoverBtn: 'Find a new friend',
@@ -98,10 +98,26 @@ const TemplateCore = (() => {
   };
   const messageOrder = items => [...items].sort((a, b) => a.ts - b.ts);
 
+  /* ---------- blue: how a time is written ("about an hour ago", "Yesterday at 3:04pm", "October 28 at 3:04pm") ---------- */
+  const fbTime = (ts, now = Date.now(), locale) => {
+    const d = new Date(ts), n = new Date(now), diff = now - ts;
+    const t = d.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' }).replace(/\s+/g, '').toLowerCase();
+    const day = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const days = Math.round((day(n) - day(d)) / 864e5);
+    if (diff < 0) return `Today at ${t}`;
+    if (diff < 60000) return 'a few seconds ago';
+    if (diff < 3600000) { const m = Math.round(diff / 60000); return m <= 1 ? 'about a minute ago' : `${m} minutes ago`; }
+    if (diff < 21600000 && days === 0) { const h = Math.round(diff / 3600000); return h <= 1 ? 'about an hour ago' : `about ${h} hours ago`; }
+    if (days === 0) return `Today at ${t}`;
+    if (days === 1) return `Yesterday at ${t}`;
+    const date = d.toLocaleDateString(locale, { month: 'long', day: 'numeric', ...(d.getFullYear() !== n.getFullYear() ? { year: 'numeric' } : {}) });
+    return `${date} at ${t}`;
+  };
+
   /* ---------- blue: little helpers ---------- */
   const firstName = acct => String((acct && (acct.name || acct.handle)) || '').trim().split(/\s+/)[0] || '';
   const countLabel = (n, one, many) => n === 1 ? `1 ${one}` : `${n} ${many}`;
 
-  return { TEMPLATES, get, valid, word, WORDS, MAX_CHANNELS, channelName, channelError, isGeneral, inChannel, crowdMayPost, serverName, initials, roleFor, ROLE_COLOR, memberGroups, messageOrder, firstName, countLabel };
+  return { TEMPLATES, get, valid, word, WORDS, MAX_CHANNELS, channelName, channelError, isGeneral, inChannel, crowdMayPost, serverName, initials, roleFor, ROLE_COLOR, memberGroups, messageOrder, firstName, countLabel, fbTime };
 })();
 if (typeof module !== 'undefined') module.exports = TemplateCore;
