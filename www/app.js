@@ -1578,7 +1578,7 @@ async function render(keepScroll = false) {
   try {
     const acct = session && await loadAccount(session);
     if (my !== renderId) return;
-    if (!acct || acct.locked) { currentAcct = null; applyBg(null); }
+    if (!acct || acct.locked) { currentAcct = null; applyBg(null); AIOnline.setKey(null); }
     if (acct?.locked) {
       if (authMode.mode !== 'unlock' || authMode.account?.id !== acct.id) authMode = { mode: 'unlock', account: acct };
       document.title = 'Anti-Social';
@@ -1589,11 +1589,12 @@ async function render(keepScroll = false) {
     const all = await loadPosts(acct);
     if (my !== renderId) return;
     currentAcct = acct;
+    AIOnline.setKey((all.find(p => p.kind === 'aikey') || {}).key);
     applyBg(bgOf(all));
     if (all.bad) console.warn(`${all.bad} post(s) could not be decrypted`);
     // Your likes, reposts and follows of generated accounts live beside your posts but are not posts.
     const posts = all.filter(p => !p.kind);                 // real posts only; everything else is a record of some other kind
-    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], srv: [], bot: [], aimsg: [], aimode: [] };
+    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], srv: [], bot: [], aimsg: [], aimode: [], aikey: [] };
     for (const p of all) if (apps[p.kind]) apps[p.kind].push(p);
     castMap = new Map(all.filter(p => p.kind === 'cast').map(p => [p.ref, p]));
     const reactions = new Map(all.filter(p => p.kind === 'ghost').map(p => [p.target, p]));

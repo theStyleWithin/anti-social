@@ -85,6 +85,7 @@ TokenReply write your AI members' replies instead of a model file on your device
 `https://api.tokenreply.com` and nothing else. If you turn it on, your API key, the character's description and the recent
 chat are sent there; switch back to "On this device" and nothing is sent. Your key stays on your device and is not part of exported accounts.
 Because of this, the Android app now carries the internet permission; it is used for nothing else.
+If your account has a vault passcode, you can also lock the API key with it: it is then stored encrypted inside the vault, readable only while the vault is open, and never included in exported files.
 
 ## About antivirus warnings
 

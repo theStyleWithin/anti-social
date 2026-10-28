@@ -64,7 +64,7 @@ jobs:
         run: |
           git init mobile/android/llama.cpp
           git -C mobile/android/llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
-          git -C mobile/android/llama.cpp fetch --depth 1 origin 1729d2ec2c4846df7754f4ce8f90f75f8a30ca3b
+          git -C mobile/android/llama.cpp fetch --depth 1 origin tag v0.7.0
           git -C mobile/android/llama.cpp checkout FETCH_HEAD
       - name: Sync web app into the Android project
         working-directory: mobile

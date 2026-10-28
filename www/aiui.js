@@ -147,10 +147,17 @@ function aiLocalPanel(acct) {
     state, info);
 }
 let aiModelList = null, aiModelErr = '';
-function aiOnlinePanel() {
-  const cfg = aiConfig(), on = cfg.online || {};
+function aiOnlinePanel(acct, ctx) {
+  const cfg = aiConfig(), on = cfg.online || {}, rec = ctx && ctx.apps.aikey[0] || null, inVault = !!rec && !!acct.vault;
   const keep = patch => aiSaveConfig({ ...aiConfig(), online: { ...(aiConfig().online || {}), ...patch } });
-  const key = h('input', { type: 'password', value: on.key || '', placeholder: 'Paste your TokenReply API key', autocomplete: 'off', spellcheck: 'false', 'aria-label': 'TokenReply API key' });
+  const key = h('input', { type: 'password', value: (rec ? rec.key : on.key) || '', placeholder: 'Paste your TokenReply API key', autocomplete: 'off', spellcheck: 'false', 'aria-label': 'TokenReply API key' });
+  const vaultBox = h('input', { type: 'checkbox', checked: inVault, 'aria-label': 'Lock the key with my passcode' });
+  vaultBox.addEventListener('change', async () => {
+    const k = key.value.trim();
+    if (vaultBox.checked) { await savePost(acct, { id: 'aikey' + acct.id, accountId: acct.id, kind: 'aikey', key: k, createdAt: Date.now() }); keep({ key: '' }); AIOnline.setKey(k); toast('The key is now locked in your vault.'); }
+    else { if (rec) await db.del('posts', rec.id); keep({ key: k }); AIOnline.setKey(null); toast('The key is stored on this device without the vault.'); }
+    render(true);
+  });
   const freeOnly = h('input', { type: 'checkbox', checked: on.freeOnly !== false, 'aria-label': 'Only free models' });
   const sel = h('select', { 'aria-label': 'Model' });
   const status = h('p', { class: 'fine', style: 'padding:6px 0 0' }, aiModelErr || (on.model ? '' : 'Paste your key, then press "Load models".'));
@@ -164,24 +171,28 @@ function aiOnlinePanel() {
     if (cur && !aiModelList) { sel.replaceChildren(h('option', { value: cur }, cur)); sel.value = cur; }
   };
   fill();
-  key.addEventListener('change', () => { keep({ key: key.value.trim() }); aiModelList = null; aiModelErr = ''; });
+  const putKey = async k => {                       // keep the key where it lives now: inside the vault, or on this device
+    if (rec) { await savePost(acct, { ...rec, key: k }); AIOnline.setKey(k); } else keep({ key: k });
+  };
+  key.addEventListener('change', async () => { await putKey(key.value.trim()); aiModelList = null; aiModelErr = ''; });
   freeOnly.addEventListener('change', () => { keep({ freeOnly: freeOnly.checked }); fill(); });
   sel.addEventListener('change', () => { keep({ model: sel.value }); if (sel.value) toast('Model chosen.'); });
   const load = h('button', { class: 'btn primary', type: 'button' }, 'Load models');
   load.addEventListener('click', async () => {
-    keep({ key: key.value.trim() }); if (!key.value.trim()) { status.textContent = 'Paste your API key first.'; return; }
+    await putKey(key.value.trim()); if (!key.value.trim()) { status.textContent = 'Paste your API key first.'; return; }
     load.disabled = true; status.textContent = 'Asking TokenReply...';
     try { aiModelList = await AIOnline.models(key.value.trim()); aiModelErr = ''; const free = aiModelList.filter(m => m.free).length; status.textContent = `${aiModelList.length} models found${free ? `, ${free} free` : ''}.`; if (!free && freeOnly.checked) { freeOnly.checked = false; keep({ freeOnly: false }); status.textContent += ' None are marked free, so all are shown.'; } fill(); }
     catch (e) { aiModelErr = e.message; status.textContent = e.message; } finally { load.disabled = false; }
   });
   return h('section', {}, h('h3', {}, 'TokenReply (online)'),
     h('p', {}, 'Optional. Instead of a model file, your AI members can be answered by TokenReply, which is handy on a phone. Everything the character says to the model goes over the internet to ' + AIOnline.BASE + ' and nowhere else: your API key, the character\'s description and the recent chat. Nothing else in Anti-Social ever goes online. Switch back to "On this device" and nothing is sent.'),
-    aiField('API key', key, 'Kept on this device only. It is not part of your exported account file.'),
+    aiField('API key', key, rec ? 'Locked in your vault: encrypted with your passcode, and only readable while the vault is open. Not part of your exported account file.' : 'Kept on this device only. It is not part of your exported account file.'),
+    acct.vault ? h('label', { class: 'field check' }, vaultBox, h('span', {}, 'Lock the key with my passcode (encrypted in the vault)')) : h('p', { class: 'fine', style: 'padding:0 0 8px' }, 'Tip: set up a vault passcode (Settings, Privacy & Security) and you can lock this key with it.'),
     h('div', { class: 'btnrow' }, load),
     h('label', { class: 'field check' }, freeOnly, h('span', {}, 'Only show free models')),
     aiField('Model', sel), status);
 }
-function aiEnginePanel(acct) {
+function aiEnginePanel(acct, ctx) {
   const cfg = aiConfig(), online = cfg.provider === 'online';
   const pick = h('select', { 'aria-label': 'Where the AI runs' }, h('option', { value: 'local' }, 'On this device (a model file; nothing is sent anywhere)'), h('option', { value: 'online' }, 'TokenReply (online, optional)'));
   pick.value = online ? 'online' : 'local';
@@ -189,12 +200,12 @@ function aiEnginePanel(acct) {
     if (pick.value === 'online' && !confirm('With TokenReply on, the chat text, the character descriptions and your API key are sent over the internet to api.tokenreply.com so it can write the replies. Turn it on?')) { pick.value = 'local'; return; }
     aiSaveConfig({ ...aiConfig(), provider: pick.value }); render(true);
   });
-  return [h('section', {}, h('h3', {}, 'Where the AI runs'), aiField('Provider', pick, online ? 'Online: replies are written by TokenReply.' : 'Local: replies are written by a model file on this device.')), online ? aiOnlinePanel() : aiLocalPanel(acct)];
+  return [h('section', {}, h('h3', {}, 'Where the AI runs'), aiField('Provider', pick, online ? 'Online: replies are written by TokenReply.' : 'Local: replies are written by a model file on this device.')), online ? aiOnlinePanel(acct, ctx) : aiLocalPanel(acct)];
 }
 function aiTab(acct, ctx) {
   const bots = aiBots(ctx), names = channelNames(ctx);
   return [
-    ...aiEnginePanel(acct),
+    ...aiEnginePanel(acct, ctx),
     h('section', {}, h('h3', {}, `AI members (${bots.length})`),
       h('p', {}, 'Characters you make for your private server. They answer when you ping them with @ and their name spelled exactly right, and in a private chat. Each one has its own personality and rules about where it may talk. Use the sparkle button in a channel to set up taking turns or away chat.'),
       bots.map(b => h('div', { class: 'person-row' }, h('a', { href: '#/bot/' + b.id, 'aria-label': b.name }, botAvatar(b, 'sm')),

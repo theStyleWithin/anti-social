@@ -16,7 +16,7 @@ async function aiEnsure() {
   if (!e) throw aiErr('no-engine', 'This device has no AI engine. Use a model file in the Windows, Linux or Android app, or switch to TokenReply in Settings, AI members.');
   const c = aiConfig();
   if (aiOnlineOn()) {
-    if (!c.online || !c.online.key) throw aiErr('no-model', 'Add your TokenReply API key first: Settings, AI members.');
+    if (!AIOnline.hasKey()) throw aiErr('no-model', 'Add your TokenReply API key first: Settings, AI members.');
     if (!c.online.model) throw aiErr('no-model', 'Choose a TokenReply model first: Settings, AI members.');
     return e;
   }

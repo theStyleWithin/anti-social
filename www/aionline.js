@@ -6,7 +6,8 @@
 const AIOnline = (() => {
   const BASE = 'https://api.tokenreply.com/v1';
   const jobs = new Map();
-  const cfg = () => { try { const c = JSON.parse(localStorage.getItem('as.ai') || '{}'); return c && c.online || {}; } catch { return {}; } };
+  let lockedKey = null;                           // the key when it is kept inside the vault (set by the app while the vault is open)
+  const cfg = () => { try { const c = JSON.parse(localStorage.getItem('as.ai') || '{}'), o = c && c.online || {}; return lockedKey ? { ...o, key: lockedKey } : o; } catch { return {}; } };
   const fail = (code, message) => Object.assign(new Error(message), { code });
   const why = async res => {
     let detail = ''; try { const j = await res.json(); detail = (j.error && (j.error.message || j.error)) || j.message || ''; } catch { /* no body */ }
@@ -57,7 +58,7 @@ const AIOnline = (() => {
     } catch (e) { if (e && e.name === 'AbortError') return ''; throw e; } finally { jobs.delete(req.id); }
   };
   return {
-    kind: 'online', BASE, models, generate,
+    kind: 'online', BASE, models, generate, setKey(k) { lockedKey = k || null; }, hasKey: () => !!cfg().key,
     async status() { const c = cfg(); return { loaded: !!(c.key && c.model), path: 'online:' + (c.model || ''), backend: 'TokenReply' }; },
     async load() {}, async unload() {}, async systemInfo() { return null; },
     cancel(id) { const c = jobs.get(id); if (c) c.abort(); },
