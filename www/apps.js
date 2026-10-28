@@ -467,6 +467,7 @@ function appsHome(acct, ctx) {
     ['notes', 'notes', 'Notes', A.note.length ? plural(A.note.length, 'note') : 'Nothing written yet'],
     ['bible', 'scroll', 'Bible', A.bible.length ? plural(A.bible.length, 'Bible') + ' on this device' : 'Bring your own Bible'],
     ['diary', 'book', 'Diary', st ? `${plural(st, 'day')} in a row` : dset.size ? plural(dset.size, 'entry').replace('entrys', 'entries') : 'A page for today'],
+    ['travel', 'globe', 'Travel Log', (() => { const t = TravelCore.stats(A.place); return t.places ? `${plural(t.places, 'place')} · ${plural(t.countries, 'country').replace('countrys', 'countries')}` : 'Mark where you have been'; })()],
   ];
   cards.splice(0, cards.length, ...cards.filter(c => !hidden.has(c[0])));
   // your own order (saved per account on this device), with anything new tacked on the end
@@ -504,7 +505,7 @@ function appsHome(acct, ctx) {
 /* ---- rearranging the launcher: drag with a mouse, or touch and hold on a phone ---- */
 let appsReorder = false;
 // Every app, for the Settings list that shows or hides them. The Bible starts hidden; turn it on if you want it.
-const APP_LIST = [['calendar', 'Calendar'], ['calc', 'Calculator'], ['bank', 'Banking'], ['inventory', 'Household'], ['groceries', 'Groceries'], ['chores', 'Chores'], ['notes', 'Notes'], ['bible', 'Bible'], ['diary', 'Diary']];
+const APP_LIST = [['calendar', 'Calendar'], ['calc', 'Calculator'], ['bank', 'Banking'], ['inventory', 'Household'], ['groceries', 'Groceries'], ['chores', 'Chores'], ['notes', 'Notes'], ['bible', 'Bible'], ['diary', 'Diary'], ['travel', 'Travel Log']];
 const hiddenKey = acct => 'as.hiddenapps.' + acct.id;
 // Every app can be given your own name (per account). An empty name means the original one.
 const namesKey = acct => 'as.appnames.' + acct.id;
@@ -609,6 +610,7 @@ function appsView(acct, ctx, sub, arg) {
     case 'notes': return notesView(acct, ctx, back, arg);
     case 'diary': return diaryView(acct, ctx, back, arg);
     case 'bible': return bibleView(acct, ctx, back, arg);
+    case 'travel': return travelView(acct, ctx, back, arg);
     default: return appsHome(acct, ctx);
   }
 }

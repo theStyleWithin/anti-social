@@ -521,3 +521,24 @@ html.has-bg .main { backdrop-filter: blur(2px); }
 .toggles { display: grid; gap: 4px; margin-top: 8px; }
 .check { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
 .appname { flex: 1; min-width: 0; padding: 8px 12px; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 999px; }
+
+/* ---- Travel Log ---- */
+.tstats { display: flex; gap: 8px; padding: 12px 16px 4px; flex-wrap: wrap; }
+.tstat { flex: 1; min-width: 70px; padding: 8px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; }
+.tstat b { font-size: 20px; }
+.travel-map { position: relative; height: clamp(300px, 58vh, 540px); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; touch-action: none; background: var(--card); }
+.travel-map:focus-visible { outline: 2px solid var(--accent); }
+.travel-map canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.map-ctl { position: absolute; right: 8px; top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.map-btn { width: 38px; height: 38px; padding: 0; font-size: 20px; line-height: 1; background: var(--bg); }
+.travel-sheet { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 10px; padding: 12px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; min-height: 52px; }
+.travel-sheet .btn { margin-left: auto; }
+.tplace { display: flex; gap: 12px; align-items: center; padding: 10px 4px; border-bottom: 1px solid var(--line); color: var(--fg); }
+.tplace-main { display: flex; flex-direction: column; min-width: 0; }
+.tplace-note { overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.tcountry { padding: 10px 4px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.tcountry-places { width: 100%; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 14px; }
+.tgallery { margin-top: 12px; }
+.tgallery .ph-tile { padding: 0; border: 0; cursor: pointer; }
+.tfound { display: grid; gap: 4px; margin: 4px 0 8px; }
+.tfound-item { display: flex; justify-content: space-between; gap: 8px; padding: 8px 12px; background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 10px; text-align: left; }

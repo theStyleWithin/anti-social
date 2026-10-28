@@ -6,7 +6,7 @@
 
 ## Status: fully featured and complete
 
-Anti-Social v0.9.1 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.10.0 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (the v0.7.1 drag-to-reorder and v0.8.0 themes and v0.9.0 Bible are automated-test verified, awaiting a hand test); plus automated tests):
 - **Android:** installed and used on a real phone, including account switching, Populated mode, Characters, the storage limit and the Apps.
@@ -54,6 +54,7 @@ is a flat, unblinking **0**.
 
 ## Version history
 
+- **v0.10.0:** a Travel Log app with a built-in offline world map: tap the map or search a city to log a place, add dates, notes of any length and your own photos, see countries light up, and browse your places and countries. You can rename it ("Captain's Log", say) like any other app
 - **v0.9.1:** the Bible app no longer ships any Bible text. You bring your own file, so it is exactly the edition you (or your congregation) trust. It reads right-to-left Hebrew files too, and skips chapters that have no text
 - **v0.9.0:** a Bible app (hidden until you turn it on in Settings): the whole Tanakh in Hebrew and the public-domain 1917 JPS English, side by side or one at a time, with search, highlights and notes; or import your own Bible file (USFM, OSIS, JSON, plain text). You can now show or hide any app and rename any of them (call Diary "Captain's Log" if you like)
 - **v0.8.0:** color themes (ten presets plus your own two-color custom theme, shareable as a tiny file) and your own picture as the app background, saved on your device and encrypted with your passcode; text is always kept readable
@@ -150,3 +151,7 @@ Forks and modified versions are not made, reviewed or endorsed by the original a
 Anti-Social does not include any Bible text. In Apps, turn on Bible in Settings, then import your own file: USFM, OSIS XML, JSON, or plain text lines such as `John 3:16 For God so loved...`. That way the text is exactly the edition you trust, whether that is a translation you own or a Hebrew Tanakh your temple has checked. You confirm you have the right to use each file you import, and it stays on your device (encrypted if you use a passcode).
 
 v0.9.0 shipped with a Hebrew and 1917 English Tanakh bundled in. v0.9.1 removes it, so there is nothing in the app to verify.
+
+## Map data
+
+The Travel Log map is drawn from [Natural Earth](https://www.naturalearthdata.com/) country outlines and populated places, which are public domain. `tools/build-map.py` rebuilds `www/map/world.js`. It is simplified to about 1 km, so it is a travel map, not a survey. The map is drawn on your device and never downloads anything.
