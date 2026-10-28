@@ -542,3 +542,19 @@ html.has-bg .main { backdrop-filter: blur(2px); }
 .tgallery .ph-tile { padding: 0; border: 0; cursor: pointer; }
 .tfound { display: grid; gap: 4px; margin: 4px 0 8px; }
 .tfound-item { display: flex; justify-content: space-between; gap: 8px; padding: 8px 12px; background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 10px; text-align: left; }
+
+/* ---- Cookbook ---- */
+.cb-list { padding: 0 16px; }
+.cb-group { margin: 16px 0 6px; font-size: 15px; color: var(--muted); font-weight: 700; }
+.cb-card { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 12px 40px 12px 4px; border-bottom: 1px solid var(--line); color: var(--fg); }
+.cb-fav { position: absolute; right: 8px; top: 12px; color: #f5b301; }
+.cb-mine { position: absolute; right: 8px; bottom: 12px; font-size: 12px; color: var(--accent); }
+.cb-title { margin: 0 0 4px; font-size: 24px; }
+.cb-serves { display: flex; align-items: center; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
+.cb-serves-n { min-width: 28px; text-align: center; font-weight: 700; font-size: 18px; }
+.cb-ing { list-style: none; margin: 0; padding: 0; }
+.cb-ing li { padding: 2px 0; }
+.cb-ing input:checked + span { text-decoration: line-through; color: var(--muted); }
+.cb-steps { padding-left: 22px; line-height: 1.55; }
+.cb-steps li { padding: 6px 4px; cursor: pointer; border-radius: 8px; }
+.cb-steps li.done { color: var(--muted); text-decoration: line-through; }
