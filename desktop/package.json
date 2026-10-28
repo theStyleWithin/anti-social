@@ -27,7 +27,17 @@
     "productName": "Anti-Social",
     "files": [
       "main.js",
-      "www/**/*"
+      "preload.js",
+      "ai-engine.mjs",
+      "www/**/*",
+      "node_modules/**/*",
+      "!node_modules/node-llama-cpp/llama/{llama.cpp,addon,cmake,gitRelease.bundle,CMakeLists.txt,localBuilds}/**",
+      "!node_modules/node-llama-cpp/llama/{gitRelease.bundle,CMakeLists.txt}",
+      "!node_modules/@node-llama-cpp/*cuda*/**",
+      "!node_modules/@node-llama-cpp/*-arm*/**",
+      "!node_modules/@node-llama-cpp/mac-*/**",
+      "!node_modules/**/*.{md,markdown,map,ts}",
+      "!node_modules/.bin/**"
     ],
     "directories": {
       "output": "dist",
@@ -40,14 +50,20 @@
         "deb"
       ],
       "category": "Network",
-      "icon": "build/icon.png"
+      "icon": "build/icon.png",
+      "files": [
+        "!node_modules/@node-llama-cpp/win-*/**"
+      ]
     },
     "win": {
       "target": [
         "nsis",
         "portable"
       ],
-      "icon": "build/icon.png"
+      "icon": "build/icon.png",
+      "files": [
+        "!node_modules/@node-llama-cpp/linux-*/**"
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -57,6 +73,11 @@
     "publish": null,
     "portable": {
       "artifactName": "Anti-Social-${version}-win-${arch}-portable.${ext}"
-    }
+    },
+    "asar": false,
+    "npmRebuild": false
+  },
+  "dependencies": {
+    "node-llama-cpp": "3.22.2"
   }
 }
