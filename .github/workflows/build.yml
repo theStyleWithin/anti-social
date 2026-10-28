@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-24.04, windows-latest]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -31,7 +31,13 @@ jobs:
       - run: npm ci
         env:
           NODE_LLAMA_CPP_SKIP_DOWNLOAD: 'true'
-      - run: npm run dist
+      - name: Build installers
+        shell: bash
+        run: |
+          set +e
+          npm run dist 2>&1 | tee dist.log
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then echo "::error::$(grep -iE 'error|cannot|enoent|fail|exit' dist.log | tail -10 | tr '\n' '|' | cut -c1-1500)"; exit "$code"; fi
       - uses: actions/upload-artifact@v4
         with:
           name: desktop-${{ matrix.os }}
