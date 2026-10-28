@@ -1,0 +1,33 @@
+# The AI engine for the Android app: llama.cpp plus a thin JNI layer. Built by Gradle for 64-bit ARM.
+# llama.cpp is fetched by the build (see .github/workflows/build.yml) into LLAMA_DIR. If it is not there the
+# library is still built, without the engine, so the app compiles and says "no engine" instead of failing.
+cmake_minimum_required(VERSION 3.22.1)
+project(antisocial_ai CXX C)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(LLAMA_DIR "" CACHE PATH "Path to a llama.cpp checkout")
+
+if (LLAMA_DIR AND EXISTS "${LLAMA_DIR}/CMakeLists.txt")
+  set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+  set(LLAMA_BUILD_COMMON OFF CACHE BOOL "" FORCE)
+  set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  set(LLAMA_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+  set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+  set(LLAMA_BUILD_SERVER OFF CACHE BOOL "" FORCE)
+  set(LLAMA_BUILD_APP OFF CACHE BOOL "" FORCE)
+  set(LLAMA_BUILD_UI OFF CACHE BOOL "" FORCE)
+  set(LLAMA_OPENSSL OFF CACHE BOOL "" FORCE)      # no networking code at all
+  set(LLAMA_SUBPROCESS OFF CACHE BOOL "" FORCE)
+  set(GGML_OPENMP OFF CACHE BOOL "" FORCE)
+  set(GGML_NATIVE OFF CACHE BOOL "" FORCE)
+  add_subdirectory("${LLAMA_DIR}" llama.cpp)
+  add_library(antisocial_ai SHARED ai_jni.cpp)
+  target_compile_definitions(antisocial_ai PRIVATE ASAI_HAVE_LLAMA=1)
+  target_include_directories(antisocial_ai PRIVATE "${LLAMA_DIR}/include" "${LLAMA_DIR}/ggml/include")
+  target_link_libraries(antisocial_ai PRIVATE llama ggml)
+else()
+  add_library(antisocial_ai SHARED ai_jni.cpp)
+endif()
+if (ANDROID)
+  target_link_libraries(antisocial_ai PRIVATE log)
+endif()

@@ -60,6 +60,12 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      - name: Fetch the AI engine source (llama.cpp, pinned)
+        run: |
+          git init mobile/android/llama.cpp
+          git -C mobile/android/llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C mobile/android/llama.cpp fetch --depth 1 origin 1729d2ec2c4846df7754f4ce8f90f75f8a30ca3b
+          git -C mobile/android/llama.cpp checkout FETCH_HEAD
       - name: Sync web app into the Android project
         working-directory: mobile
         run: |
@@ -89,7 +95,10 @@ jobs:
         working-directory: mobile/android
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
+          set +e
+          ./gradlew assembleRelease --no-daemon 2>&1 | tee build.log
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then echo "::error::$(grep -E 'error|Error|FAILED|What went wrong' -A2 build.log | head -30 | tr '\n' '|' | cut -c1-1800)"; exit "$code"; fi
       - name: Name the APK
         run: |
           VERSION=$(node -p "require('./desktop/package.json').version")

@@ -134,7 +134,7 @@ function aiLocalPanel(acct) {
       h('button', { class: 'btn primary', type: 'button', onclick: async () => { try { const m = await e.pickModel(); if (!m) return; aiSaveConfig({ ...aiConfig(), model: m }); toast('Model chosen.'); render(true); } catch (x) { toast('That file could not be used: ' + (x && x.message || x)); } } }, cfg.model ? 'Choose a different model' : 'Choose model file'),
       cfg.model && h('button', { class: 'btn', type: 'button', onclick: async () => { try { await aiEnsure(); await refresh(); toast('Model loaded.'); } catch (x) { toast(x.message); } } }, 'Load now'),
       h('button', { class: 'btn', type: 'button', onclick: async () => { try { await e.unload(); await refresh(); toast('Model unloaded. Memory is free again.'); } catch (x) { toast(String(x && x.message || x)); } } }, 'Unload')),
-    aiField('Memory length', ctxSel, 'How much of the conversation a character can remember. Longer uses more memory.'), aiField('Run on', gpuSel),
+    aiField('Memory length', ctxSel, 'How much of the conversation a character can remember. Longer uses more memory.'), e.kind === 'android' ? null : aiField('Run on', gpuSel),
     h('div', { class: 'btnrow' }, h('button', { class: 'btn', type: 'button', onclick: async () => {
       try {
         const start = Date.now(); let n = 0; const id = uid();
@@ -203,7 +203,7 @@ function aiTab(acct, ctx) {
       h('div', { class: 'btnrow', style: 'margin-top:10px' }, h('button', { class: 'btn primary', type: 'button', onclick: () => botEditor(acct, ctx, null) }, 'Add an AI member'), h('button', { class: 'btn', type: 'button', onclick: () => botImport(acct, ctx) }, 'Import character card'))),
     h('section', {}, h('h3', {}, 'Away chat and battery'),
       h('p', {}, 'Away chat lets your AI members keep talking to each other while you do something else. Running a model uses the processor or graphics card hard, so on a laptop or phone it drains the battery quickly. By default it only runs while charging, stops below 30% battery, waits between messages and never sends more than 30 an hour. You can change all of that per channel. It pauses when the vault locks.'),
-      h('p', { class: 'fine', style: 'padding:0' }, 'Android may pause the app when the screen is off. The app asks Android to keep it running only while away chat is on and charging.')),
+      h('p', { class: 'fine', style: 'padding:0' }, 'On a phone, away chat runs while the app is open. Android stops apps when the screen is off, so turn on "fill in what they would have said" in the channel window and the conversation catches up when you come back.')),
   ];
 }
 
