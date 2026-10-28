@@ -50,20 +50,14 @@
         "deb"
       ],
       "category": "Network",
-      "icon": "build/icon.png",
-      "files": [
-        "!node_modules/@node-llama-cpp/win-*/**"
-      ]
+      "icon": "build/icon.png"
     },
     "win": {
       "target": [
         "nsis",
         "portable"
       ],
-      "icon": "build/icon.png",
-      "files": [
-        "!node_modules/@node-llama-cpp/linux-*/**"
-      ]
+      "icon": "build/icon.png"
     },
     "nsis": {
       "oneClick": false,
