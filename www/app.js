@@ -47,6 +47,15 @@ const ICONS = {
   wallet: '<path d="M3 7a2 2 0 0 1 2-2h13v4"/><path d="M3 7v10a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2z"/><circle cx="16.5" cy="14" r="1"/>',
   notes: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>',
   globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+  hash: '<path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18"/>',
+  speaker: '<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>',
+  compass: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+  chevron: '<path d="M6 9l6 6 6-6"/>',
+  crown: '<path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/>',
+  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+  headset: '<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="2"/><rect x="17" y="14" width="4" height="6" rx="2"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',
+  menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
   scroll: '<path d="M6 4h12v13a3 3 0 0 0 3 3H9a3 3 0 0 1-3-3z"/><path d="M6 4a2 2 0 0 0-2 2v1h2M10 9h6M10 13h6"/>',
   book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>',
   pin: '<path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3z"/>',
@@ -280,6 +289,8 @@ let profileTab = 'posts';
 let installPrompt = null;
 let session = ls('as.session');
 let currentAcct = null;
+const tplId = () => TemplateCore.valid(ls('as.template'));      // which template is on (this device)
+const W = key => TemplateCore.word(tplId(), key);                // the template's word for something
 
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; });
 
@@ -309,10 +320,15 @@ function applyBg(rec) {
   root.classList.add('has-bg');
 }
 
+function applyTemplate() {
+  const id = tplId(), root = document.documentElement;
+  if (id === 'default') delete root.dataset.tpl; else root.dataset.tpl = id;
+}
 function applyTheme() {
+  applyTemplate();
   if (applySkin()) return;
   document.documentElement.removeAttribute('data-theme');
-  const t = ls('as.theme');
+  const t = ls('as.theme') || TemplateCore.get(tplId()).mode;     // a template starts in its own look until you pick Light or Dark
   if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
   else delete document.documentElement.dataset.theme;
   const dark = t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
@@ -474,13 +490,14 @@ function mediaGrid(images) {
 
 function topbar(title, { back = false, sub = '', action = null } = {}) {
   return h('div', { class: 'topbar' },
+    tplId() === 'chat' && !back && h('button', { class: 'hamburger', 'aria-label': 'Open channels', onclick: () => drawer('left') }, icon('menu')),
     !back && currentAcct && h('button', { class: 'tb-me', 'aria-haspopup': 'menu', 'aria-label': 'Accounts', onclick: e => openAccountMenu(e.currentTarget, currentAcct) }, avatar(currentAcct, 'sm')),
     back && h('button', { class: 'back', 'aria-label': 'Back', onclick: () => history.length > 1 ? history.back() : go('/') }, icon('back')),
     h('div', {}, h('h1', {}, title), sub && h('div', { class: 'sub' }, sub)),
     action && h('div', { class: 'tbact' }, action));
 }
 
-function composer(acct, { placeholder, parentId = null, onDone, autofocus = false, label = 'Post' }) {
+function composer(acct, { placeholder, parentId = null, onDone, autofocus = false, label = W('send'), channel = null, enterSends = false }) {
   let images = [];
   const ta = h('textarea', { placeholder, rows: 1, 'aria-label': placeholder });
   const previews = h('div', { class: 'previews' });
@@ -505,7 +522,7 @@ function composer(acct, { placeholder, parentId = null, onDone, autofocus = fals
       return;
     }
     try {
-      await savePost(acct, { id: uid(), accountId: acct.id, text: ta.value.trim(), images, createdAt: Date.now(), parentId, liked: false, reposted: false });
+      await savePost(acct, { id: uid(), accountId: acct.id, text: ta.value.trim(), images, createdAt: Date.now(), parentId, liked: false, reposted: false, ...(channel && channel !== 'general' ? { channel } : {}) });
     } catch (e) {
       console.error(e);
       toast(isQuotaError(e) ? 'Out of space, so that post was not saved. Free some room and try again.' : 'That post could not be saved.');
@@ -516,7 +533,7 @@ function composer(acct, { placeholder, parentId = null, onDone, autofocus = fals
     onDone?.();
   };
   ta.addEventListener('input', sync);
-  ta.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) send(); });
+  ta.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey || (enterSends && !e.shiftKey && !e.isComposing))) { e.preventDefault(); send(); } });
   submit.addEventListener('click', send);
   file.addEventListener('change', async () => {
     for (const f of [...file.files].slice(0, 4 - images.length)) {
@@ -555,15 +572,15 @@ function postEl(p, acct, ctx, { detail = false } = {}) {
     if (detail) go(p.parentId ? '/post/' + p.parentId : '/'); else refresh();
   };
   const act = (name, count, label, onclick, cls = '', on = false) =>
-    h('button', { class: `act ${cls}${on ? ' on' : ''}`, 'aria-label': label, 'aria-pressed': cls === 'like' || cls === 'repost' ? String(on) : null, onclick: e => { e.stopPropagation(); onclick(); } },
+    h('button', { class: `act ${cls}${on ? ' on' : ''}`, 'aria-label': label, 'data-label': label, 'aria-pressed': cls === 'like' || cls === 'repost' ? String(on) : null, onclick: e => { e.stopPropagation(); onclick(); } },
       icon(name), count ? String(count) : '');
 
   const actions = h('div', { class: 'actions' },
-    act('reply', replies, 'Reply', () => detail ? $('.composer textarea')?.focus() : go('/post/' + p.id)),
-    act('repost', p.reposted ? 1 : 0, 'Repost', () => patch({ reposted: !p.reposted }), 'repost', p.reposted),
-    act('heart', p.liked ? 1 : 0, 'Like', () => patch({ liked: !p.liked }), 'like', p.liked),
+    act('reply', replies, W('actReply'), () => detail ? $('.composer textarea')?.focus() : go('/post/' + p.id)),
+    act('repost', p.reposted ? 1 : 0, W('actRepost'), () => patch({ reposted: !p.reposted }), 'repost', p.reposted),
+    act('heart', p.liked ? 1 : 0, W('actLike'), () => patch({ liked: !p.liked }), 'like', p.liked),
     h('span', { class: 'act views', title: 'Views', 'aria-label': '0 views' }, icon('chart'), '0'),
-    act('trash', 0, 'Delete post', remove, 'del'));
+    act('trash', 0, W('actDelete'), remove, 'del'));
 
   const name = h('span', { class: 'name' }, acct.name);
   const handle = h('span', { class: 'handle' }, '@' + acct.handle);
@@ -573,28 +590,29 @@ function postEl(p, acct, ctx, { detail = false } = {}) {
     return h('article', { class: 'post detail' },
       h('div', { style: 'display:flex;gap:12px;align-items:center' }, avatar(acct),
         h('div', {}, h('div', {}, name), h('div', {}, handle))),
-      p.reposted && h('div', { class: 'replying' }, 'You reposted yourself'),
-      parent && h('div', { class: 'replying' }, 'Replying to yourself, as usual'),
-      gParent && h('div', { class: 'replying' }, 'Replying to @' + gParent),
+      p.reposted && h('div', { class: 'replying' }, W('youReposted')),
+      parent && h('div', { class: 'replying' }, W('replyingSelf')),
+      gParent && h('div', { class: 'replying' }, W('replyingTo') + ' @' + gParent),
       p.text && h('div', { class: 'text' }, richText(p.text)),
       mediaGrid(p.images),
       h('div', { class: 'muted', style: 'margin-top:12px' }, `${when} · `, h('b', { style: 'color:var(--fg)' }, '0'), ' Views'),
       h('div', { class: 'stats' },
-        h('span', {}, h('b', {}, replies), ' Replies'),
-        h('span', {}, h('b', {}, p.reposted ? 1 : 0), ' Reposts'),
-        h('span', {}, h('b', {}, p.liked ? 1 : 0), ' Likes')),
+        h('span', {}, h('b', {}, replies), ' ' + W('statReplies')),
+        h('span', {}, h('b', {}, p.reposted ? 1 : 0), ' ' + W('statReposts')),
+        h('span', {}, h('b', {}, p.liked ? 1 : 0), ' ' + W('statLikes'))),
       actions);
   }
 
   return h('article', { class: 'post', onclick: e => { if (!e.target.closest('button,a')) go('/post/' + p.id); } },
     avatar(acct),
     h('div', { class: 'content' },
-      p.reposted && h('div', { class: 'replying' }, 'You reposted yourself'),
-      h('div', { class: 'head' }, name, handle, h('span', { class: 'time' }, '· ' + timeAgo(p.createdAt))),
-      parent && h('div', { class: 'replying' }, 'Replying to @' + acct.handle),
-      gParent && h('div', { class: 'replying' }, 'Replying to @' + gParent),
+      p.reposted && h('div', { class: 'replying' }, W('youReposted')),
+      h('div', { class: 'head' }, name, handle, h('span', { class: 'time' }, stamp(p.createdAt))),
+      parent && h('div', { class: 'replying' }, W('replyingTo') + ' @' + acct.handle),
+      gParent && h('div', { class: 'replying' }, W('replyingTo') + ' @' + gParent),
       p.text && h('div', { class: 'text' }, richText(p.text)),
       mediaGrid(p.images),
+      p.liked && tplId() === 'chat' && h('div', { class: 'reactions' }, h('button', { class: 'reaction on', 'aria-label': 'Remove your reaction', onclick: e => { e.stopPropagation(); patch({ liked: false }); } }, '\u2764\ufe0f 1')),
       actions));
 }
 
@@ -629,7 +647,7 @@ const FEED_MAX = 500;      // the on-screen crowd is capped, so memory and time 
 const fmt = n => n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1000 ? (n / 1000).toFixed(n < 10000 ? 1 : 0) + 'K' : String(n);
 
 const actBtn = (name, count, label, onclick, cls = '', on = false) =>
-  h('button', { class: `act ${cls}${on ? ' on' : ''}`, 'aria-label': label, 'aria-pressed': cls === 'like' || cls === 'repost' ? String(on) : null, onclick: e => { e.stopPropagation(); onclick(); } },
+  h('button', { class: `act ${cls}${on ? ' on' : ''}`, 'aria-label': label, 'data-label': label, 'aria-pressed': cls === 'like' || cls === 'repost' ? String(on) : null, onclick: e => { e.stopPropagation(); onclick(); } },
     icon(name), count ? String(count) : '');
 
 // Your reaction to a generated post or person (like, repost, follow). Stored like any post, so the vault covers it.
@@ -648,11 +666,11 @@ function ghostPostEl(g, acct, ctx, { detail = false } = {}) {
   const replies = ctx.replyCount.get(g.id) || 0;     // only your own replies exist
   const reposts = g.reposts + (rx.reposted ? 1 : 0), likes = g.likes + (rx.liked ? 1 : 0);
   const actions = h('div', { class: 'actions' },
-    actBtn('reply', replies, 'Reply', () => detail ? $('.composer textarea')?.focus() : go('/post/' + g.id)),
-    actBtn('repost', fmt(reposts), 'Repost', () => setReaction(acct, ctx, g.id, 'reposted'), 'repost', !!rx.reposted),
-    actBtn('heart', fmt(likes), 'Like', () => setReaction(acct, ctx, g.id, 'liked'), 'like', !!rx.liked),
+    actBtn('reply', replies, W('actReply'), () => detail ? $('.composer textarea')?.focus() : go('/post/' + g.id)),
+    actBtn('repost', fmt(reposts), W('actRepost'), () => setReaction(acct, ctx, g.id, 'reposted'), 'repost', !!rx.reposted),
+    actBtn('heart', fmt(likes), W('actLike'), () => setReaction(acct, ctx, g.id, 'liked'), 'like', !!rx.liked),
     h('span', { class: 'act views', title: 'Views', 'aria-label': fmt(g.views) + ' views' }, icon('chart'), fmt(g.views)));
-  const name = h('a', { class: 'name', href: '#/u/' + who.id }, who.name);
+  const name = h('a', { class: 'name' + (tplId() === 'chat' ? ' role-' + TemplateCore.roleFor(who.id).toLowerCase() : ''), href: '#/u/' + who.id }, who.name);
   const handle = h('a', { class: 'handle', href: '#/u/' + who.id }, '@' + who.handle);
 
   if (detail) {
@@ -664,15 +682,15 @@ function ghostPostEl(g, acct, ctx, { detail = false } = {}) {
       g.image && mediaGrid([g.image]),
       h('div', { class: 'muted', style: 'margin-top:12px' }, `${when} · `, h('b', { style: 'color:var(--fg)' }, fmt(g.views)), ' Views'),
       h('div', { class: 'stats' },
-        h('span', {}, h('b', {}, replies), ' Replies'),
-        h('span', {}, h('b', {}, fmt(reposts)), ' Reposts'),
-        h('span', {}, h('b', {}, fmt(likes)), ' Likes')),
+        h('span', {}, h('b', {}, replies), ' ' + W('statReplies')),
+        h('span', {}, h('b', {}, fmt(reposts)), ' ' + W('statReposts')),
+        h('span', {}, h('b', {}, fmt(likes)), ' ' + W('statLikes'))),
       actions);
   }
   return h('article', { class: 'post ghost-post', 'data-ghost': g.id, onclick: e => { if (!e.target.closest('button,a')) go('/post/' + g.id); } },
     h('a', { href: '#/u/' + who.id, 'aria-label': who.name }, ghostAvatar(who)),
     h('div', { class: 'content' },
-      h('div', { class: 'head' }, name, handle, h('span', { class: 'time' }, '· ' + timeAgo(g.ts))),
+      h('div', { class: 'head' }, name, handle, h('span', { class: 'time' }, stamp(g.ts))),
       h('div', { class: 'text' }, richText(g.text)),
       g.image && mediaGrid([g.image]),
       actions));
@@ -695,32 +713,33 @@ function ghostProfileView(acct, ctx, ref) {
         h('div', { class: 'avwrap' }, ghostAvatar(who, 'lg')),
         h('div', { class: 'btnrow', style: 'margin-top:12px' },
           h('button', { class: 'btn', onclick: () => personEditor(acct, who.id) }, 'Edit this person'),
-          h('button', { class: 'btn' + (rx.followed ? '' : ' primary'), 'aria-pressed': String(!!rx.followed), onclick: () => setReaction(acct, ctx, 'u:' + who.id, 'followed') }, rx.followed ? 'Following' : 'Follow'))),
+          h('button', { class: 'btn' + (rx.followed ? '' : ' primary'), 'aria-pressed': String(!!rx.followed), onclick: () => setReaction(acct, ctx, 'u:' + who.id, 'followed') }, rx.followed ? W('unfollow') : W('follow')))),
       h('h2', {}, who.name),
       h('div', { class: 'muted' }, '@' + who.handle),
       h('div', { class: 'bio' }, who.bio),
       h('div', { class: 'meta' }, 'Joined ' + who.joined),
       !who.custom && pr.i >= Ghost.POP && h('div', { class: 'meta' }, 'Far from the busy part of the world. Discovered by you.'),
-      h('div', { class: 'follow' }, h('span', {}, h('b', {}, fmt(who.following)), ' Following'), h('span', {}, h('b', {}, fmt(who.followers + (rx.followed ? 1 : 0))), ' Followers'))),
-    h('div', { class: 'tabs', role: 'tablist' }, h('button', { role: 'tab', 'aria-selected': 'true', class: 'active' }, 'Posts')),
+      h('div', { class: 'follow' }, h('span', {}, h('b', {}, fmt(who.following)), ' ' + W('following')), h('span', {}, h('b', {}, fmt(who.followers + (rx.followed ? 1 : 0))), ' ' + W('followers')))),
+    h('div', { class: 'tabs', role: 'tablist' }, h('button', { role: 'tab', 'aria-selected': 'true', class: 'active' }, W('tabPosts'))),
     list.map(g => ghostPostEl(g, acct, ctx)),
     ghostPostCount < 120 ? h('div', { class: 'empty-note' }, h('button', { class: 'btn', onclick: () => { ghostPostCount += 12; render(true); } }, 'Show more')) : h('div', { class: 'empty-note' }, 'That is everything they have posted lately.'),
   ];
 }
 
 /* ---------- views ---------- */
-function homeView(acct, ctx) {
+function homeView(acct, ctx, chId) {
+  if (tplId() === 'chat') return chatHome(acct, ctx, chId);
   const top = ctx.posts.filter(p => !p.parentId).sort((a, b) => b.createdAt - a.createdAt);
   const pop = populated();
   const head = [
-    topbar('Home', { action: acct.vault && h('button', { class: 'back', 'aria-label': 'Lock vault', title: 'Lock vault', onclick: () => { lockVault(); render(); } }, icon('lock')) }),
-    pop && h('div', { class: 'tabs', role: 'tablist' }, [['foryou', 'For you'], ['mine', 'Yours']].map(([k, label]) =>
+    topbar(W('titleHome'), { action: acct.vault && h('button', { class: 'back', 'aria-label': 'Lock vault', title: 'Lock vault', onclick: () => { lockVault(); render(); } }, icon('lock')) }),
+    pop && h('div', { class: 'tabs', role: 'tablist' }, [['foryou', W('tabForYou')], ['mine', W('tabYours')]].map(([k, label]) =>
       h('button', { role: 'tab', 'aria-selected': String(homeTab === k), class: homeTab === k ? 'active' : '', onclick: () => { homeTab = k; render(true); } }, label))),
     !acct.vault && !ls('as.hidenote.' + acct.id) && h('div', { class: 'vault-note' }, h('span', {}, "Your posts aren't encrypted. That's fine for a local app, or you can lock them with a passcode."),
       h('div', { class: 'btnrow' },
         h('button', { class: 'btn primary', onclick: () => passcodeModal(acct) }, 'Set up vault'),
         h('button', { class: 'btn', onclick: () => { ls('as.hidenote.' + acct.id, '1'); render(true); } }, 'No thanks'))),
-    composer(acct, { placeholder: "What's happening?", onDone: () => render(true) }),
+    composer(acct, { placeholder: W('composePlaceholder'), onDone: () => render(true) }),
   ];
   if (pop && homeTab === 'foryou') {
     const crowd = GW.feed(worldSeed(), Date.now(), feedCount);
@@ -737,8 +756,8 @@ function homeView(acct, ctx) {
   }
   return [...head,
     top.length
-      ? [...top.map(p => postEl(p, acct, ctx)), h('div', { class: 'empty-note' }, "You're all caught up. Nobody else posted. Nobody else exists.")]
-      : emptyState('Welcome to nowhere', 'Your timeline is empty. So is everyone else\'s. Go on, post something.'),
+      ? [...top.map(p => postEl(p, acct, ctx)), h('div', { class: 'empty-note' }, W('caughtUp'))]
+      : emptyState(W('emptyFeedTitle'), W('emptyFeedText')),
   ];
 }
 
@@ -758,47 +777,47 @@ function exploreCrowdView(acct, ctx) {
   const seed = worldSeed(), now = Date.now();
   const trends = Ghost.trending(seed, now, 5), who = GW.suggestions(seed, now, 4);
   return [
-    topbar('Explore'),
-    h('div', { class: 'explore-block' }, h('h3', {}, 'Trending'),
-      trends.map((t, k) => h('div', { class: 'trend' }, h('div', { class: 'muted' }, `${k + 1} · Trending`), h('b', {}, t.tag ? '#' + t.tag : t.topic), h('div', { class: 'muted' }, fmt(t.posts) + ' posts')))),
-    who.length > 0 && h('div', { class: 'explore-block' }, h('h3', {}, 'Who to follow'),
+    topbar(W('titleExplore')),
+    h('div', { class: 'explore-block' }, h('h3', {}, W('sideTrending')),
+      trends.map((t, k) => h('div', { class: 'trend' }, h('div', { class: 'muted' }, `${k + 1} · ${W('sideTrending')}`), h('b', {}, t.tag ? '#' + t.tag : t.topic), h('div', { class: 'muted' }, fmt(t.posts) + ' posts')))),
+    who.length > 0 && h('div', { class: 'explore-block' }, h('h3', {}, W('sideWho')),
       who.map(p => {
         const rx = ctx.reactions.get('u:' + p.id) || {};
         return h('div', { class: 'suggest' },
           h('a', { href: '#/u/' + p.id, class: 'suggest-who' }, ghostAvatar(p, 'sm'), h('div', {}, h('b', {}, p.name), h('div', { class: 'muted' }, '@' + p.handle))),
-          h('button', { class: 'btn' + (rx.followed ? '' : ' primary'), onclick: () => setReaction(acct, ctx, 'u:' + p.id, 'followed') }, rx.followed ? 'Following' : 'Follow'));
+          h('button', { class: 'btn' + (rx.followed ? '' : ' primary'), onclick: () => setReaction(acct, ctx, 'u:' + p.id, 'followed') }, rx.followed ? W('unfollow') : W('follow')));
       })),
-    crowdOn() && h('div', { class: 'explore-block' }, h('h3', {}, 'Discover'),
+    crowdOn() && h('div', { class: 'explore-block' }, h('h3', {}, W('exploreDiscover')),
       h('p', { class: 'muted', style: 'margin:0 0 12px' }, `Pick a stranger from ${Ghost.WORLD.toLocaleString()} possible accounts. All generated, none real.`),
-      h('button', { class: 'btn primary', onclick: () => go('/u/' + seed + '.' + Ghost.discover()) }, 'Discover someone new')),
+      h('button', { class: 'btn primary', onclick: () => go('/u/' + seed + '.' + Ghost.discover()) }, W('discoverBtn'))),
   ];
 }
 
 function exploreView(acct, ctx) {
   if (populated()) return exploreCrowdView(acct, ctx);
-  const line = h('p', { class: 'search-line' }, 'Searching for people...');
+  const line = h('p', { class: 'search-line' }, W('exploreSearching'));
   const tries = h('div', { class: 'search-tries' });
-  const again = h('button', { class: 'btn' }, 'Search again');
+  const again = h('button', { class: 'btn' }, W('searchAgain'));
   again.addEventListener('click', () => {
     searchAttempts++;
     line.textContent = SEARCH_JOKES[(searchAttempts - 1) % SEARCH_JOKES.length];
     tries.textContent = plural(searchAttempts, 'attempt') + ', 0 people';
   });
   return [
-    topbar('Explore'),
+    topbar(W('titleExplore')),
     h('div', { class: 'empty search-empty' },
       h('div', { class: 'stuck', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': '0', 'aria-label': 'Searching for people' }, h('span', {})),
-      h('h2', {}, 'Nobody found'),
+      h('h2', {}, W('exploreEmptyTitle')),
       line, tries, again),
   ];
 }
 
 function notificationsView() {
   return [
-    topbar('Notifications'),
+    topbar(W('titleNotifications')),
     populated()
       ? emptyState('Still nothing', 'There is a whole crowd now, and not one of them can notice you. That is by design.')
-      : emptyState('Nothing to see here', 'Literally no one has liked, replied to, or noticed you. No one can. That is the whole point.'),
+      : emptyState(W('notifTitle'), W('notifText')),
   ];
 }
 
@@ -808,25 +827,25 @@ function postView(acct, ctx, id) {
     const g = GW.post(gp.seed, gp.i, gp.m);
     const replies = ctx.posts.filter(r => r.parentId === g.id).sort((a, b) => a.createdAt - b.createdAt);
     return [
-      topbar('Post', { back: true }),
+      topbar(W('titlePost'), { back: true }),
       ghostPostEl(g, acct, ctx, { detail: true }),
-      composer(acct, { placeholder: 'Post your reply (they will not answer)', parentId: g.id, label: 'Reply', onDone: () => render(true) }),
+      composer(acct, { placeholder: W('replyGhostPlaceholder'), parentId: g.id, label: W('reply'), onDone: () => render(true) }),
       replies.map(r => postEl(r, acct, ctx)),
     ];
   }
   const p = ctx.byId.get(id);
-  if (!p) return [topbar('Post', { back: true }), emptyState('Post not found', 'It may have been deleted. Nobody will miss it.')];
+  if (!p) return [topbar(W('titlePost'), { back: true }), emptyState(W('postNotFound'), 'It may have been deleted. Nobody will miss it.')];
   const chain = [];
   for (let c = ctx.byId.get(p.parentId); c; c = ctx.byId.get(c.parentId)) chain.unshift(c);
   const rootGp = Ghost.parsePostId((chain[0] || p).parentId);
   const rootGhost = rootGp && GW.post(rootGp.seed, rootGp.i, rootGp.m);
   const replies = ctx.posts.filter(r => r.parentId === p.id).sort((a, b) => a.createdAt - b.createdAt);
   return [
-    topbar('Post', { back: true }),
+    topbar(W('titlePost'), { back: true }),
     rootGhost && ghostPostEl(rootGhost, acct, ctx),
     chain.map(c => postEl(c, acct, ctx)),
     postEl(p, acct, ctx, { detail: true }),
-    composer(acct, { placeholder: 'Post your reply (to yourself)', parentId: p.id, label: 'Reply', onDone: () => render(true) }),
+    composer(acct, { placeholder: W('replySelfPlaceholder'), parentId: p.id, label: W('reply'), onDone: () => render(true) }),
     replies.map(r => postEl(r, acct, ctx)),
   ];
 }
@@ -839,7 +858,7 @@ function profileView(acct, ctx) {
     media: ctx.posts.filter(p => p.images?.length),
   }[profileTab].sort((a, b) => b.createdAt - a.createdAt);
   const joined = new Date(acct.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-  const tabs = h('div', { class: 'tabs', role: 'tablist' }, [['posts', 'Posts'], ['replies', 'Replies'], ['media', 'Media']].map(([k, label]) =>
+  const tabs = h('div', { class: 'tabs', role: 'tablist' }, [['posts', W('tabPosts')], ['replies', W('tabReplies')], ['media', W('tabMedia')]].map(([k, label]) =>
     h('button', { role: 'tab', 'aria-selected': String(profileTab === k), class: profileTab === k ? 'active' : '', onclick: () => { profileTab = k; render(true); } }, label)));
   return [
     topbar(acct.name, { back: true, sub: plural(ctx.posts.length, 'post') }),
@@ -849,12 +868,12 @@ function profileView(acct, ctx) {
     h('div', { class: 'pinfo' },
       h('div', { class: 'top' },
         h('button', { class: 'avbtn', 'aria-label': 'Change avatar image', onclick: () => setProfileImage(acct.id, 'avatarImg', 256, 256) }, avatar(acct, 'lg'), h('span', { class: 'cam' }, icon('camera'))),
-        h('button', { class: 'btn', onclick: () => editProfile(acct) }, 'Edit profile')),
+        h('button', { class: 'btn', onclick: () => editProfile(acct) }, W('editProfile'))),
       h('h2', {}, acct.name),
       h('div', { class: 'muted' }, '@' + acct.handle),
       h('div', { class: 'bio' }, acct.bio || 'No bio. No audience either.'),
       h('div', { class: 'meta' }, 'Joined ' + joined + ' · Location: your device'),
-      h('div', { class: 'follow' }, h('span', {}, h('b', {}, ctx.following || 0), ' Following'), h('span', {}, h('b', {}, 0), ' Followers'))),
+      h('div', { class: 'follow' }, h('span', {}, h('b', {}, ctx.following || 0), ' ' + W('following')), h('span', {}, h('b', {}, 0), ' ' + W('followers')))),
     tabs,
     list.length ? list.map(p => postEl(p, acct, ctx)) : emptyState('Nothing here yet', 'Not that it matters. Nobody is checking.'),
   ];
@@ -1192,6 +1211,7 @@ function settingsView(acct, ctxBg) {
   const general = [
     h('section', {}, h('h3', {}, 'Display'), h('p', {}, 'Pick a look. Nobody will see it.'),
       h('div', { class: 'btnrow' }, themeBtn('auto', 'Auto'), themeBtn('light', 'Light'), themeBtn('dark', 'Dark'))),
+    templateSection(),
     h('section', {}, h('h3', {}, 'Color themes'), h('p', {}, 'The text color is picked for you so it always stays readable.'),
       h('div', { class: 'skins' }, ThemeCore.PRESETS.map(p => swatch(p.id, p.name, p.bg, p.accent)), swatch('custom', 'Custom', custom.bg, custom.accent))),
     h('section', {}, h('h3', {}, 'Make your own'), h('p', {}, 'Choose two colors. Everything else follows.'),
@@ -1389,7 +1409,7 @@ function editProfile(acct) {
 function composeModal(acct) {
   const close = modal(h('div', {},
     h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => close() }, icon('x'))),
-    composer(acct, { placeholder: "What's happening?", autofocus: true, onDone: () => { close(); render(true); } })));
+    composer(acct, { placeholder: W('composePlaceholder'), autofocus: true, onDone: () => { close(); render(true); } })));
 }
 
 /* ---------- auth ---------- */
@@ -1508,32 +1528,39 @@ async function authView() {
 }
 
 /* ---------- shell ---------- */
-function shell(acct, route, main) {
+function shell(acct, route, main, ctx, chId) {
+  const id = tplId();
+  if (id === 'chat') return shellChat(acct, route, main, ctx, chId);
+  return shellDefault(acct, route, main);
+}
+function shellDefault(acct, route, main) {
   const link = (path, name, label) => h('a', { href: '#' + path, class: route === name ? 'active' : '', 'aria-label': label, 'aria-current': route === name ? 'page' : null }, icon({ profile: 'user', explore: 'search', notifications: 'bell', apps: 'grid' }[name] || name), h('span', {}, label));
   return h('div', { class: 'shell' },
     h('nav', { class: 'nav', 'aria-label': 'Main' },
       h('a', { class: 'brand', href: '#/', 'aria-label': 'Anti-Social home' }, icon('logo')),
-      link('/', 'home', 'Home'), link('/apps', 'apps', 'Apps'), link('/explore', 'explore', 'Explore'), link('/notifications', 'notifications', 'Notifications'),
-      link('/profile', 'profile', 'Profile'), link('/settings', 'settings', 'Settings'),
+      link('/', 'home', W('navHome')), link('/apps', 'apps', W('navApps')), link('/explore', 'explore', W('navExplore')), link('/notifications', 'notifications', W('navNotifications')),
+      link('/profile', 'profile', W('navProfile')), link('/settings', 'settings', W('navSettings')),
       h('button', { class: 'postbtn', 'aria-label': 'Post', onclick: () => composeModal(acct) }, icon('compose'), h('span', {}, 'Post')),
       h('button', { class: 'me', 'aria-haspopup': 'menu', 'aria-label': 'Accounts', onclick: e => openAccountMenu(e.currentTarget, acct) }, avatar(acct, 'sm'),
         h('div', { class: 'who' }, h('b', {}, acct.name), h('div', { class: 'muted' }, '@' + acct.handle)))),
     h('main', { class: 'main' }, main),
     h('aside', { class: 'side' },
-      h('div', { class: 'search' }, icon('search'), h('span', {}, 'Search for people in Explore. Good luck.')),
+      h('div', { class: 'search' }, icon('search'), h('span', {}, W('searchBlurb'))),
       populated()
-        ? [h('div', { class: 'card' }, h('h3', {}, "What's happening"),
-            Ghost.trending(worldSeed(), Date.now(), 3).map((t, k) => h('div', { class: 'side-trend' }, h('div', { class: 'muted' }, `${k + 1} · Trending`), h('b', {}, t.tag ? '#' + t.tag : t.topic), h('div', { class: 'muted' }, fmt(t.posts) + ' posts')))),
-           h('div', { class: 'card' }, h('h3', {}, 'Who to follow'),
+        ? [h('div', { class: 'card' }, h('h3', {}, W('sideHappening')),
+            Ghost.trending(worldSeed(), Date.now(), 3).map((t, k) => h('div', { class: 'side-trend' }, h('div', { class: 'muted' }, `${k + 1} · ${W('sideTrending')}`), h('b', {}, t.tag ? '#' + t.tag : t.topic), h('div', { class: 'muted' }, fmt(t.posts) + ' posts')))),
+           h('div', { class: 'card' }, h('h3', {}, W('sideWho')),
             GW.suggestions(worldSeed(), Date.now(), 3).map(p => h('a', { class: 'side-who', href: '#/u/' + p.id }, ghostAvatar(p, 'sm'), h('div', {}, h('b', {}, p.name), h('div', { class: 'muted' }, '@' + p.handle)))))]
-        : [h('div', { class: 'card' }, h('h3', {}, "What's happening"), h('p', {}, 'Nothing. Nobody is here.')),
-           h('div', { class: 'card' }, h('h3', {}, 'Who to follow'), h('p', {}, 'No one. There is no one.'))],
+        : [h('div', { class: 'card' }, h('h3', {}, W('sideHappening')), h('p', {}, W('sideEmptyHappening'))),
+           h('div', { class: 'card' }, h('h3', {}, W('sideWho')), h('p', {}, W('sideEmptyWho')))],
       h('p', { class: 'fine' }, 'No servers · No tracking · No audience · Terms: TOUCH GRASS')));
 }
 
 async function render(keepScroll = false) {
   const my = ++renderId;
-  const y = scrollY;
+  const oldPane = tplId() === 'chat' ? $('.main') : null, oldList = $('.chat-list');
+  const y = oldPane ? oldPane.scrollTop : scrollY;
+  const stick = oldList ? oldList.scrollHeight - oldList.scrollTop - oldList.clientHeight < 60 : true, listTop = oldList ? oldList.scrollTop : 0;
   const root = $('#app');
   try {
     const acct = session && await loadAccount(session);
@@ -1553,7 +1580,7 @@ async function render(keepScroll = false) {
     if (all.bad) console.warn(`${all.bad} post(s) could not be decrypted`);
     // Your likes, reposts and follows of generated accounts live beside your posts but are not posts.
     const posts = all.filter(p => !p.kind);                 // real posts only; everything else is a record of some other kind
-    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [] };
+    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [] };
     for (const p of all) if (apps[p.kind]) apps[p.kind].push(p);
     castMap = new Map(all.filter(p => p.kind === 'cast').map(p => [p.ref, p]));
     const reactions = new Map(all.filter(p => p.kind === 'ghost').map(p => [p.target, p]));
@@ -1561,14 +1588,20 @@ async function render(keepScroll = false) {
     for (const p of posts) if (p.parentId) ctx.replyCount.set(p.parentId, (ctx.replyCount.get(p.parentId) || 0) + 1);
 
     const [, r = '', arg, arg2] = location.hash.split('/');
-    const route = { notifications: 'notifications', explore: 'explore', profile: 'profile', settings: 'settings', post: 'post', u: 'u', apps: 'apps' }[r] || 'home';
+    const route = { notifications: 'notifications', explore: 'explore', profile: 'profile', settings: 'settings', post: 'post', u: 'u', apps: 'apps', channel: 'home' }[r] || 'home';
+    const chId = r === 'channel' ? arg : '';
     const main = {
-      home: () => homeView(acct, ctx), apps: () => appsView(acct, ctx, arg, arg2), explore: () => exploreView(acct, ctx), notifications: notificationsView, u: () => ghostProfileView(acct, ctx, arg),
+      home: () => homeView(acct, ctx, chId), apps: () => appsView(acct, ctx, arg, arg2), explore: () => exploreView(acct, ctx), notifications: notificationsView, u: () => ghostProfileView(acct, ctx, arg),
       profile: () => profileView(acct, ctx), settings: () => { if (arg === 'security' || arg === 'characters') settingsTab = arg; return settingsView(acct, ctx.apps.bg[0]); }, post: () => postView(acct, ctx, arg),
     }[route]();
     document.title = route === 'home' ? 'Home / Anti-Social' : route[0].toUpperCase() + route.slice(1) + ' / Anti-Social';
-    root.replaceChildren(shell(acct, route, main));
-    scrollTo(0, keepScroll ? y : 0);
+    root.replaceChildren(shell(acct, route, main, ctx, chId));
+    if (tplId() === 'chat') {
+      // in the chat layout the panes scroll, not the page; the message list sticks to the newest message
+      const list = $('.chat-list'), pane = $('.main');
+      if (list) list.scrollTop = keepScroll && !stick ? listTop : list.scrollHeight;
+      else if (pane) pane.scrollTop = keepScroll ? y : 0;
+    } else scrollTo(0, keepScroll ? y : 0);
   } catch (e) {
     console.error(e);
     root.replaceChildren(h('div', { class: 'auth' }, h('div', { class: 'box' },

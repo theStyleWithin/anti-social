@@ -369,6 +369,23 @@ const Ghost = (() => {
     }
     return out.map(k => person(pool[k].seed, pool[k].i, cast));
   }
+  // The people who "belong" to a server: a fixed handful of the generated crowd (the same for a given world), with who is
+  // online shifting each hour. Only ever generated people, never real ones. This draws nothing the feed or profiles use.
+  const MEMBER_ACTIVITIES = ['Playing Minesweeper', 'Listening to nothing', 'Touching grass', 'Watching paint dry', 'Reading the terms (there are none)', 'Staring at the wall', 'Doing absolutely nothing', 'Buffering'];
+  function members(seed, n, opts = {}) {
+    const { cast = null, crowd = true, chars = false, now = Date.now() } = opts;
+    const pool = [];
+    if (crowd) for (let i = 0; i < POP; i++) pool.push({ seed, i });
+    if (chars && cast) for (const rec of cast.values()) if (rec.injected) pool.push({ seed: rec.seed, i: 0 });
+    const r = rng(seed, 'members'), idx = pool.map((_, k) => k);
+    for (let k = idx.length - 1; k > 0; k--) { const j = Math.floor(r() * (k + 1)); [idx[k], idx[j]] = [idx[j], idx[k]]; }
+    const hour = Math.floor(now / HOUR);
+    return idx.slice(0, Math.min(n, pool.length)).map(k => {
+      const p = person(pool[k].seed, pool[k].i, cast), o = rng(seed, 'online', p.id, hour);
+      const online = o() < 0.38;
+      return { ...p, online, activity: online && o() < 0.35 ? pick(o, MEMBER_ACTIVITIES) : '' };
+    });
+  }
   function trending(seed, now, n) {
     const hour = Math.floor(now / HOUR);
     const r = rng(seed, 'trend', hour);
@@ -391,6 +408,6 @@ const Ghost = (() => {
   const newSeed = () => Array.from(crypto.getRandomValues(new Uint8Array(4)), b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
   const cleanSeed = s => (s || '').trim().replace(/[^\w-]/g, '').slice(0, 16);
 
-  return { POP, WORLD, STYLES: STYLE_LIST, person, baseperson, post, feed, profilePosts, suggestions, trending, discover, parsePostId, parsePersonRef, newSeed, newCharacterSeed, cleanSeed, rng, hash32 };
+  return { POP, WORLD, STYLES: STYLE_LIST, person, baseperson, post, feed, profilePosts, suggestions, members, trending, discover, parsePostId, parsePersonRef, newSeed, newCharacterSeed, cleanSeed, rng, hash32 };
 })();
 if (typeof module !== 'undefined') module.exports = Ghost;

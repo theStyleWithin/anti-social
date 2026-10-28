@@ -6,7 +6,7 @@
 
 ## Status: fully featured and complete
 
-Anti-Social v0.12.0 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.13.0 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (drag-to-reorder, themes, the Bible, Travel Log, Cookbook and the v0.12.0 account features are automated-test verified, awaiting a hand test; the Android file saver in v0.12.0 is new native code and has not yet been run on a real phone); plus automated tests):
 - **Android:** installed and used on a real phone, including account switching, Populated mode, Characters, the storage limit and the Apps.
@@ -54,6 +54,7 @@ is a flat, unblinking **0**.
 
 ## Version history
 
+- **v0.13.0:** Templates (Settings, above Color themes). Chat Rooms makes the app look like a chat server: a server rail, channels you can create, a chat column where posts become messages (oldest first, Enter to send), and a member list. In Populated mode the generated people become server members, and they only ever talk in #general, however many channels you add; your own channels hold only your messages. Wording changes too (Explore becomes Discover, Notifications becomes Inbox, Like becomes React). It is appearance only, your data does not change, and it combines with color themes
 - **v0.12.0:** accounts get more ways in and out. Import an account from a file on the create-account screen; Eject account (Settings, next to Export) saves everything to a file and takes the account off the device, and it comes back whenever you import the file; Continue as guest skips the handle and passcode (claim it as a real account later in Settings); and with two or more accounts you can hide one, then unhide it from the Hidden accounts list in Settings. On Android, exports now really save into Downloads (the old download link did nothing in the Android app), and so do the CSV and theme exports
 - **v0.11.0:** a Cookbook app with 69 starter recipes, American favorites first and then dishes from Italy, Mexico, India, Thailand, China, Japan, Korea, Greece, France, Spain, West Africa, the UK and more. Search by dish or ingredient, scale the servings, tick ingredients and steps off as you cook, add the ingredients to your Groceries list, mark favorites, and write your own recipes (encrypted with your passcode). Rename it like any other app
 - **v0.10.0:** a Travel Log app with a built-in offline world map: tap the map or search a city to log a place, add dates, notes of any length and your own photos, see countries light up, and browse your places and countries. You can rename it ("Captain's Log", say) like any other app
@@ -168,3 +169,9 @@ The starter recipes in the Cookbook were written for Anti-Social (the lists of i
 - **Eject account** does an export and then removes the account from this device. It is not a delete: **Import account** (on the create-account screen) puts it all back, on this or another device. Eject only removes the account after the file saved and you confirm you have it. A passcode account comes back without its passcode or duress PIN, and you can set a new passcode while importing. Importing never overwrites an account already on the device.
 - **Continue as guest** makes an account with no handle and no passcode. Anyone who opens the device can open it, and nothing is encrypted. Settings has "Make this a real account" to claim it later.
 - **Hide this account** (Settings, once you have two or more accounts) leaves it out of the account list. It still holds its handle. Settings in any other account has a Hidden accounts list to unhide it, and a hidden account with a passcode asks for the passcode before it comes back. If every account ends up hidden, the sign-in list shows them all so you are never locked out.
+
+## Templates
+
+A template changes how the whole app looks and what things are called. It never changes where your data lives or what the app can do, and you can switch back any time in Settings. The in-app names are generic on purpose (the look is inspired by familiar apps, but nothing here uses their names or logos).
+
+- **Chat Rooms:** a server with channels, a chat column and a member list. The generated members (Populated mode) are not real, and they only post in #general; extra channels you create hold only your own messages. Deleting a channel deletes the messages you wrote in it. Voice channels and "Add a server" are for show.
