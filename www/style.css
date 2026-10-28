@@ -857,7 +857,7 @@ html[data-tpl="blue"] .pinfo .top .avbtn { border-radius: 3px; }
 .field.check { flex-direction: row; align-items: center; gap: 8px; }
 .field.check input { width: 18px; height: 18px; }
 .field .hint { color: var(--muted); font-size: 12px; margin-top: 4px; }
-.ai-model { margin: 8px 0; word-break: break-all; }
+.ai-model { margin: 8px 0; overflow-wrap: anywhere; }
 .person-row .who { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .person-row .who small { color: var(--muted); }
 .chat-welcome .big-av { display: block; }
