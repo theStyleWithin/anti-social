@@ -85,6 +85,16 @@ TokenReply write your AI members' replies instead of a model file on your device
 chat are sent there; switch back to "On this device" and nothing is sent. Your key stays on your device and is not part of exported accounts.
 Because of this, the Android app now carries the internet permission; it is used for nothing else.
 
+## About antivirus warnings
+
+The Windows apps are not code-signed (a certificate costs money), and they bundle an AI engine (llama.cpp) as native
+libraries. Unsigned Electron apps with native code are a common source of false alarms on scanners like VirusTotal:
+one or two engines out of seventy may complain about the installer or the engine libraries. The source is all in this repository:
+there is no obfuscated code, no downloader, no remote code, and the only address the page may contact is the optional
+`api.tokenreply.com`. The AI engine process is deliberately cut off from the network (this is done by disabling network
+functions inside it, which can look like "hooking" to a heuristic scanner, but it only blocks). If a scanner flags a download,
+compare its hash with the one on the release page, and report it to the vendor as a false positive.
+
 ## Get the apps
 
 | Platform | File |
