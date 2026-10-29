@@ -9,12 +9,13 @@ const FireCore = (() => {
     ['copper', 'Copper green', '#f6ffe8', '#9dff6a', '#1fbf5a', '#085a3a'],
     ['violet', 'Violet', '#fff2ff', '#e29bff', '#9a3cff', '#430a8a'],
   ];
-  const DEFAULTS = { flame: 'wood', height: 1, keep: true, sound: false };
+  const THEMES = ['cozy', 'brick', 'cabin', 'stone', 'insert', 'herring'];
+  const DEFAULTS = { flame: 'wood', height: 1, keep: true, sound: false, theme: 'cozy' };
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   function normCfg(c) {
     const o = { ...DEFAULTS, ...(c && typeof c === 'object' ? c : {}) };
     if (!FLAMES.some(f => f[0] === o.flame)) o.flame = DEFAULTS.flame;
-    o.height = clamp(+o.height || 1, 0.5, 1.6); o.keep = o.keep !== false; o.sound = o.sound === true;
+    if (!THEMES.includes(o.theme)) o.theme = 'cozy'; o.height = clamp(+o.height || 1, 0.5, 1.6); o.keep = o.keep !== false; o.sound = o.sound === true;
     return o;
   }
   const MAX_LOGS = 8;
@@ -73,6 +74,6 @@ const FireCore = (() => {
     return mix(stops[i], stops[i + 1], x - i);
   }
   const seeded = seed => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
-  return { FLAMES, DEFAULTS, MAX_LOGS, normCfg, makeFire, addLog, power, isOut, light, poke, step, flameColor, seeded, clamp };
+  return { THEMES, FLAMES, DEFAULTS, MAX_LOGS, normCfg, makeFire, addLog, power, isOut, light, poke, step, flameColor, seeded, clamp };
 })();
 if (typeof module !== 'undefined') module.exports = FireCore;
