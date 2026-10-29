@@ -70,6 +70,7 @@ is a flat, unblinking **0**.
 
 ## Version history
 
+- **v0.23.0:** Lava Lamp, Fireplace (place logs and watch them char and burn away, with ambient sound) and Aquarium (starts empty; add fish, sharks and rays, feed them, day and night, ambient sound)
 - **v0.22.1:** Settings and Profile reachable on phones in the Communities template (gear icon, and your user plus Settings at the top of the account menu)
 - **v0.22.0:** Books, an e-reader for your own EPUB, text, Markdown, HTML, Word and OpenDocument files; and the Communities template (a Reddit-style look with vote arrows)
 - **v0.21.1:** rearranging the Apps menu is smooth again: the card you drag now sticks to your finger or mouse, the others slide out of the way without flickering, the page scrolls by itself when you hold a card near the top or bottom edge, and the card glides into its place when you let go
