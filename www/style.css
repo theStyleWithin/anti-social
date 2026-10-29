@@ -1463,4 +1463,5 @@ html[data-tpl="reddit"] .post .time::before { content: "· "; }
 .aq-card:hover { border-color: var(--accent, #1d9bf0); } .aq-card canvas { width: 108px; height: 60px; background: #0a2a44; border-radius: 8px; } .aq-card b { font-size: 14px; } .aq-card small { color: var(--muted); font-size: 11.5px; line-height: 1.25; }
 .aq-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 0; } .aq-info input { max-width: 190px; }
 .aq-list { display: flex; flex-direction: column; gap: 6px; } .aq-row { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 10px; } .aq-row.on { border-color: var(--accent, #1d9bf0); } .aq-row span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.aq-stage { aspect-ratio: 16 / 10; height: auto; }
+.aq-stage { aspect-ratio: 16 / 9; height: auto; }
+.vw-bar .btn { background: rgba(10,10,14,.65); color: #fff; border: 1px solid rgba(255,255,255,.3); backdrop-filter: blur(6px); } .vw-bar .btn.primary { background: var(--accent, #8b5cf6); border-color: transparent; }

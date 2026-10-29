@@ -30,7 +30,7 @@ const FireCore = (() => {
   const power = f => clamp(f.logs.reduce((p, l) => p + (l.wood > 0.04 ? l.lit * Math.sqrt(l.wood) * 0.5 : 0), 0), 0, 1.6);
   const isOut = f => power(f) < 0.04;
   function makeFire(rnd) {
-    rnd = rnd || Math.random; const f = { logs: [], coals: 1, parts: [], acc: 0, pops: 0, t: 0, nextId: 0, since: 0, events: [] };
+    rnd = rnd || Math.random; const f = { logs: [], coals: 1, parts: [], acc: 0, pops: 0, t: 0, nextId: 0, since: 0, events: [], ash: 0 };
     [-0.2, 0.22, 0.0].forEach(x => { const l = addLog(f, rnd, x); l.lit = 1; l.wood = 0.85; l.y = restY(f, { ...l, y: 9 }); });
     return f;
   }
@@ -45,7 +45,7 @@ const FireCore = (() => {
       if (l.lit > 0.25) l.wood = Math.max(0, l.wood - dt * 0.0018 * (0.6 + l.lit) * (cfg.burn || 1));
       const ty = restY(f, l); if (l.y > ty + 0.0005) { l.vy -= 2.6 * dt; l.y = Math.max(ty, l.y + l.vy * dt); if (l.y === ty) { if (l.vy < -0.6) f.events.push('thump'); l.vy = 0; } } else { l.y = ty; l.vy = 0; }
     }
-    const before = f.logs.length; f.logs = f.logs.filter(l => l.wood > 0.02 || l.y > 0.001 && false); if (f.logs.length < before) { f.coals = 1; f.events.push('collapse'); }       // burnt right through
+    const before = f.logs.length; f.logs = f.logs.filter(l => l.wood > 0.02); if (f.logs.length < before) { f.coals = 1; f.ash = Math.min(1, (f.ash || 0) + 0.12 * (before - f.logs.length)); f.events.push('collapse'); }       // burnt right through
     let pw = power(f);
     if (cfg.keep && pw < 0.04 && !f.logs.length) { const l = addLog(f, rnd); l.lit = 1; pw = power(f); }                                    // the fire went out and somebody lit it again
     if (cfg.keep && pw < 0.45 && f.logs.length < 5 && f.since > 3) { addLog(f, rnd); f.since = 0; }                                        // somebody keeps feeding it
@@ -60,7 +60,7 @@ const FireCore = (() => {
     }
     for (const p of f.parts) {
       p.life += dt;
-      if (p.k === 'f') { p.x += (p.vx + Math.sin(f.t * 6 + p.max * 9) * 0.05 * (p.life / p.max)) * dt; p.y += p.vy * dt; p.x *= 1 - 0.35 * dt; }
+      if (p.k === 'f') { p.x += (p.vx + Math.sin(f.t * 7 + p.y * 6 + p.max * 11) * 0.2 * Math.min(1, p.y + 0.1) + Math.sin(f.t * 3.1 + p.max * 5) * 0.06) * dt; p.y += p.vy * dt; p.x *= 1 - 0.3 * dt; }
       else if (p.k === 'e') { p.x += (p.vx + Math.sin(f.t * 2 + p.ph) * 0.07) * dt; p.y += p.vy * dt; }
       else { p.x += p.vx * dt; p.y += p.vy * dt; p.vy -= 1.1 * dt; }
     }

@@ -32,7 +32,7 @@ const AquaCore = (() => {
     const sp = bySp(spId); if (!sp) return null;
     const floor = floorOf(H), top = 40, z = sp.zone, y = sp.kind === 'crab' || sp.kind === 'star' ? floor : top + (floor - top) * (z[0] + rnd() * (z[1] - z[0]));
     const dir = rnd() < 0.5 ? -1 : 1;
-    return { sp: spId, name: saved && saved.name || NAMES[(Math.floor(rnd() * NAMES.length) + nameCounter++) % NAMES.length], meals: saved && saved.meals || 0, x: sp.kind === 'star' ? 120 + rnd() * (W - 240) : 60 + rnd() * (W - 120), y, vx: dir * sp.speed * 0.5, vy: 0, dir, tx: 0, ty: 0, retarget: 0, phase: rnd() * 6.28, scare: 0, happy: 0, puff: 0, id: ++nameCounter + Math.floor(rnd() * 1e6) };
+    return { sp: spId, name: saved && saved.name || NAMES[(Math.floor(rnd() * NAMES.length) + nameCounter++) % NAMES.length], meals: saved && saved.meals || 0, x: sp.kind === 'star' ? 120 + rnd() * (W - 240) : 60 + rnd() * (W - 120), y, vx: dir * sp.speed * 0.5, vy: 0, dir, tx: 0, ty: 0, retarget: 0, phase: rnd() * 6.28, scare: 0, happy: 0, puff: 0, z: 0.25 + rnd() * 0.75, id: ++nameCounter + Math.floor(rnd() * 1e6) };
   }
   const makeFood = (x, y, rnd, kind = 'flake') => ({ x, y, kind, vy: kind === 'pellet' ? 70 + rnd() * 20 : 22 + rnd() * 14, ph: rnd() * 6, age: 0, rest: 0, eaten: false });
   // a pinch of flakes from the feeder (it sits near the top right)
