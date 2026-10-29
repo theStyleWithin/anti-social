@@ -1374,6 +1374,8 @@ async function openAccountMenu(anchor, acct) {
   const pop = h('div', { class: 'popover', role: 'menu', 'aria-label': 'Accounts' },
     h('div', { class: 'pop-head' }, plural(accounts.length, 'account') + ' on this device'),
     accounts.map(row),
+    h('button', { class: 'pop-row', role: 'menuitem', onclick: () => { close(); go('/profile'); } }, h('span', { class: 'pop-plus' }, icon('user')), h('b', {}, 'Profile')),
+    h('button', { class: 'pop-row', role: 'menuitem', onclick: () => { close(); go('/settings'); } }, h('span', { class: 'pop-plus' }, icon('settings')), h('b', {}, 'Settings')),
     h('button', { class: 'pop-row add', role: 'menuitem', onclick: () => { close(); addAccount(acct); } }, h('span', { class: 'pop-plus' }, icon('plus')), h('b', {}, 'Add account')),
     h('div', { class: 'pop-foot' }, 'Followers across all accounts: 0'));
   document.body.append(pop);

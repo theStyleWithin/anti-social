@@ -194,11 +194,11 @@ function shellBlue(acct, route, main, ctx) {
 function shellReddit(acct, route, main, ctx) {
   const hidden = hiddenApps(acct);
   const search = h('input', { type: 'search', placeholder: W('searchBlurb'), 'aria-label': 'Search' });
-  const ic = (href, label, name, ico) => h('a', { class: 'rd-icon' + (route === name ? ' active' : ''), href: '#' + href, title: label, 'aria-label': label, 'aria-current': route === name ? 'page' : null }, icon(ico));
+  const ic = (href, label, name, ico, extra = '') => h('a', { class: 'rd-icon' + extra + (route === name ? ' active' : ''), href: '#' + href, title: label, 'aria-label': label, 'aria-current': route === name ? 'page' : null }, icon(ico));
   const bar = h('header', { class: 'rd-bar' }, h('div', { class: 'rd-bar-in' },
     h('a', { class: 'rd-logo', href: '#/', 'aria-label': 'Anti-Social home' }, h('span', { class: 'rd-snoo', 'aria-hidden': 'true' }, icon('logo')), h('b', {}, 'anti-social')),
     h('form', { class: 'rd-search', role: 'search', onsubmit: e => { e.preventDefault(); go('/explore'); } }, icon('search'), search),
-    h('nav', { class: 'rd-top', 'aria-label': 'Main' }, ic('/', W('navHome'), 'home', 'home'), ic('/explore', W('navExplore'), 'explore', 'compass'), ic('/apps', W('navApps'), 'apps', 'grid'), ic('/notifications', W('navNotifications'), 'notifications', 'bell'),
+    h('nav', { class: 'rd-top', 'aria-label': 'Main' }, ic('/', W('navHome'), 'home', 'home'), ic('/explore', W('navExplore'), 'explore', 'compass'), ic('/apps', W('navApps'), 'apps', 'grid'), ic('/notifications', W('navNotifications'), 'notifications', 'bell'), ic('/settings', W('navSettings'), 'settings', 'settings', ' rd-mob'),
       h('button', { class: 'rd-create', type: 'button', onclick: () => composeModal(acct) }, icon('plus'), h('span', {}, 'Create')),
       h('button', { class: 'rd-me', type: 'button', 'aria-haspopup': 'menu', 'aria-label': 'Account menu', title: 'Accounts', onclick: e => openAccountMenu(e.currentTarget, acct) }, avatar(acct, 'sm')))));
   const nav = (href, label, name, ico) => h('a', { class: 'rd-nav' + (route === name ? ' active' : ''), href: '#' + href, 'aria-current': route === name ? 'page' : null }, icon(ico), h('span', {}, label));
