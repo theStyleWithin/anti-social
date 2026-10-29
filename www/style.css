@@ -963,3 +963,51 @@ html[data-tpl="blue"] .pinfo .top .avbtn { border-radius: 3px; }
 .pk-guide { padding-left: 20px; display: grid; gap: 10px; }
 
 .sd-lines { padding-left: 20px; display: grid; gap: 6px; margin: 0 0 12px; }
+
+/* ---------- Achievements ---------- */
+.av-hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; padding: 12px 16px; }
+.av-stat { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--card, transparent); }
+.av-stat b { display: block; font-size: 24px; line-height: 1.1; }
+.av-stat small { color: var(--muted); }
+.av-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.av-tools input[type=search] { flex: 1 1 180px; min-width: 0; }
+.av-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; padding: 0 16px 16px; }
+.av-game { position: relative; display: flex; gap: 12px; align-items: center; padding: 10px; border: 1px solid var(--line); border-radius: 12px; color: inherit; text-decoration: none; background: var(--card, transparent); }
+.av-game:hover, .av-game:focus-visible { border-color: var(--accent); }
+.av-game.complete { border-color: #e0a100; }
+.av-gbody { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.av-gbody b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.av-gnum { display: flex; gap: 10px; flex-wrap: wrap; font-size: 14px; align-items: center; }
+.av-cover { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; flex: none; }
+.av-cover.letter { display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 26px; }
+.av-cover.sm { width: 40px; height: 40px; font-size: 18px; border-radius: 8px; }
+.av-cover.lg { width: 96px; height: 96px; font-size: 40px; border-radius: 14px; }
+.av-plat { display: inline-block; align-self: flex-start; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 700; background: color-mix(in srgb, var(--c) 22%, transparent); color: var(--fg); border: 1px solid var(--c); }
+.av-done { color: #e0a100; flex: none; } .av-done svg { width: 22px; height: 22px; } .av-done.inline { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; } .av-done.inline svg { width: 18px; height: 18px; }
+.av-row { display: flex; align-items: center; gap: 10px; padding: 8px 4px; color: inherit; text-decoration: none; border-bottom: 1px solid var(--line); }
+.av-row:hover { background: var(--hover); }
+.av-row .who { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.av-row small { color: var(--muted); }
+.av-pts { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 14px; }
+.av-ghead { display: flex; gap: 14px; align-items: center; }
+.av-chips { display: flex; gap: 6px; flex-wrap: wrap; width: 100%; }
+.chip.on { background: var(--accent); color: var(--accent-fg, #fff); border-color: var(--accent); }
+button.chip { background: none; color: inherit; cursor: pointer; font: inherit; font-size: 13px; }
+.av-list { padding-top: 0; }
+.av-ach { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.av-ach:not(.done) .av-abody { opacity: .8; }
+.av-check { width: 28px; height: 28px; flex: none; border-radius: 50%; border: 2px solid var(--muted); background: none; color: var(--accent-fg, #fff); display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; margin-top: 2px; }
+.av-check svg { width: 16px; height: 16px; }
+.av-ach.done .av-check { background: var(--accent); border-color: var(--accent); }
+.av-abody { flex: 1; min-width: 0; }
+.av-aname { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.av-ameta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.av-aright { display: flex; gap: 6px; align-items: center; }
+.av-aright .btn { padding: 4px 8px; } .av-aright .btn svg { width: 16px; height: 16px; }
+.av-plrow { display: grid; gap: 4px; margin-bottom: 12px; }
+.av-months { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; align-items: end; height: 140px; }
+.av-month { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; position: relative; }
+.av-month i { display: block; width: 100%; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 2px; opacity: .85; }
+.av-month small { color: var(--muted); font-size: 11px; } .av-month span { position: absolute; top: 0; font-size: 11px; color: var(--muted); }
+.av-cover-edit { margin-bottom: 8px; }
+@media (max-width: 640px) { .av-grid { grid-template-columns: 1fr; } .av-cover.lg { width: 72px; height: 72px; } }
