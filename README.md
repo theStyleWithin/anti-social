@@ -6,7 +6,7 @@
 
 ## Status: fully featured and complete
 
-Anti-Social v0.17.0 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.18.0 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (drag-to-reorder, themes, the Bible, Travel Log, Cookbook and the v0.12.0 account features are automated-test verified, awaiting a hand test; the Android file saver in v0.12.0 is new native code and has not yet been run on a real phone); plus automated tests):
 - **Android:** installed and used on a real phone, including account switching, Populated mode, Characters, the storage limit and the Apps.
@@ -48,6 +48,7 @@ is a flat, unblinking **0**.
   - **Notes:** pin, search, autosave. **No length limit** on the text
   - **Diary:** one page a day with a mood, a gentle prompt, a streak, search and no length limit
   - **Pokédex:** every Pokémon by game (Let's Go, FireRed/LeafGreen, Brilliant Diamond/Shining Pearl, Legends: Arceus, Sword/Shield and both expansions, Scarlet/Violet and both expansions, Legends: Z-A and its expansion) plus the National Pokédex. Search, a page for each Pokémon with its types, evolutions, where to find it and a shiny view, and a tracker for Caught, Shiny, Alpha and Shiny Alpha with bulk actions and multi-select. Data and pictures from pkDex (GPL-2.0)
+  - **Palworld Paldeck (inside the Pokédex):** a separate category with every Pal in the list (288), by Paldeck number with its variants (#5B and so on), rarity, an icon and a page each, and a Caught / Lucky tracker of its own. The data is a Paldeck list made from palworld.gg
   - **Pokémon Bank:** banks of boxes in the layout of each game family (32 boxes of 30, 40 of 25 for Let's Go, and so on), in the spirit of pkHouse. Two panels side by side to move Pokémon between boxes and banks (click, pick up and put down, or drag), a details bar, search across every bank, sorting, and per-Pokémon details you type in (nature, ability, moves, IVs, EVs, trainer, notes). Import `.pk8`, `.pk9`, `.pa8`, `.pb7` and `.pk3` files from PKHeX or pkHouse and pkHouse bank files (`.bin`), and export them back unchanged. Trade by sending a card file (`.json`) to a friend. It never reads or changes a game's save file. **Switch SD card:** plug a Switch SD card into the computer or (with a card reader) the phone and the app finds pkHouse's banks and its automatic save backups on it (plus JKSV and Checkpoint backups of the Pokémon games); import a bank, copy a backup out to an emulator's save folder, or send a bank or a save folder from an emulator back onto the card for pkHouse to restore on the Switch. It asks before it writes and never deletes. A Switch keeps its saves inside the console, so only backups that a tool copied to the card can be found
 - **Multiple accounts:** click your account at the bottom left on desktop, or your avatar at the top left on a phone, to switch or add one, with a joke about it
 - Light, dark or auto theme
@@ -56,6 +57,7 @@ is a flat, unblinking **0**.
 
 ## Version history
 
+- **v0.18.0:** the Palworld Paldeck joins the Pokédex as its own category (288 Pals, with icons and a tracker)
 - **v0.17.0:** two new apps, the Pokédex and the Pokémon Bank (see Apps). Because they include data and pictures from the GPL-2.0 projects pkDex and pkHouse, Anti-Social is now licensed under the GPL-2.0 (see NOTICE.md); releases up to 0.16.0 stay 0BSD
 - **v0.16.0:** the Android app can now run AI members on the phone itself: pick a small `.gguf` model file (1 to 3 billion parameters works best) in Settings, AI members; llama.cpp runs it on the processor, with no network. Away chat on a phone runs while the app is open and can fill in what you missed when you return. Also: the README now explains antivirus false alarms, and Android no longer includes app data in automatic cloud backups (so an API key is never copied there)
 - **v0.15.0:** AI members in Chat Rooms. Make characters (picture, banner, bio, personality, greeting) that live on your private server. They answer only when you write `@Name` spelled exactly, and always in their own private chat; you choose which channels each may speak in. Modes per channel: one at a time, taking turns, or away chat where they talk to each other while you are gone (with pace, an hourly cap, charging and battery guards). Character cards export and import (JSON, or a PNG with the card inside, compatible with other chat tools). Desktop apps run model files (.gguf) you download yourself, fully on your computer (llama.cpp, in its own process with no network access). Optional: use TokenReply instead (see below)

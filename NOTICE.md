@@ -16,6 +16,8 @@ Releases up to 0.16.0 contain none of that material and stay available under 0BS
 - **llama.cpp** (MIT) and **node-llama-cpp** (MIT): the AI engine for AI members.
 - **Electron** (MIT) and **Capacitor** (MIT): the desktop and Android shells.
 
+- **Palworld Paldeck** (names, Paldeck numbers, rarity and icons in `www/palworld/`): taken from a "Palworld Full Paldeck" list that was made from palworld.gg and marked "for personal reference use", built by `tools/build-palworld.py`. It is not GPL material and is not covered by this project's licence.
+
 ## Trademarks
 
 Pokémon and its names, characters, artwork and trademarks belong to Nintendo, Creatures, GAME FREAK and The Pokémon
