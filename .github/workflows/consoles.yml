@@ -66,21 +66,41 @@ jobs:
         run: |
           VERSION=$(grep -m1 '"version"' desktop/package.json | sed -E 's/.*"([0-9.]+)".*/\1/')
           make -C consoles/3ds VERSION=$VERSION
-      - name: Build .cia (optional)
-        continue-on-error: true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: console-3ds-elf
+          path: consoles/3ds/build/anti-social.elf
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: console-3ds
+          path: |
+            consoles/3ds/anti-social.3dsx
+            consoles/3ds/anti-social.cia
+          if-no-files-found: error
+
+  n3ds-cia:
+    # the .cia tools need a newer system than the devkitPro container has, so this runs on a plain runner
+    needs: n3ds
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: console-3ds-elf
+          path: consoles/3ds/build
+      - name: Build .cia
         run: |
           set +e
           (
           set -e
-          apt-get update -qq && apt-get install -y -qq curl unzip >/dev/null
           mkdir -p /tmp/ct && cd /tmp/ct
-          # find the newest Linux download of each tool through the releases API
           fetch() { curl -fsSL -H "Authorization: Bearer ${{ github.token }}" "https://api.github.com/repos/$1/releases/latest" | grep -o '"browser_download_url": *"[^"]*"' | cut -d'"' -f4 | grep -iE "$2" | head -1; }
           MK=$(fetch 3DSGuy/Project_CTR 'makerom.*(ubuntu|linux).*x86_64|makerom.*(ubuntu|linux)')
           BT=$(fetch carstene1ns/3ds-bannertool 'linux|ubuntu')
-          echo "makerom: $MK"; echo "bannertool: $BT"
           curl -fsSL -o makerom.dl "$MK" && curl -fsSL -o bannertool.dl "$BT"
-          for f in makerom bannertool; do mkdir -p $f && (cd $f && (unzip -oq ../$f.dl 2>/dev/null || tar xf ../$f.dl 2>/dev/null || cp ../$f.dl ./$f)); BIN=$(find $f -type f -name $f | head -1); install -m755 "$BIN" /usr/local/bin/$f; done
+          for f in makerom bannertool; do mkdir -p $f && (cd $f && (unzip -oq ../$f.dl 2>/dev/null || tar xf ../$f.dl 2>/dev/null || cp ../$f.dl ./$f)); BIN=$(find $f -type f -name $f | head -1); sudo install -m755 "$BIN" /usr/local/bin/$f; done
           cd $GITHUB_WORKSPACE
           VERSION=$(grep -m1 '"version"' desktop/package.json | sed -E 's/.*"([0-9.]+)".*/\1/')
           make -C consoles/3ds cia VERSION=$VERSION
@@ -89,8 +109,6 @@ jobs:
           if [ $code -ne 0 ]; then echo "::warning::CIA step: $(tail -12 cia.log | tr '\n' '|' | cut -c1-1500)"; exit $code; fi
       - uses: actions/upload-artifact@v4
         with:
-          name: console-3ds
-          path: |
-            consoles/3ds/anti-social.3dsx
-            consoles/3ds/anti-social.cia
+          name: console-3ds-cia
+          path: consoles/3ds/anti-social.cia
           if-no-files-found: error

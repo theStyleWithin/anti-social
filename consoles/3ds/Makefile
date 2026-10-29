@@ -17,7 +17,7 @@ build/anti-social.smdh: icon.png
 anti-social.3dsx: build/anti-social.elf build/anti-social.smdh
 	$(TOOLS)/3dsxtool build/anti-social.elf $@ --smdh=build/anti-social.smdh
 # the .cia installs to the HOME menu with FBI; it needs bannertool and makerom
-cia: build/anti-social.elf
+cia:
 	@mkdir -p build romfs
 	bannertool makebanner -i banner.png -a silence.wav -o build/banner.bnr
 	bannertool makesmdh -s "Anti-Social" -l "A social network with nobody on it" -p "Gamehopper" -i icon.png -o build/icon.icn
