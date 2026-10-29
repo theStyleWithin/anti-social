@@ -14,6 +14,7 @@ function stamp(ts) {
     return diff === 0 ? `Today at ${t}` : diff === 1 ? `Yesterday at ${t}` : `${d.toLocaleDateString(undefined, { month: '2-digit', day: '2-digit', year: 'numeric' })} ${t}`;
   }
   if (id === 'blue') return TP.fbTime(ts);
+  if (id === 'reddit') return TP.redditTime(ts);
   return '· ' + timeAgo(ts);
 }
 
@@ -189,6 +190,34 @@ function shellBlue(acct, route, main, ctx) {
   return h('div', { class: 'shell fb' }, bar, h('div', { class: 'fb-page' }, left, h('main', { class: 'main' + (page ? ' fb-card' : '') }, main), right));
 }
 
+/* ---------- Communities (Reddit-style) ---------- */
+function shellReddit(acct, route, main, ctx) {
+  const hidden = hiddenApps(acct);
+  const search = h('input', { type: 'search', placeholder: W('searchBlurb'), 'aria-label': 'Search' });
+  const ic = (href, label, name, ico) => h('a', { class: 'rd-icon' + (route === name ? ' active' : ''), href: '#' + href, title: label, 'aria-label': label, 'aria-current': route === name ? 'page' : null }, icon(ico));
+  const bar = h('header', { class: 'rd-bar' }, h('div', { class: 'rd-bar-in' },
+    h('a', { class: 'rd-logo', href: '#/', 'aria-label': 'Anti-Social home' }, h('span', { class: 'rd-snoo', 'aria-hidden': 'true' }, icon('logo')), h('b', {}, 'anti-social')),
+    h('form', { class: 'rd-search', role: 'search', onsubmit: e => { e.preventDefault(); go('/explore'); } }, icon('search'), search),
+    h('nav', { class: 'rd-top', 'aria-label': 'Main' }, ic('/', W('navHome'), 'home', 'home'), ic('/explore', W('navExplore'), 'explore', 'compass'), ic('/apps', W('navApps'), 'apps', 'grid'), ic('/notifications', W('navNotifications'), 'notifications', 'bell'),
+      h('button', { class: 'rd-create', type: 'button', onclick: () => composeModal(acct) }, icon('plus'), h('span', {}, 'Create')),
+      h('button', { class: 'rd-me', type: 'button', 'aria-haspopup': 'menu', 'aria-label': 'Account menu', title: 'Accounts', onclick: e => openAccountMenu(e.currentTarget, acct) }, avatar(acct, 'sm')))));
+  const nav = (href, label, name, ico) => h('a', { class: 'rd-nav' + (route === name ? ' active' : ''), href: '#' + href, 'aria-current': route === name ? 'page' : null }, icon(ico), h('span', {}, label));
+  const left = h('aside', { class: 'rd-left', 'aria-label': 'Navigation' },
+    nav('/', W('navHome'), 'home', 'home'), nav('/explore', W('navExplore'), 'explore', 'compass'), nav('/notifications', W('navNotifications'), 'notifications', 'bell'), nav('/profile', W('navProfile'), 'profile', 'user'), nav('/settings', W('navSettings'), 'settings', 'settings'),
+    h('div', { class: 'rd-head' }, 'Apps'),
+    APP_LIST.filter(([id]) => !hidden.has(id)).map(([id]) => h('a', { class: 'rd-nav', href: '#/apps/' + id }, icon(APP_ICONS[id] || 'grid'), h('span', {}, appName(acct, id)))));
+  const mine = (ctx.posts || []).length;
+  const right = h('aside', { class: 'rd-right', 'aria-label': 'About' },
+    h('div', { class: 'card rd-about' }, h('h3', {}, 'About Community'),
+      h('div', { class: 'rd-about-body' }, h('p', {}, h('b', {}, TP.COMMUNITY), ' is a community of one. Everything you post here stays on this device, and nobody is going to downvote it.'),
+        h('div', { class: 'rd-stats' }, h('div', {}, h('b', {}, '1'), h('small', {}, 'Member')), h('div', {}, h('b', {}, String(mine)), h('small', {}, mine === 1 ? 'Post' : 'Posts')), h('div', {}, h('b', {}, '1'), h('small', {}, 'Online'))),
+        h('button', { class: 'btn primary rd-wide', type: 'button', onclick: () => composeModal(acct) }, 'Create Post'))),
+    h('div', { class: 'card' }, h('h3', {}, TP.COMMUNITY + ' Rules'), h('ol', { class: 'rd-rules' }, h('li', {}, 'Be yourself. There is no one else.'), h('li', {}, 'No self-promotion. (It is all self-promotion.)'), h('li', {}, 'Do not expect replies.'), h('li', {}, 'Karma is not tracked.'))),
+    sideBlocks(), h('p', { class: 'fine' }, 'Anti-Social © 2026 · No servers · No tracking · No audience'));
+  const page = ['apps', 'settings', 'explore', 'notifications'].includes(route);
+  return h('div', { class: 'shell rd' }, bar, h('div', { class: 'rd-page' }, left, h('main', { class: 'main' + (page ? ' rd-card' : '') }, main), right));
+}
+
 // Rename the server. It is its own setting, separate from your account; until you choose a name it is "<you>'s Server".
 function serverNameEditor(acct, ctx) {
   const rec = ctx.apps.srv[0], current = TP.serverTitle(acct, rec && rec.name);
@@ -218,6 +247,7 @@ function serverNameEditor(acct, ctx) {
 const TPL_ART = {
   default: '<rect x="2" y="2" width="96" height="62" rx="4" class="a-bg"/><rect x="6" y="8" width="9" height="40" rx="3" class="a-nav"/><rect x="20" y="8" width="50" height="9" rx="2" class="a-bar"/><rect x="20" y="21" width="50" height="9" rx="2" class="a-card"/><rect x="20" y="34" width="50" height="9" rx="2" class="a-card"/><rect x="20" y="47" width="50" height="9" rx="2" class="a-card"/><rect x="75" y="8" width="19" height="16" rx="3" class="a-nav"/><rect x="75" y="28" width="19" height="16" rx="3" class="a-nav"/>',
   chat: '<rect x="2" y="2" width="96" height="62" rx="4" class="a-chat"/><rect x="2" y="2" width="11" height="62" rx="4" class="a-rail"/><circle cx="7.5" cy="12" r="3.5" class="a-acc"/><circle cx="7.5" cy="24" r="3.5" class="a-nav"/><rect x="14" y="2" width="22" height="62" class="a-chan"/><rect x="18" y="10" width="14" height="3" rx="1.5" class="a-bar"/><rect x="18" y="17" width="14" height="3" rx="1.5" class="a-bar"/><rect x="18" y="24" width="14" height="3" rx="1.5" class="a-bar"/><circle cx="44" cy="15" r="3.5" class="a-acc"/><rect x="50" y="12" width="22" height="3" rx="1.5" class="a-bar"/><rect x="50" y="17" width="30" height="3" rx="1.5" class="a-card"/><circle cx="44" cy="29" r="3.5" class="a-nav"/><rect x="50" y="26" width="18" height="3" rx="1.5" class="a-bar"/><rect x="50" y="31" width="26" height="3" rx="1.5" class="a-card"/><rect x="41" y="52" width="38" height="7" rx="3" class="a-chan"/><rect x="82" y="2" width="16" height="62" class="a-chan"/><circle cx="86" cy="12" r="2.5" class="a-acc"/><rect x="90" y="11" width="6" height="2.5" rx="1" class="a-bar"/><circle cx="86" cy="21" r="2.5" class="a-nav"/><rect x="90" y="20" width="6" height="2.5" rx="1" class="a-bar"/>',
+  reddit: '<rect x="2" y="2" width="96" height="62" rx="4" class="a-rbg"/><rect x="2" y="2" width="96" height="9" rx="3" class="a-rw"/><circle cx="9" cy="6.5" r="2.6" class="a-ro"/><rect x="26" y="4" width="30" height="5" rx="2.5" class="a-rbg"/><rect x="14" y="15" width="52" height="16" rx="2" class="a-rw"/><rect x="14" y="15" width="7" height="16" rx="2" class="a-rg"/><path d="M17.5 19l2 2.5h-4zM17.5 27l2-2.5h-4z" class="a-ro"/><rect x="24" y="19" width="34" height="3" rx="1.5" class="a-rg"/><rect x="14" y="34" width="52" height="16" rx="2" class="a-rw"/><rect x="14" y="34" width="7" height="16" rx="2" class="a-rg"/><rect x="24" y="38" width="28" height="3" rx="1.5" class="a-rg"/><rect x="70" y="15" width="26" height="22" rx="2" class="a-rw"/><rect x="70" y="15" width="26" height="5" rx="2" class="a-ro"/>',
   blue: '<rect x="2" y="2" width="96" height="62" rx="4" class="a-gray"/><rect x="2" y="2" width="96" height="9" rx="3" class="a-blue"/><rect x="6" y="5" width="16" height="3" rx="1.5" class="a-white"/><rect x="26" y="4" width="26" height="5" rx="1" class="a-white2"/><rect x="6" y="16" width="20" height="3" rx="1.5" class="a-bar"/><rect x="6" y="22" width="20" height="3" rx="1.5" class="a-bar"/><rect x="6" y="28" width="20" height="3" rx="1.5" class="a-bar"/><rect x="31" y="15" width="40" height="10" rx="1.5" class="a-white"/><rect x="31" y="28" width="40" height="14" rx="1.5" class="a-white"/><rect x="31" y="45" width="40" height="14" rx="1.5" class="a-white"/><rect x="76" y="15" width="19" height="14" rx="1.5" class="a-white"/><rect x="76" y="32" width="19" height="14" rx="1.5" class="a-white"/>',
 };
 function templateSection() {

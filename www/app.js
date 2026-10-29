@@ -70,6 +70,8 @@ const ICONS = {
   sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 2.1L22 19l-2.3.9L19 22l-.7-2.1L16 19l2.3-.9z"/>',
   pokeball: '<circle cx="12" cy="12" r="9"/><path d="M3 12h6M15 12h6"/><circle cx="12" cy="12" r="3"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  arrowup: '<path d="M12 19V5M5 12l7-7 7 7"/>',
+  arrowdown: '<path d="M12 5v14M5 12l7 7 7-7"/>',
   trophy: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
   camera: '<path d="M3 8h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13" r="4"/>',
 };
@@ -584,6 +586,7 @@ function postEl(p, acct, ctx, { detail = false } = {}) {
     for (const id of doomed) await db.del('posts', id);
     if (detail) go(p.parentId ? '/post/' + p.parentId : '/'); else refresh();
   };
+  const rdVote = () => voteRail({ score: TemplateCore.score(0, p.liked, p.disliked), up: p.liked, down: p.disliked, onUp: () => patch({ liked: !p.liked, disliked: false }), onDown: () => patch({ disliked: !p.disliked, liked: false }) });
   const act = (name, count, label, onclick, cls = '', on = false) =>
     h('button', { class: `act ${cls}${on ? ' on' : ''}`, 'aria-label': label, 'data-label': cls === 'like' && on ? W('actLikeOn') : label, 'aria-pressed': cls === 'like' || cls === 'repost' ? String(on) : null, onclick: e => { e.stopPropagation(); onclick(); } },
       icon(name), count ? h('span', { class: 'cnt' }, String(count)) : '');
@@ -592,7 +595,7 @@ function postEl(p, acct, ctx, { detail = false } = {}) {
   const bRepost = act('repost', p.reposted ? 1 : 0, W('actRepost'), () => patch({ reposted: !p.reposted }), 'repost', p.reposted);
   const bLike = act('heart', p.liked ? 1 : 0, W('actLike'), () => patch({ liked: !p.liked }), 'like', p.liked);
   const actions = h('div', { class: 'actions' },
-    ...(tplId() === 'blue' ? [bLike, bReply, bRepost] : [bReply, bRepost, bLike]),      // Like comes first in Classic Blue
+    ...(tplId() === 'blue' ? [bLike, bReply, bRepost] : tplId() === 'reddit' ? [bReply, bRepost] : [bReply, bRepost, bLike]),      // Like comes first in Classic Blue; Communities votes with the arrows instead
     h('span', { class: 'act views', title: 'Views', 'aria-label': '0 views' }, icon('chart'), '0'),
     act('trash', 0, W('actDelete'), remove, 'del'));
 
@@ -601,8 +604,10 @@ function postEl(p, acct, ctx, { detail = false } = {}) {
 
   if (detail) {
     const when = new Date(p.createdAt).toLocaleString(undefined, { hour: 'numeric', minute: '2-digit', month: 'short', day: 'numeric', year: 'numeric' });
-    return h('article', { class: 'post detail' },
-      h('div', { style: 'display:flex;gap:12px;align-items:center' }, avatar(acct),
+    const rdd = tplId() === 'reddit';
+    return h('article', { class: 'post detail' + (rdd ? ' rd-post' : '') },
+      rdd ? rdVote() : null,
+      rdd ? h('div', { class: 'head rd-meta' }, h('b', { class: 'rd-comm' }, TemplateCore.COMMUNITY), ' · Posted by ', h('span', { class: 'name' }, 'u/' + acct.handle), h('span', { class: 'time' }, stamp(p.createdAt))) : h('div', { style: 'display:flex;gap:12px;align-items:center' }, avatar(acct),
         h('div', {}, h('div', {}, name), h('div', {}, handle))),
       p.reposted && h('div', { class: 'replying' }, W('youReposted')),
       parent && h('div', { class: 'replying' }, W('replyingSelf')),
@@ -617,11 +622,12 @@ function postEl(p, acct, ctx, { detail = false } = {}) {
       actions);
   }
 
-  return h('article', { class: 'post', onclick: e => { if (!e.target.closest('button,a')) go('/post/' + p.id); } },
-    avatar(acct),
+  const rd = tplId() === 'reddit';
+  return h('article', { class: 'post' + (rd ? ' rd-post' : ''), onclick: e => { if (!e.target.closest('button,a')) go('/post/' + p.id); } },
+    rd ? rdVote() : avatar(acct),
     h('div', { class: 'content' },
       p.reposted && h('div', { class: 'replying' }, W('youReposted')),
-      h('div', { class: 'head' }, name, handle, h('span', { class: 'time' }, stamp(p.createdAt))),
+      rd ? h('div', { class: 'head' }, h('b', { class: 'rd-comm' }, TemplateCore.COMMUNITY), ' · Posted by ', h('span', { class: 'name' }, 'u/' + acct.handle), h('span', { class: 'time' }, stamp(p.createdAt))) : h('div', { class: 'head' }, name, handle, h('span', { class: 'time' }, stamp(p.createdAt))),
       parent && h('div', { class: 'replying' }, W('replyingTo') + ' @' + acct.handle),
       gParent && h('div', { class: 'replying' }, W('replyingTo') + ' @' + gParent),
       p.text && h('div', { class: 'text' }, richText(p.text)),
@@ -672,6 +678,18 @@ async function setReaction(acct, ctx, target, field) {
   render(true);
 }
 
+// The up and down arrows (Communities): the number sits between them
+const voteRail = ({ score, up, down, onUp, onDown }) => h('div', { class: 'rd-vote', role: 'group', 'aria-label': 'Vote' },
+  h('button', { class: 'rd-arrow up' + (up ? ' on' : ''), type: 'button', 'aria-label': up ? 'Remove upvote' : 'Upvote', 'aria-pressed': String(!!up), onclick: e => { e.stopPropagation(); onUp(); } }, icon('arrowup')),
+  h('b', { class: 'rd-score' + (up ? ' up' : down ? ' down' : ''), 'aria-label': score + ' points' }, fmt(score)),
+  h('button', { class: 'rd-arrow down' + (down ? ' on' : ''), type: 'button', 'aria-label': down ? 'Remove downvote' : 'Downvote', 'aria-pressed': String(!!down), onclick: e => { e.stopPropagation(); onDown(); } }, icon('arrowdown')));
+// an up or down vote on a generated post: one or the other, never both
+async function setVote(acct, ctx, target, which) {
+  const cur = ctx.reactions.get(target) || { id: uid(), accountId: acct.id, kind: 'ghost', target, liked: false, reposted: false, followed: false, createdAt: Date.now() };
+  const on = which === 'up' ? !cur.liked : !cur.disliked;
+  try { await savePost(acct, { ...cur, liked: which === 'up' ? on : false, disliked: which === 'down' ? on : false }); } catch (e) { console.error(e); toast(isQuotaError(e) ? 'Out of space.' : 'That could not be saved.'); return; }
+  render(true);
+}
 const ghostAvatar = (p, size = '') => avatar({ name: p.name, handle: p.handle, color: p.color, avatarImg: p.avatarImg }, size);
 
 function ghostPostEl(g, acct, ctx, { detail = false } = {}) {
@@ -679,19 +697,22 @@ function ghostPostEl(g, acct, ctx, { detail = false } = {}) {
   const rx = ctx.reactions.get(g.id) || {};
   const replies = ctx.replyCount.get(g.id) || 0;     // only your own replies exist
   const reposts = g.reposts + (rx.reposted ? 1 : 0), likes = g.likes + (rx.liked ? 1 : 0);
+  const gVote = () => voteRail({ score: TemplateCore.score(g.likes, rx.liked, rx.disliked), up: rx.liked, down: rx.disliked, onUp: () => setVote(acct, ctx, g.id, 'up'), onDown: () => setVote(acct, ctx, g.id, 'down') });
   const gReply = actBtn('reply', replies, W('actReply'), () => detail ? $('.composer textarea')?.focus() : go('/post/' + g.id));
   const gRepost = actBtn('repost', fmt(reposts), W('actRepost'), () => setReaction(acct, ctx, g.id, 'reposted'), 'repost', !!rx.reposted);
   const gLike = actBtn('heart', fmt(likes), W('actLike'), () => setReaction(acct, ctx, g.id, 'liked'), 'like', !!rx.liked);
   const actions = h('div', { class: 'actions' },
-    ...(tplId() === 'blue' ? [gLike, gReply, gRepost] : [gReply, gRepost, gLike]),
+    ...(tplId() === 'blue' ? [gLike, gReply, gRepost] : tplId() === 'reddit' ? [gReply, gRepost] : [gReply, gRepost, gLike]),
     h('span', { class: 'act views', title: 'Views', 'aria-label': fmt(g.views) + ' views' }, icon('chart'), fmt(g.views)));
   const name = h('a', { class: 'name' + (tplId() === 'chat' ? ' role-' + TemplateCore.roleFor(who.id).toLowerCase() : ''), href: '#/u/' + who.id }, who.name);
   const handle = h('a', { class: 'handle', href: '#/u/' + who.id }, '@' + who.handle);
 
   if (detail) {
     const when = new Date(g.ts).toLocaleString(undefined, { hour: 'numeric', minute: '2-digit', month: 'short', day: 'numeric', year: 'numeric' });
-    return h('article', { class: 'post detail ghost-post', 'data-ghost': g.id },
-      h('div', { style: 'display:flex;gap:12px;align-items:center' }, h('a', { href: '#/u/' + who.id }, ghostAvatar(who)),
+    const rdd = tplId() === 'reddit';
+    return h('article', { class: 'post detail ghost-post' + (rdd ? ' rd-post' : ''), 'data-ghost': g.id },
+      rdd ? gVote() : null,
+      rdd ? h('div', { class: 'head rd-meta' }, h('b', { class: 'rd-comm' }, TemplateCore.COMMUNITY), ' · Posted by ', h('a', { class: 'name', href: '#/u/' + who.id }, 'u/' + who.handle), h('span', { class: 'time' }, stamp(g.ts))) : h('div', { style: 'display:flex;gap:12px;align-items:center' }, h('a', { href: '#/u/' + who.id }, ghostAvatar(who)),
         h('div', {}, h('div', {}, name), h('div', {}, handle))),
       h('div', { class: 'text' }, richText(g.text)),
       g.image && mediaGrid([g.image]),
@@ -702,10 +723,11 @@ function ghostPostEl(g, acct, ctx, { detail = false } = {}) {
         h('span', {}, h('b', {}, fmt(likes)), ' ' + W('statLikes'))),
       actions);
   }
-  return h('article', { class: 'post ghost-post', 'data-ghost': g.id, onclick: e => { if (!e.target.closest('button,a')) go('/post/' + g.id); } },
-    h('a', { href: '#/u/' + who.id, 'aria-label': who.name }, ghostAvatar(who)),
+  const rd = tplId() === 'reddit';
+  return h('article', { class: 'post ghost-post' + (rd ? ' rd-post' : ''), 'data-ghost': g.id, onclick: e => { if (!e.target.closest('button,a')) go('/post/' + g.id); } },
+    rd ? gVote() : h('a', { href: '#/u/' + who.id, 'aria-label': who.name }, ghostAvatar(who)),
     h('div', { class: 'content' },
-      h('div', { class: 'head' }, name, handle, h('span', { class: 'time' }, stamp(g.ts))),
+      rd ? h('div', { class: 'head' }, h('b', { class: 'rd-comm' }, TemplateCore.COMMUNITY), ' · Posted by ', h('a', { class: 'name', href: '#/u/' + who.id }, 'u/' + who.handle), h('span', { class: 'time' }, stamp(g.ts))) : h('div', { class: 'head' }, name, handle, h('span', { class: 'time' }, stamp(g.ts))),
       h('div', { class: 'text' }, richText(g.text)),
       g.image && mediaGrid([g.image]),
       actions));
@@ -1558,6 +1580,7 @@ function shell(acct, route, main, ctx, chId) {
   const id = tplId();
   if (id === 'chat') return shellChat(acct, route, main, ctx, chId);
   if (id === 'blue') return shellBlue(acct, route, main, ctx);
+  if (id === 'reddit') return shellReddit(acct, route, main, ctx);
   return shellDefault(acct, route, main);
 }
 function shellDefault(acct, route, main) {

@@ -6,6 +6,7 @@ const TemplateCore = (() => {
     { id: 'default', name: 'Anti-Social', blurb: 'The original look: a timeline with a menu down the side.', mode: '' },
     { id: 'chat', name: 'Chat Rooms', blurb: 'A server with channels, a chat column and a member list. Posts become messages.', mode: 'dark' },
     { id: 'blue', name: 'Classic Blue', blurb: 'A blue bar on top, shortcuts on the left, a News Feed and a Timeline. Early-2010s social network.', mode: 'light' },
+    { id: 'reddit', name: 'Communities', blurb: 'A community page with vote arrows, score counts, comments and an orange header. Posts become threads in r/AntiSocial.', mode: 'light' },
   ];
   const ids = TEMPLATES.map(t => t.id);
   const get = id => TEMPLATES.find(t => t.id === id) || TEMPLATES[0];
@@ -61,7 +62,24 @@ const TemplateCore = (() => {
     notifTitle: 'No new notifications', notifText: 'Nobody has liked, commented on, or poked you. Nobody can.',
     postNotFound: 'Status not found', profileOf: 'Timeline', searchBlurb: 'Search for people, places and things',
   };
-  const WORDS = { default: DEFAULT, chat: CHAT, blue: BLUE };
+  const REDDIT = {
+    ...DEFAULT,
+    navHome: 'Home', navExplore: 'Popular', navNotifications: 'Inbox', navProfile: 'Profile', navSettings: 'Settings',
+    titleHome: 'Home', titleExplore: 'Popular', titleNotifications: 'Inbox', titlePost: 'Post',
+    composePlaceholder: 'Text (optional)', composeHeading: 'Create a post', send: 'Post', reply: 'Comment',
+    replyGhostPlaceholder: 'What are your thoughts? (they will not answer)', replySelfPlaceholder: 'What are your thoughts? (you are commenting on yourself)',
+    actReply: 'Comments', actRepost: 'Share', actLike: 'Upvote', actLikeOn: 'Remove upvote', actViews: 'Views', actDelete: 'Delete',
+    statReplies: 'Comments', statReposts: 'Shares', statLikes: 'Upvotes',
+    youReposted: 'You shared your own post', replyingSelf: 'Commenting on yourself', replyingTo: 'In reply to',
+    following: 'Following', followers: 'Followers', follow: 'Join', unfollow: 'Joined',
+    tabPosts: 'Posts', tabReplies: 'Comments', tabMedia: 'Media', tabForYou: 'Best', tabYours: 'Yours', editProfile: 'Edit profile',
+    sideHappening: 'Popular communities', sideTrending: 'Trending today', sideWho: 'Communities near you', sideEmptyWho: 'None. You are the only member of everything.', sideEmptyHappening: 'Nothing is trending. Nobody is here.',
+    exploreEmptyTitle: 'No communities found', exploreSearching: 'Looking for communities...', searchAgain: 'Search again', exploreDiscover: 'Popular', discoverBtn: 'Find something new',
+    emptyFeedTitle: 'Welcome to r/AntiSocial', emptyFeedText: 'Nothing has been posted. Be the first. Your post will get one upvote: yours.', caughtUp: "You've reached the end of the feed. There is no more.",
+    notifTitle: 'No new messages', notifText: 'Nobody has replied, mentioned you or sent you anything. Nobody can.',
+    postNotFound: 'Post not found', profileOf: 'Profile', searchBlurb: 'Search Anti-Social',
+  };
+  const WORDS = { default: DEFAULT, chat: CHAT, blue: BLUE, reddit: REDDIT };
   const word = (id, key) => (WORDS[valid(id)] || DEFAULT)[key] ?? DEFAULT[key] ?? key;
 
   /* ---------- chat: channels ---------- */
@@ -124,10 +142,22 @@ const TemplateCore = (() => {
     return `${date} at ${t}`;
   };
 
+  /* ---------- reddit: "3 hr. ago", and the community's name ---------- */
+  const COMMUNITY = 'r/AntiSocial';
+  const redditTime = (ts, now = Date.now()) => {
+    const s = Math.max(0, Math.round((now - ts) / 1000));
+    if (s < 45) return 'just now'; const m = Math.round(s / 60); if (m < 60) return `${Math.max(1, m)} min. ago`;
+    const hr = Math.round(m / 60); if (hr < 24) return `${hr} hr. ago`;
+    const d = Math.round(hr / 24); if (d < 30) return `${d} ${d === 1 ? 'day' : 'days'} ago`;
+    const mo = Math.round(d / 30); return mo < 12 ? `${mo} mo. ago` : `${Math.round(mo / 12)} yr. ago`;
+  };
+  // the number between the arrows: your own vote counts one
+  const score = (base, up, down) => (base || 0) + (up ? 1 : 0) - (down ? 1 : 0);
+
   /* ---------- blue: little helpers ---------- */
   const firstName = acct => String((acct && (acct.name || acct.handle)) || '').trim().split(/\s+/)[0] || '';
   const countLabel = (n, one, many) => n === 1 ? `1 ${one}` : `${n} ${many}`;
 
-  return { TEMPLATES, get, valid, word, WORDS, MAX_CHANNELS, channelName, channelError, isGeneral, inChannel, crowdMayPost, serverName, serverTitle, cleanServerName, serverInitials, MAX_SERVER_NAME, initials, roleFor, ROLE_COLOR, memberGroups, messageOrder, firstName, countLabel, fbTime };
+  return { COMMUNITY, redditTime, score, TEMPLATES, get, valid, word, WORDS, MAX_CHANNELS, channelName, channelError, isGeneral, inChannel, crowdMayPost, serverName, serverTitle, cleanServerName, serverInitials, MAX_SERVER_NAME, initials, roleFor, ROLE_COLOR, memberGroups, messageOrder, firstName, countLabel, fbTime };
 })();
 if (typeof module !== 'undefined') module.exports = TemplateCore;
