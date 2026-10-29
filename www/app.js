@@ -1366,16 +1366,17 @@ async function openAccountMenu(anchor, acct) {
   const row = a => {
     const current = a.id === acct.id;
     const view = current ? acct : a;
-    return h('button', { class: 'pop-row', role: 'menuitem', onclick: () => { close(); if (!current) switchAccount(a); } },
+    return h('button', { class: 'pop-row', role: 'menuitem', onclick: () => { close(); if (current) go('/profile'); else switchAccount(a); } },
       avatar(view, 'sm'),
       h('div', { class: 'who' }, h('b', {}, view.name || '@' + view.handle), h('div', { class: 'muted' }, view.name ? '@' + view.handle : 'Locked')),
       h('span', { class: 'pop-mark' }, current ? icon('check') : (a.vault || a.hash) ? icon('lock') : null));
   };
   const pop = h('div', { class: 'popover', role: 'menu', 'aria-label': 'Accounts' },
     h('div', { class: 'pop-head' }, plural(accounts.length, 'account') + ' on this device'),
-    accounts.map(row),
-    h('button', { class: 'pop-row', role: 'menuitem', onclick: () => { close(); go('/profile'); } }, h('span', { class: 'pop-plus' }, icon('user')), h('b', {}, 'Profile')),
+    accounts.filter(a => a.id === acct.id).map(row),
     h('button', { class: 'pop-row', role: 'menuitem', onclick: () => { close(); go('/settings'); } }, h('span', { class: 'pop-plus' }, icon('settings')), h('b', {}, 'Settings')),
+    accounts.length > 1 && h('div', { class: 'pop-head' }, 'Switch account'),
+    accounts.filter(a => a.id !== acct.id).map(row),
     h('button', { class: 'pop-row add', role: 'menuitem', onclick: () => { close(); addAccount(acct); } }, h('span', { class: 'pop-plus' }, icon('plus')), h('b', {}, 'Add account')),
     h('div', { class: 'pop-foot' }, 'Followers across all accounts: 0'));
   document.body.append(pop);
