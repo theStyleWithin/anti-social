@@ -1011,3 +1011,39 @@ button.chip { background: none; color: inherit; cursor: pointer; font: inherit; 
 .av-month small { color: var(--muted); font-size: 11px; } .av-month span { position: absolute; top: 0; font-size: 11px; color: var(--muted); }
 .av-cover-edit { margin-bottom: 8px; }
 @media (max-width: 640px) { .av-grid { grid-template-columns: 1fr; } .av-cover.lg { width: 72px; height: 72px; } }
+
+/* ---------- Digital Clock ---------- */
+.ck-pad { max-width: 640px; margin: 0 auto; }
+.ck-stage { background: #05070a; border-radius: 16px; padding: 28px 12px; margin: 8px 0 12px; overflow: hidden; }
+.ck-face { color: var(--ck, #39ff7a); text-align: center; font-variant-numeric: tabular-nums; font-family: ui-monospace, "SF Mono", Consolas, "DejaVu Sans Mono", monospace; text-shadow: 0 0 18px color-mix(in srgb, var(--ck) 55%, transparent); }
+.ck-row { display: flex; align-items: baseline; justify-content: center; gap: 8px; }
+.ck-time { font-size: clamp(54px, 17vw, 120px); font-weight: 700; line-height: 1; letter-spacing: -.02em; }
+.ck-side { display: flex; flex-direction: column; align-items: flex-start; font-size: clamp(16px, 5vw, 30px); line-height: 1.15; }
+.ck-date { margin-top: 14px; font-size: clamp(14px, 3.6vw, 20px); opacity: .85; font-family: system-ui, sans-serif; text-shadow: none; }
+.ck-zone { text-align: center; padding: 0 0 8px; }
+.ck-opts { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 12px 0; }
+.ck-themes { display: flex; gap: 10px; padding: 4px 0 12px; }
+.ck-swatch { width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; outline: 1px solid var(--line); cursor: pointer; }
+.ck-swatch.on { border-color: var(--bg, #000); outline: 3px solid var(--fg); }
+.ck-full { position: fixed; inset: 0; z-index: 300; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+.ck-full .ck-time { font-size: min(26vw, 36vh); }
+.ck-full .ck-side { font-size: min(7vw, 10vh); }
+.ck-full .ck-date { font-size: min(4vw, 5vh); }
+.ck-full .fine { position: absolute; bottom: 14px; color: #888; }
+.ck-wrow { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.ck-dn { width: 24px; text-align: center; font-size: 18px; }
+.ck-wname { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ck-wtime { font-size: 22px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ck-add { padding: 14px 0; display: flex; flex-direction: column; gap: 8px; }
+.ck-found { display: flex; flex-wrap: wrap; gap: 6px; }
+.ck-big { font-size: clamp(44px, 14vw, 88px); text-align: center; font-weight: 700; padding: 28px 0 14px; font-variant-numeric: tabular-nums; font-family: ui-monospace, Consolas, monospace; }
+.ck-btns { justify-content: center; }
+.ck-laps { padding-top: 12px; }
+.ck-lap { display: flex; justify-content: space-between; gap: 12px; padding: 10px 4px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.ck-lap.best b { color: #1c9c4a; }
+.ck-lap.worst b { color: #d6453d; }
+.ck-inputs { display: flex; justify-content: center; gap: 12px; padding: 4px 0 10px; }
+.ck-num { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.ck-num input { width: 84px; font-size: 28px; text-align: center; padding: 8px 4px; }
+.ck-presets { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding-bottom: 12px; }
+.ck-done { text-align: center; font-weight: 800; color: var(--accent); min-height: 1.4em; }

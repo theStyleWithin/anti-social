@@ -1,6 +1,6 @@
 // Cache the app shell so Anti-Social works offline. There is no network API to call.
-const CACHE = 'anti-social-v14';
-const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'theme.js', 'ghost.js', 'apps.js', 'travelcore.js', 'tplcore.js', 'templates.js', 'acctcore.js', 'accounts.js', 'cookcore.js', 'cookbook.js', 'travel.js', 'bible.js', 'bibleapp.js', 'pokecore.js', 'pokedex.js', 'fsbridge.js', 'sdcore.js', 'pkmparse.js', 'pokesd.js', 'rabridge.js', 'achcore.js', 'achievements.js', 'pokebank.js', 'aicore.js', 'aionline.js', 'aiandroid.js', 'aichat.js', 'aiui.js', 'manifest.webmanifest',
+const CACHE = 'anti-social-v15';
+const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'theme.js', 'ghost.js', 'apps.js', 'travelcore.js', 'tplcore.js', 'templates.js', 'acctcore.js', 'accounts.js', 'cookcore.js', 'cookbook.js', 'travel.js', 'bible.js', 'bibleapp.js', 'pokecore.js', 'pokedex.js', 'fsbridge.js', 'sdcore.js', 'pkmparse.js', 'pokesd.js', 'rabridge.js', 'achcore.js', 'achievements.js', 'clockcore.js', 'clock.js', 'pokebank.js', 'aicore.js', 'aionline.js', 'aiandroid.js', 'aichat.js', 'aiui.js', 'manifest.webmanifest',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {

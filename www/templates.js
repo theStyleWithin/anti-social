@@ -160,7 +160,7 @@ function channelEditor(acct, ctx, ch) {
 }
 
 /* ---------- Classic Blue ---------- */
-const APP_ICONS = { calendar: 'calendar', calc: 'calc', bank: 'wallet', inventory: 'box', groceries: 'cart', chores: 'tasks', notes: 'notes', bible: 'scroll', diary: 'book', travel: 'globe', cookbook: 'pot', pokedex: 'pokeball', pokebank: 'box', achv: 'trophy' };
+const APP_ICONS = { calendar: 'calendar', calc: 'calc', bank: 'wallet', inventory: 'box', groceries: 'cart', chores: 'tasks', notes: 'notes', bible: 'scroll', diary: 'book', travel: 'globe', cookbook: 'pot', pokedex: 'pokeball', pokebank: 'box', achv: 'trophy', clock: 'clock' };
 function shellBlue(acct, route, main, ctx) {
   const hidden = hiddenApps(acct);
   const ic = (href, label, name, ico, cls = '') => h('a', { class: 'fb-icon ' + cls + (route === name ? ' active' : ''), href: '#' + href, title: label, 'aria-label': label, 'aria-current': route === name ? 'page' : null }, icon(ico));
