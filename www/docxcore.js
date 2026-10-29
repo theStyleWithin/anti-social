@@ -70,6 +70,6 @@ const DocxCore = (() => {
     else throw new Error(`.${k} files are not supported. Try .txt, .md, .docx or .odt.`);
     return { title: title(name), body };
   };
-  return { toNote, entries, wordText, odfText, plain, title, kind, TYPES, MAX_FILE };
+  return { toNote, entries, read, inflate, utf8, decode, wordText, odfText, plain, title, kind, TYPES, MAX_FILE };
 })();
 if (typeof module !== 'undefined') module.exports = DocxCore;

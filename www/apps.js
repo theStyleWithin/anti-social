@@ -479,6 +479,7 @@ function appsHome(acct, ctx) {
     ['terminal', 'terminal', 'Terminal Practice', 'Learn Linux commands safely (pretend)'],
     ['matrix', 'code', 'Matrix Viewer', 'Falling digits. Just to look at.'],
     ['cards', 'cards', 'Card Binder', A.ccard.length ? `${plural(A.ccard.length, 'card')} in ${plural(A.cbinder.length, 'binder')}` : 'Photograph a card, fill the binder'],
+    ['books', 'books', 'Books', A.ebook.length ? `${plural(A.ebook.length, 'book')} on your shelf` : 'Read your own books, offline'],
     ['achv', 'trophy', 'Achievements', (() => { const o = AchCore.overall(A.agame, A.ach); return A.agame.length ? `${o.unlocked} of ${o.total} unlocked · ${plural(A.agame.length, 'game')}` : 'Keep score of your game achievements'; })()],
   ];
   cards.splice(0, cards.length, ...cards.filter(c => !hidden.has(c[0])));
@@ -517,7 +518,7 @@ function appsHome(acct, ctx) {
 /* ---- rearranging the launcher: drag with a mouse, or touch and hold on a phone ---- */
 let appsReorder = false;
 // Every app, for the Settings list that shows or hides them. The Bible starts hidden; turn it on if you want it.
-const APP_LIST = [['calendar', 'Calendar'], ['calc', 'Calculator'], ['bank', 'Banking'], ['inventory', 'Household'], ['groceries', 'Groceries'], ['chores', 'Chores'], ['notes', 'Notes'], ['bible', 'Bible'], ['diary', 'Diary'], ['travel', 'Travel Log'], ['cookbook', 'Cookbook'], ['pokedex', 'Pokédex'], ['pokebank', 'Pokémon Bank'], ['achv', 'Achievements'], ['clock', 'Digital Clock'], ['sound', 'Sound Meter'], ['worldmap', 'World Map'], ['budget', 'Budget'], ['shots', 'Screenshots'], ['terminal', 'Terminal Practice'], ['matrix', 'Matrix Viewer'], ['cards', 'Card Binder']];
+const APP_LIST = [['calendar', 'Calendar'], ['calc', 'Calculator'], ['bank', 'Banking'], ['inventory', 'Household'], ['groceries', 'Groceries'], ['chores', 'Chores'], ['notes', 'Notes'], ['bible', 'Bible'], ['diary', 'Diary'], ['travel', 'Travel Log'], ['cookbook', 'Cookbook'], ['pokedex', 'Pokédex'], ['pokebank', 'Pokémon Bank'], ['achv', 'Achievements'], ['clock', 'Digital Clock'], ['sound', 'Sound Meter'], ['worldmap', 'World Map'], ['budget', 'Budget'], ['shots', 'Screenshots'], ['terminal', 'Terminal Practice'], ['matrix', 'Matrix Viewer'], ['cards', 'Card Binder'], ['books', 'Books']];
 const hiddenKey = acct => 'as.hiddenapps.' + acct.id;
 // Every app can be given your own name (per account). An empty name means the original one.
 const namesKey = acct => 'as.appnames.' + acct.id;
@@ -651,6 +652,7 @@ function appsView(acct, ctx, sub, arg) {
     case 'terminal': return terminalView(acct, ctx, back);
     case 'matrix': return matrixView(acct, ctx, back);
     case 'cards': return cardsView(acct, ctx, back, arg);
+    case 'books': return booksView(acct, ctx, back, arg);
     default: return appsHome(acct, ctx);
   }
 }
