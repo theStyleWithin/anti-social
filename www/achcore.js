@@ -1,7 +1,7 @@
 'use strict';
-/* Achievements: the pure logic. Games and their achievements, scoring, completion, and reading the files people keep
-   (Steam and RetroAchievements API replies saved as JSON, CSV, or this app's own export). It never goes online: you put
-   the data in by hand or from a file, and it adds it up for you. */
+/* Achievements: the pure logic. Games and their achievements, scoring, completion, reading a list pasted from a game's page
+   (RetroAchievements or Steam) and this app's own backup files. It never goes online: you put the data in by hand or by
+   pasting, and it adds it up for you. */
 const AchCore = (() => {
   const PLATFORMS = [
     { id: 'steam', name: 'Steam', color: '#66c0f4' }, { id: 'ra', name: 'RetroAchievements', color: '#e6a117' }, { id: 'psn', name: 'PlayStation', color: '#3b82f6' }, { id: 'xbox', name: 'Xbox', color: '#22a355' },
@@ -12,7 +12,7 @@ const AchCore = (() => {
   const int = (v, lo, hi, def) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : def; };
   const MAX_ACH = 5000;
 
-  const normGame = raw => ({ name: str(raw && raw.name, 80).trim(), platform: PLATFORMS.some(p => p.id === (raw && raw.platform)) ? raw.platform : 'other', notes: str(raw && raw.notes, 2000), hours: int(raw && raw.hours, 0, 99999, 0), console: str(raw && raw.console, 40) });
+  const normGame = raw => ({ name: str(raw && raw.name, 80).trim(), platform: PLATFORMS.some(p => p.id === (raw && raw.platform)) ? raw.platform : 'other', notes: str(raw && raw.notes, 2000), hours: int(raw && raw.hours, 0, 99999, 0), console: str(raw && raw.console, 40), raId: int(raw && raw.raId, 0, 1e9, 0) });
   const normAch = raw => ({
     key: str(raw && raw.key, 64), name: str(raw && raw.name, 120).trim(), desc: str(raw && raw.desc, 500), points: int(raw && raw.points, 0, 100000, 1), hidden: !!(raw && raw.hidden),
     rarity: raw && raw.rarity != null && raw.rarity !== '' && Number.isFinite(Number(raw.rarity)) ? Math.max(0, Math.min(100, Math.round(Number(raw.rarity) * 10) / 10)) : null,
@@ -84,56 +84,74 @@ const AchCore = (() => {
     return out;
   };
 
-  /* ---------- files people have ---------- */
-  const epochMs = v => { const n = Number(v); return n > 0 ? (n < 1e11 ? n * 1000 : n) : 0; };
+  /* ---------- pasting from a website ---------- */
+  // Text copied from a game's page on RetroAchievements (select all, copy):
+  //   My Shield (1) (1)            <- title, points, and the points with the site's multiplier
+  //   Acquire the standard shield from Tarin.
+  //   Unlocked Jun 1, 2024 1:06 AM  <- only on achievements you have
+  //   8,783 (3,919) of 9,109
+  //   96.42% unlock rate            <- the share of players who have it
+  const RA_TITLE = /^(.{1,120}?)\s*\((\d{1,6})\)(?:\s*\((\d{1,7})\))?\s*$/;
+  const when = line => { const m = /^unlocked\b[:\s]*(?:\(?hardcore\)?\s*)?(.*)$/i.exec(line); if (!m) return null; const t = Date.parse(m[1].replace(/\s+/g, ' ').trim()); return { at: Number.isFinite(t) ? t : 0, hardcore: /hardcore/i.test(line) }; };
+  const parseRaText = lines => {
+    const out = []; let cur = null;
+    const finish = () => { if (cur && cur.name) out.push(cur); cur = null; };
+    for (let i = 0; i < lines.length; i++) {
+      const l = lines[i], t = RA_TITLE.exec(l);
+      const next = lines[i + 1] || '';
+      if (t && next && !RA_TITLE.test(next) && !when(next) && !/unlock rate/i.test(next) && !/^[\d,.\s()of]+$/.test(l)) { finish(); cur = { name: t[1].trim(), points: Number(t[2]), desc: next, done: false, at: 0, rarity: null, hardcore: false }; i++; continue; }
+      if (!cur) continue;
+      const w = when(l); if (w) { cur.done = true; cur.at = w.at; cur.hardcore = w.hardcore; continue; }
+      const r = /([\d.,]+)\s*%\s*unlock rate/i.exec(l); if (r) { const v = parseFloat(r[1].replace(/,/g, '')); if (Number.isFinite(v)) cur.rarity = Math.min(100, v); }
+    }
+    finish(); return out;
+  };
+  // Steam's global achievement page, copied: a percent on its own line, then the name, then the description
+  const parseSteamText = lines => {
+    const out = []; const pct = l => /^\d{1,3}(?:\.\d+)?\s*%$/.test(l);
+    for (let i = 0; i < lines.length - 1; i++) {
+      if (!pct(lines[i]) || pct(lines[i + 1])) continue;
+      const name = lines[i + 1], desc = lines[i + 2] && !pct(lines[i + 2]) ? lines[i + 2] : '';
+      out.push({ name, desc, points: 1, done: false, at: 0, rarity: parseFloat(lines[i]), hardcore: false }); i += desc ? 2 : 1;
+    }
+    return out;
+  };
+  // returns {ok, kind, achs} or {ok:false, error}
+  const parsePage = text => {
+    const lines = String(text || '').replace(/ /g, ' ').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const ra = parseRaText(lines), steam = ra.length ? [] : parseSteamText(lines);
+    const found = ra.length ? ra : steam, kind = ra.length ? 'retroachievements' : steam.length ? 'steam' : null;
+    if (!kind) return { ok: false, error: 'No achievements were found in that text. Copy the whole achievement list from the game\'s page and paste it again.' };
+    return { ok: true, kind, achs: found.slice(0, MAX_ACH).map((a, i) => normAch({ ...a, order: i })) };
+  };
+
+  /* ---------- RetroAchievements web API ---------- */
   const raDate = s => { if (!s || typeof s !== 'string') return 0; const t = Date.parse(s.trim().replace(' ', 'T') + (/Z|[+-]\d\d:?\d\d$/.test(s.trim()) ? '' : 'Z')); return Number.isFinite(t) ? t : 0; };
-  const asObj = x => { if (typeof x === 'string') { try { return JSON.parse(x); } catch { return null; } } return x && typeof x === 'object' ? x : null; };
-  // Steam: GetSchemaForGame (names, descriptions, hidden) and GetPlayerAchievements (what you unlocked), saved as JSON
-  const steamSchema = d => { const g = d && d.game, list = g && g.availableGameStats && g.availableGameStats.achievements; return Array.isArray(list) ? { name: str(g.gameName, 80), achs: list.map((a, i) => ({ key: a.name, name: a.displayName || a.name, desc: a.description || '', hidden: !!a.hidden, order: i, points: 1 })) } : null; };
-  const steamPlayer = d => { const p = d && d.playerstats, list = p && p.achievements; return Array.isArray(list) ? { name: str(p.gameName, 80), achs: list.map((a, i) => ({ key: a.apiname, name: a.name || a.apiname, desc: a.description || '', done: !!a.achieved, at: a.achieved ? epochMs(a.unlocktime) : 0, order: i, points: 1 })) } : null; };
-  // RetroAchievements: API_GetGameInfoAndUserProgress
-  const raGame = d => {
-    if (!d || typeof d !== 'object' || !d.Achievements || typeof d.Achievements !== 'object' || !('Title' in d)) return null;
+  // "669", "game/669", "https://retroachievements.org/game/669" -> 669 (or 0)
+  const raGameId = input => { const m = /(?:\/game\/|^\s*)(\d{1,9})\s*(?:[/?#].*)?$/.exec(String(input || '')); return m ? Number(m[1]) : 0; };
+  // API_GetGameInfoAndUserProgress -> {ok, raId, name, console, achs}
+  const fromRaGame = d => {
+    if (!d || typeof d !== 'object' || !d.Achievements || typeof d.Achievements !== 'object' || !('Title' in d)) return { ok: false, error: 'RetroAchievements did not send a game back. Check the game number.' };
     const players = Number(d.NumDistinctPlayers || d.NumDistinctPlayersCasual) || 0;
-    const achs = Object.values(d.Achievements).map((a, i) => {
+    const list = Array.isArray(d.Achievements) ? d.Achievements : Object.values(d.Achievements);
+    const achs = list.slice(0, MAX_ACH).map((a, i) => {
       const hc = raDate(a.DateEarnedHardcore), sc = raDate(a.DateEarned), at = hc || sc;
-      return { key: String(a.ID), name: a.Title, desc: a.Description || '', points: a.Points, done: !!at, at, hardcore: !!hc, order: Number.isFinite(Number(a.DisplayOrder)) ? Number(a.DisplayOrder) : i, rarity: players && Number(a.NumAwarded) >= 0 ? Math.min(100, Number(a.NumAwarded) / players * 100) : null };
+      return normAch({ key: String(a.ID), name: a.Title, desc: a.Description || '', points: a.Points, done: !!at, at, hardcore: !!hc, order: Number.isFinite(Number(a.DisplayOrder)) ? Number(a.DisplayOrder) : i, rarity: players && Number(a.NumAwarded) >= 0 ? Number(a.NumAwarded) / players * 100 : null });
     });
-    return { name: str(d.Title, 80), platform: 'ra', console: str(d.ConsoleName, 40), achs };
+    return { ok: true, raId: Number(d.ID) || 0, name: str(d.Title, 80), console: str(d.ConsoleName, 40), achs };
   };
-  const csvRows = text => {
-    const rows = []; let row = [], cur = '', q = false; const s = String(text || '').replace(/^﻿/, '');
-    for (let i = 0; i < s.length; i++) { const c = s[i];
-      if (q) { if (c === '"') { if (s[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += c; }
-      else if (c === '"') q = true; else if (c === ',' || c === ';') { row.push(cur); cur = ''; } else if (c === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; } else if (c !== '\r') cur += c; }
-    if (cur || row.length) { row.push(cur); rows.push(row); }
-    return rows.filter(r => r.some(x => x.trim()));
-  };
-  const truthy = v => /^(1|true|yes|y|x|done|unlocked|achieved)$/i.test(String(v || '').trim());
-  const csvAchs = text => {
-    const rows = csvRows(text); if (rows.length < 2) return null;
-    const head = rows[0].map(h => h.trim().toLowerCase()), col = (...names) => head.findIndex(h => names.includes(h));
-    const cn = col('name', 'title', 'achievement'), cd = col('description', 'desc'), cp = col('points', 'score', 'gamerscore'), cu = col('unlocked', 'done', 'achieved', 'earned'), ct = col('date', 'unlocked date', 'date unlocked', 'unlocked at', 'dateearned'), ch = col('hidden', 'secret'), cr = col('rarity', 'percent', 'global %');
-    if (cn < 0) return null;
-    const achs = rows.slice(1, MAX_ACH + 1).map((r, i) => {
-      const t = ct >= 0 ? Date.parse(String(r[ct] || '').trim()) : NaN, at = Number.isFinite(t) ? t : 0;
-      return { name: r[cn], desc: cd >= 0 ? r[cd] : '', points: cp >= 0 && r[cp] !== '' ? r[cp] : 1, done: cu >= 0 ? truthy(r[cu]) || at > 0 : at > 0, at, hidden: ch >= 0 && truthy(r[ch]), rarity: cr >= 0 ? String(r[cr] || '').replace('%', '') : null, order: i };
-    }).filter(a => a.name && a.name.trim());
-    return achs.length ? { name: '', achs } : null;
+  // API_GetUserCompletedGames -> [{raId, name, console, total, earned}] (the same game can be listed once for casual and once for hardcore)
+  const fromRaGames = d => {
+    if (!Array.isArray(d)) return [];
+    const m = new Map();
+    for (const g of d) { const id = Number(g && g.GameID); if (!id) continue; const earned = Math.max(Number(g.NumAwarded) || 0, Number(g.NumAwardedHardcore) || 0), prev = m.get(id); if (!prev || earned > prev.earned) m.set(id, { raId: id, name: str(g.Title, 80), console: str(g.ConsoleName, 40), total: Number(g.MaxPossible) || 0, earned }); }
+    return [...m.values()].filter(g => g.total > 0).sort((a, b) => a.name.localeCompare(b.name));
   };
   const EXPORT_FORMAT = 'anti-social-achievements';
-  // Work out what a file is. Returns {ok, kind, name, platform, console, achs} or {ok:false, error}.
+  // A backup made by this app's Export. Returns {ok, export} or {ok:false, error}.
   const detect = input => {
-    const d = asObj(input);
-    if (d) {
-      if (d.format === EXPORT_FORMAT && Array.isArray(d.games)) return { ok: true, kind: 'export', export: d };
-      const ra = raGame(d); if (ra) return { ok: true, kind: 'retroachievements', ...ra, achs: ra.achs.slice(0, MAX_ACH).map(normAch) };
-      const sp = steamPlayer(d); if (sp) return { ok: true, kind: 'steam', platform: 'steam', ...sp, achs: sp.achs.slice(0, MAX_ACH).map(normAch) };
-      const ss = steamSchema(d); if (ss) return { ok: true, kind: 'steam', platform: 'steam', ...ss, achs: ss.achs.slice(0, MAX_ACH).map(normAch) };
-      return { ok: false, error: 'That JSON is not a Steam or RetroAchievements reply, or an Achievements export.' };
-    }
-    if (typeof input === 'string') { const c = csvAchs(input); if (c) return { ok: true, kind: 'csv', platform: null, ...c, achs: c.achs.map(normAch) }; }
-    return { ok: false, error: 'That file is not JSON or a CSV with a "name" column.' };
+    let d = input; if (typeof d === 'string') { try { d = JSON.parse(d); } catch { d = null; } }
+    return d && typeof d === 'object' && d.format === EXPORT_FORMAT && Array.isArray(d.games) ? { ok: true, kind: 'export', export: d } : { ok: false, error: 'That is not a backup made by Achievements (use Export to make one).' };
   };
   const matchKey = a => a.key ? 'k:' + a.key : 'n:' + a.name.toLowerCase();
   // Put incoming achievements into a game that already has some. Never takes an unlock away.
@@ -157,6 +175,6 @@ const AchCore = (() => {
   };
   const exportAll = (games, achs) => ({ format: EXPORT_FORMAT, version: 1, games: games.map(g => ({ ...normGame(g), id: g.id, achs: achs.filter(a => a.game === g.id).map(a => normAch(a)) })) });
 
-  return { PLATFORMS, platform, MAX_ACH, normGame, normAch, gameStats, byGame, overall, GAME_SORTS, sortGames, filterGames, ACH_FILTERS, filterAchs, recent, monthly, rarest, parseBulk, detect, merge, exportAll, EXPORT_FORMAT, csvRows };
+  return { PLATFORMS, platform, MAX_ACH, normGame, normAch, gameStats, byGame, overall, GAME_SORTS, sortGames, filterGames, ACH_FILTERS, filterAchs, recent, monthly, rarest, parseBulk, detect, merge, exportAll, EXPORT_FORMAT, parsePage, raGameId, fromRaGame, fromRaGames };
 })();
 if (typeof module !== 'undefined') module.exports = AchCore;

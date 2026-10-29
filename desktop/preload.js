@@ -30,3 +30,9 @@ contextBridge.exposeInMainWorld('AntiSocialFS', {
   write: (id, rel, bytes) => ipcRenderer.invoke('fs:write', String(id), String(rel), bytes),
   exists: (id, rel) => ipcRenderer.invoke('fs:exists', String(id), String(rel)),
 });
+
+// Optional lookups on retroachievements.org (a few fixed, read-only calls), only when the person asks for one.
+contextBridge.exposeInMainWorld('AntiSocialRA', {
+  kind: 'desktop',
+  get: (call, params) => ipcRenderer.invoke('ra:get', String(call), Object.fromEntries(Object.entries(params || {}).map(([k, v]) => [String(k), String(v)]))),
+});

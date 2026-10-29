@@ -38,7 +38,7 @@ async function accountExportFile(acct) {
   if (posts.bad) throw new Error('unreadable');
   const prefs = {};
   for (const k of AX.prefKeys(acct.id)) { const v = ls(k); if (v) prefs[k] = v; }
-  const text = JSON.stringify(AX.buildExport(acct, Object.assign(posts.filter(p => p.kind !== 'aikey'), { bad: posts.bad }), prefs));
+  const text = JSON.stringify(AX.buildExport(acct, Object.assign(posts.filter(p => p.kind !== 'aikey' && p.kind !== 'rakey'), { bad: posts.bad }), prefs));
   return { name: AX.fileName(acct.handle), text, bytes: new TextEncoder().encode(text).length };
 }
 const sizeLabel = n => n < 1024 * 1024 ? Math.max(1, Math.round(n / 1024)) + ' KB' : (n / 1024 / 1024).toFixed(1) + ' MB';

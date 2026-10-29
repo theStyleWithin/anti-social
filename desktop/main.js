@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, shell, ipcMain, dialog, utilityProcess } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain, dialog, utilityProcess, net } = require('electron');
 const crypto = require('crypto');
 const os = require('os');
 const path = require('path');
@@ -109,6 +109,29 @@ ipcMain.handle('fs:write', guard(async (_e, id, rel, bytes) => {
   return true;
 }));
 ipcMain.handle('fs:exists', guard(async (_e, id, rel) => { try { return fs.existsSync(inside(id, rel, false)); } catch { return false; } }));
+
+/* ---------- RetroAchievements (optional, only when the person asks) ---------- */
+// The page can ask for one of a few read-only API calls. The address, the call names and the shape of every value are
+// fixed here, so the page can not use this to reach anything else.
+const RA_BASE = (!app.isPackaged && process.env.ANTISOCIAL_RA_BASE) || 'https://retroachievements.org/API/';
+const RA_CALLS = { API_GetGameInfoAndUserProgress: ['z', 'y', 'u', 'g', 'a'], API_GetUserCompletedGames: ['z', 'y', 'u'], API_GetUserProfile: ['z', 'y', 'u'] };
+const RA_VALUE = { z: /^[A-Za-z0-9_.-]{1,40}$/, u: /^[A-Za-z0-9_.-]{1,40}$/, y: /^[A-Za-z0-9]{8,64}$/, g: /^\d{1,9}$/, a: /^[01]$/ };
+ipcMain.handle('ra:get', guard(async (_e, call, params) => {
+  if (!RA_CALLS[call]) throw new Error('That call is not allowed.');
+  const url = new URL(RA_BASE + call + '.php');
+  for (const [k, v] of Object.entries(params || {})) {
+    if (!RA_CALLS[call].includes(k) || !RA_VALUE[k].test(String(v))) throw new Error('A value in that request is not allowed.');
+    url.searchParams.set(k, String(v));
+  }
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 25000);
+  try {
+    const res = await net.fetch(url.toString(), { signal: ctl.signal, headers: { 'User-Agent': 'Anti-Social', Accept: 'application/json' } });
+    const text = await res.text();
+    if (text.length > 12 * 1024 * 1024) throw new Error('The reply was too big.');
+    return { status: res.status, text };
+  } catch (e) { if (e && e.name === 'AbortError') throw new Error('RetroAchievements took too long to answer.'); throw new Error('Could not reach RetroAchievements. Check your internet connection.'); }
+  finally { clearTimeout(timer); }
+}));
 
 function createWindow() {
   const win = new BrowserWindow({

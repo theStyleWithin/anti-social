@@ -27,6 +27,8 @@ public class MainActivity extends BridgeActivity {
         // Folders the person picks (the Switch SD card in a card reader, an emulator's save folder).
         fs = new FsBridge(this, getBridge().getWebView());
         getBridge().getWebView().addJavascriptInterface(fs, "AntiSocialFSNative");
+        // Optional lookups on retroachievements.org (a few fixed, read-only calls), only when the person asks.
+        getBridge().getWebView().addJavascriptInterface(new RaBridge(this, getBridge().getWebView()), "AntiSocialRANative");
     }
 
     void pickFolder() {
