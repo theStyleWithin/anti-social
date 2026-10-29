@@ -43,11 +43,6 @@ AccessControlInfo:
   CpuSpeed                : 804MHz
   EnableL2Cache           : true
   CanAccessCore2          : true
-  IoAccessControl:
-    - FsMountNand
-    - FsMountNandRoOnly
-    - UseSdif3
-    - FsMountSdmcWriteOnly
   SystemMode              : 64MB
   ResourceLimitCategory   : Application
   HandleTableSize         : 0x200
