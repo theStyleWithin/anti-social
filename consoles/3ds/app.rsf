@@ -1,0 +1,83 @@
+BasicInfo:
+  Title                   : Anti-Social
+  ProductCode             : CTR-P-ASOC
+  Logo                    : Nintendo
+
+RomFs:
+  RootPath                : "romfs"
+
+TitleInfo:
+  Category                : Application
+  UniqueId                : 0xA5C01
+
+Option:
+  UseOnSD                 : true
+  FreeProductCode         : true
+  MediaFootPadding        : false
+  EnableCrypt             : false
+  EnableCompress          : true
+
+AccessControlInfo:
+  CoreVersion             : 2
+  DescVersion             : 2
+  ReleaseKernelMajor      : "02"
+  ReleaseKernelMinor      : "33"
+  UseExtSaveData          : false
+  FileSystemAccess:
+    - DirectSdmc
+    - Debug
+  IdealProcessor          : 0
+  AffinityMask            : 1
+  Priority                : 16
+  MaxCpu                  : 0x9E
+  DisableDebug            : false
+  EnableForceDebug        : false
+  CanWriteSharedPage      : true
+  CanUsePrivilegedPriority: false
+  CanUseNonAlphabetAndNumber: true
+  PermitMainFunctionArgument: true
+  CanShareDeviceMemory    : true
+  RunnableOnSleep         : false
+  SpecialMemoryArrange    : true
+  SystemModeExt           : Legacy
+  CpuSpeed                : 804MHz
+  EnableL2Cache           : true
+  CanAccessCore2          : true
+  IoAccessControl:
+    - FsMountNand
+    - FsMountNandRoOnly
+    - UseSdif3
+    - FsMountSdmcWriteOnly
+  SystemMode              : 64MB
+  ServiceAccessControl:
+    - APT:U
+    - ac:u
+    - am:net
+    - boss:U
+    - cam:u
+    - cecd:u
+    - cfg:nor
+    - cfg:u
+    - csnd:SND
+    - dsp::DSP
+    - frd:u
+    - fs:USER
+    - gsp::Gpu
+    - hid:USER
+    - http:C
+    - mic:u
+    - ndm:u
+    - news:u
+    - nwm::EXT
+    - nwm::UDS
+    - ptm:sysm
+    - ptm:u
+    - pxi:dev
+    - soc:U
+    - ssl:C
+    - y2r:u
+
+SystemControlInfo:
+  SaveDataSize: 0KB
+  RemasterVersion: 0
+  StackSize: 0x40000
