@@ -71,11 +71,13 @@ jobs:
         run: |
           apt-get update -qq && apt-get install -y -qq curl unzip >/dev/null
           mkdir -p /tmp/ct && cd /tmp/ct
-          curl -fsSL -o makerom.zip https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.18.4/makerom-v0.18.4-ubuntu_x86_64.zip
-          curl -fsSL -o bannertool.zip https://github.com/carstene1ns/3ds-bannertool/releases/download/v1.2.0/bannertool.zip
-          unzip -oq makerom.zip && unzip -oq bannertool.zip
-          cp makerom /usr/local/bin/ && cp linux-x86_64/bannertool /usr/local/bin/ 2>/dev/null || cp bannertool /usr/local/bin/
-          chmod +x /usr/local/bin/makerom /usr/local/bin/bannertool
+          # find the newest Linux download of each tool through the releases API
+          fetch() { curl -fsSL -H "Authorization: Bearer ${{ github.token }}" "https://api.github.com/repos/$1/releases/latest" | grep -o '"browser_download_url": *"[^"]*"' | cut -d'"' -f4 | grep -iE "$2" | head -1; }
+          MK=$(fetch 3DSGuy/Project_CTR 'makerom.*(ubuntu|linux).*x86_64|makerom.*(ubuntu|linux)')
+          BT=$(fetch carstene1ns/3ds-bannertool 'linux|ubuntu')
+          echo "makerom: $MK"; echo "bannertool: $BT"
+          curl -fsSL -o makerom.dl "$MK" && curl -fsSL -o bannertool.dl "$BT"
+          for f in makerom bannertool; do mkdir -p $f && (cd $f && (unzip -oq ../$f.dl 2>/dev/null || tar xf ../$f.dl 2>/dev/null || cp ../$f.dl ./$f)); BIN=$(find $f -type f -name $f | head -1); install -m755 "$BIN" /usr/local/bin/$f; done
           cd $GITHUB_WORKSPACE
           VERSION=$(grep -m1 '"version"' desktop/package.json | sed -E 's/.*"([0-9.]+)".*/\1/')
           make -C consoles/3ds cia VERSION=$VERSION
