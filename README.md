@@ -6,7 +6,7 @@
 
 ## Status: fully featured and complete
 
-Anti-Social v0.20.1 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.21.0 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (drag-to-reorder, themes, the Bible, Travel Log, Cookbook and the v0.12.0 account features are automated-test verified, awaiting a hand test; the Android file saver in v0.12.0 is new native code and has not yet been run on a real phone); plus automated tests):
 - **Android:** installed and used on a real phone, including account switching, Populated mode, Characters, the storage limit and the Apps.
@@ -55,6 +55,7 @@ is a flat, unblinking **0**.
   - **Screenshots:** a gallery for your gameplay screenshots, with a folder for each game so you can find anything by its title. Add many at once, caption them, move them between games, select several to move or delete, view them full size, save a copy. Separate from Achievements.
   - **Terminal Practice:** a pretend Linux terminal for learning before you switch to Linux. A made-up file system with real-feeling commands (ls, cd, cat, grep, find, pipes, redirects, chmod, sudo, a pretend apt and more), Tab completion, history, eight guided lessons with hints and a cheat sheet. It never runs anything real and has no network.
   - **Matrix Viewer:** falling glowing digits, purely to look at. Ones and zeros, hex or katakana, six colours, speed, size and trail, full screen. It does nothing useful, on purpose.
+  - **Card Binder:** a virtual binder for your trading cards. Photograph a card and the app reads it on your device (open source OCR with English and Japanese built in, nothing uploaded) and fills in what it can: the Pokédex number (so a Japanese card with "No. 172" becomes Pichu, its type and the Pokédex link), HP, card number, set code, illustrator, language and stage. You check and fix the details, add the set, rarity, condition, value and notes, and the card goes into a binder with real pages (2x2, 3x3, 4x3 or 4x4 sleeves, swipe or arrow between pages). Several binders, search by name, number, set or illustrator, filter by language, sort a binder, move cards, CSV export. Also works for other card games by typing the details. Reading a photo is a helper, not a promise: foil glare and blur can fool it, so always check.
   - **Pokédex:** every Pokémon by game (Let's Go, FireRed/LeafGreen, Brilliant Diamond/Shining Pearl, Legends: Arceus, Sword/Shield and both expansions, Scarlet/Violet and both expansions, Legends: Z-A and its expansion) plus the National Pokédex. Search, a page for each Pokémon with its types, evolutions, where to find it and a shiny view, and a tracker for Caught, Shiny, Alpha and Shiny Alpha with bulk actions and multi-select. Data and pictures from pkDex (GPL-2.0)
   - **Palworld Paldeck (inside the Pokédex):** a separate category with every Pal in the list (288), by Paldeck number with its variants (#5B and so on), rarity, an icon and a page each, and a Caught / Lucky tracker of its own. The data is a Paldeck list made from palworld.gg
   - **More monsters from other games (beta, inside the Pokédex):** the Nexodex, all 310 Nexomon from the original Nexomon (number, type and rarity: Common, Uncommon, Rare, Mega Rare, Special/Starter, Legendary), with a Caught tick for each, filters by rarity and search by name, number, element or rarity. There are no pictures for it yet, so each one gets a coloured tile in its element's colour. It sits beside the Paldeck as a beta library; more games may follow.
@@ -67,7 +68,8 @@ is a flat, unblinking **0**.
 
 ## Version history
 
-- **v0.20.1:** the Pokédex has a beta library of monsters from other games, starting with all 310 Nexomon
+- **v0.21.0:** Card Binder, a virtual binder where you photograph a card and the app reads it offline to fill in its details; plus a beta library of Nexomon in the Pokédex
+- **v0.20.1 (included in v0.21.0):** the Pokédex has a beta library of monsters from other games, starting with all 310 Nexomon
 - **v0.20.0:** seven new built-in apps: Digital Clock, Sound Meter, World Map, Budget, Screenshots, Terminal Practice and Matrix Viewer. Household items no longer need a price. Notes can import .txt, .md, .docx and .odt files. The Apps menu has a new clear glass look. The Android app and desktop app may now ask for the microphone, only for the Sound Meter
 - **v0.19.0:** Achievements, a catalogue and score keeper for your video game achievements: type, paste a game's page, or (optionally) fetch from RetroAchievements with your API key
 - **v0.18.0:** the Palworld Paldeck joins the Pokédex as its own category (288 Pals, with icons and a tracker)

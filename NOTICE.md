@@ -19,6 +19,8 @@ Releases up to 0.16.0 contain none of that material and stay available under 0BS
 - **Palworld Paldeck** (names, Paldeck numbers, rarity and icons in `www/palworld/`): taken from a "Palworld Full Paldeck" list that was made from palworld.gg and marked "for personal reference use", built by `tools/build-palworld.py`. It is not GPL material and is not covered by this project's licence.
 - **Nexomon (beta library in the Pokédex)** (names, numbers, types and rarity in `www/nexomon/`): taken from a list of the original Nexomon game made from the Nexomon database on nexomon.fandom.com. No artwork is included. Nexomon and its monsters belong to VEWO Interactive. This app is not affiliated with or endorsed by them.
 
+- **Card Binder's card reader** (`www/vendor/tesseract/`): Tesseract.js and Tesseract.js-Core (Apache-2.0, https://github.com/naptha/tesseract.js), which run the Tesseract OCR engine (Apache-2.0, https://github.com/tesseract-ocr/tesseract) in WebAssembly, and the English and Japanese "fast" language data from tessdata_fast (Apache-2.0, https://github.com/tesseract-ocr/tessdata_fast). The licence texts are in that folder. Photos are read on your device and are never uploaded.
+
 ## Trademarks
 
 Pokémon and its names, characters, artwork and trademarks belong to Nintendo, Creatures, GAME FREAK and The Pokémon
