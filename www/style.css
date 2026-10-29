@@ -1273,3 +1273,14 @@ button.chip { background: none; color: inherit; cursor: pointer; font: inherit; 
 .kd-from { color: var(--accent); font-style: normal; font-size: 12px; }
 .kd-big { max-height: 56vh; }
 .kd-info { padding: 4px 0 8px; }
+
+/* ---------- reordering apps: keep it smooth ----------
+   The floating copy must follow the pointer exactly (no easing, no blur to repaint), and the cards it passes over must not
+   fight it with hover lifts or heavy blur while they slide. */
+.app-drag-clone { transition: none !important; animation: none; -webkit-backdrop-filter: none; backdrop-filter: none; cursor: grabbing; backface-visibility: hidden; contain: layout paint; box-shadow: 0 18px 44px -8px rgba(0,0,0,.5), inset 0 1.5px 1px color-mix(in srgb, #fff 80%, transparent); }
+body.app-dragging .app-card:not(.app-drag-clone) { -webkit-backdrop-filter: none; backdrop-filter: none; transition: none; background: linear-gradient(160deg, color-mix(in srgb, var(--bg) 70%, transparent), color-mix(in srgb, var(--bg) 52%, color-mix(in srgb, var(--accent) 10%, transparent))); }
+body.app-dragging .app-card:hover { transform: none; }
+.app-card.ghosted { transition: none; }
+.apps-grid.reorder .app-card { -webkit-user-drag: none; }
+/* the glass tile rule above sets position: relative on every .app-card; the floating copy has to stay fixed to the screen */
+.app-drag-clone { position: fixed !important; left: 0; top: 0; margin: 0; z-index: 90; pointer-events: none; }

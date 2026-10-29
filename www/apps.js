@@ -540,8 +540,11 @@ const appOrderKey = acct => 'as.apporder.' + acct.id;
 function enableAppDrag(grid, acct) {
   let st = null, suppress = false;
   const cardsNow = () => [...grid.querySelectorAll('.app-card')];
+  // whatever scrolls the page (the window, or an inner panel)
+  const scrollerOf = el => { for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) { const o = getComputedStyle(p).overflowY; if ((o === 'auto' || o === 'scroll') && p.scrollHeight > p.clientHeight + 1) return p; } return null; };
+  const scrollPos = () => st.scroller ? { x: st.scroller.scrollLeft, y: st.scroller.scrollTop } : { x: window.scrollX, y: window.scrollY };
   const cleanup = () => {
-    if (st) { clearTimeout(st.timer); st.clone?.remove(); st.card.classList.remove('ghosted'); document.body.classList.remove('app-dragging'); }
+    if (st) { clearTimeout(st.timer); cancelAnimationFrame(st.raf); st.clone?.remove(); st.card.classList.remove('ghosted'); document.body.classList.remove('app-dragging'); }
     st = null;
     document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', end); document.removeEventListener('pointercancel', end); document.removeEventListener('touchmove', onTouchMove);
   };
@@ -549,25 +552,37 @@ function enableAppDrag(grid, acct) {
     st.active = true;
     const r = st.card.getBoundingClientRect();
     st.offX = st.x - r.left; st.offY = st.y - r.top;
+    st.scroller = scrollerOf(grid);
+    // The grid cells never move while you drag, only the cards between them. So measure the cells once, in page
+    // coordinates, and decide where the card goes from those, not from cards that are still sliding about.
+    const sp = scrollPos();
+    st.slots = cardsNow().map(c => { const b = c.getBoundingClientRect(); return { l: b.left + sp.x, t: b.top + sp.y, w: b.width, h: b.height }; });
     st.clone = st.card.cloneNode(true); st.clone.classList.add('app-drag-clone'); st.clone.removeAttribute('href');
     Object.assign(st.clone.style, { width: r.width + 'px', height: r.height + 'px' });
     document.body.append(st.clone); st.card.classList.add('ghosted'); document.body.classList.add('app-dragging');
     try { navigator.vibrate?.(12); } catch { /* not supported */ }
-    place();
+    place(); st.raf = requestAnimationFrame(autoScroll);
+  };
+  // near the top or bottom of the screen, scroll so you can reach the far cards
+  const autoScroll = () => {
+    if (!st || !st.active) return;
+    const rect = st.scroller ? st.scroller.getBoundingClientRect() : { top: 0, bottom: window.innerHeight }, top = Math.max(0, rect.top), bottom = Math.min(window.innerHeight, rect.bottom), edge = 90;
+    let v = 0; if (st.y < top + edge) v = -Math.min(1, (top + edge - st.y) / edge) * 22; else if (st.y > bottom - edge) v = Math.min(1, (st.y - (bottom - edge)) / edge) * 22;
+    if (v) { const before = scrollPos().y; if (st.scroller) st.scroller.scrollTop += v; else window.scrollBy(0, v); if (scrollPos().y !== before) place(); }
+    st.raf = requestAnimationFrame(autoScroll);
   };
   const place = () => {
-    st.clone.style.transform = `translate(${st.x - st.offX}px, ${st.y - st.offY}px) scale(1.04)`;
-    const others = cardsNow().filter(c => c !== st.card);
-    const t = AC.dropTarget(others.map(c => { const r = c.getBoundingClientRect(); return { id: c.dataset.app, left: r.left, top: r.top, width: r.width, height: r.height }; }), st.x, st.y);
-    if (!t) return;
-    const target = others.find(c => c.dataset.app === t.id), ref = t.before ? target : target.nextElementSibling;
-    if (ref === st.card || target.nextElementSibling === st.card && !t.before) return;
-    const first = new Map(cardsNow().map(c => [c, c.getBoundingClientRect()]));
-    grid.insertBefore(st.card, ref);
+    st.clone.style.transform = `translate3d(${st.x - st.offX}px, ${st.y - st.offY}px, 0) scale(1.04)`;
+    const sp = scrollPos(), px = st.x + sp.x, py = st.y + sp.y;
+    const j = st.slots.findIndex(s => px >= s.l && px <= s.l + s.w && py >= s.t && py <= s.t + s.h);
+    const cards = cardsNow(), from = cards.indexOf(st.card);
+    if (j < 0 || j === from || !cards[j]) return;        // in a gap, or already there: leave things alone
+    const first = new Map(cards.map(c => [c, c.getBoundingClientRect()]));
+    grid.insertBefore(st.card, j > from ? cards[j].nextElementSibling : cards[j]);
     for (const c of cardsNow()) {   // slide the others into place instead of jumping
       if (c === st.card) continue;
       const a = first.get(c), z = c.getBoundingClientRect(), dx = a.left - z.left, dy = a.top - z.top;
-      if (dx || dy) { c.style.transition = 'none'; c.style.transform = `translate(${dx}px, ${dy}px)`; requestAnimationFrame(() => requestAnimationFrame(() => { c.style.transition = 'transform .18s ease'; c.style.transform = ''; })); }
+      if (dx || dy) c.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], { duration: 200, easing: 'cubic-bezier(.2,.8,.2,1)' });
     }
   };
   // While a press is in progress we listen on the whole page, so the drag keeps working even when a
@@ -588,6 +603,7 @@ function enableAppDrag(grid, acct) {
     const was = st.active;
     if (was) {
       const ids = cardsNow().map(c => c.dataset.app);
+      try { const cr = st.clone.getBoundingClientRect(); st.card.classList.remove('ghosted'); const tr = st.card.getBoundingClientRect(); st.card.animate([{ transform: `translate(${cr.left - tr.left}px, ${cr.top - tr.top}px) scale(1.04)` }, { transform: 'translate(0, 0) scale(1)' }], { duration: 180, easing: 'cubic-bezier(.2,.8,.2,1)' }); } catch { /* no glide, it just lands */ }
       if (e.type !== 'pointercancel') ls(appOrderKey(acct), JSON.stringify(ids));
       suppress = true; setTimeout(() => { suppress = false; }, 80);
     }

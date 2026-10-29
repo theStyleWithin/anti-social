@@ -6,7 +6,7 @@
 
 ## Status: fully featured and complete
 
-Anti-Social v0.21.0 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.21.1 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (drag-to-reorder, themes, the Bible, Travel Log, Cookbook and the v0.12.0 account features are automated-test verified, awaiting a hand test; the Android file saver in v0.12.0 is new native code and has not yet been run on a real phone); plus automated tests):
 - **Android:** installed and used on a real phone, including account switching, Populated mode, Characters, the storage limit and the Apps.
@@ -68,6 +68,7 @@ is a flat, unblinking **0**.
 
 ## Version history
 
+- **v0.21.1:** rearranging the Apps menu is smooth again: the card you drag now sticks to your finger or mouse, the others slide out of the way without flickering, the page scrolls by itself when you hold a card near the top or bottom edge, and the card glides into its place when you let go
 - **v0.21.0:** Card Binder, a virtual binder where you photograph a card and the app reads it offline to fill in its details; plus a beta library of Nexomon in the Pokédex
 - **v0.20.1 (included in v0.21.0):** the Pokédex has a beta library of monsters from other games, starting with all 310 Nexomon
 - **v0.20.0:** seven new built-in apps: Digital Clock, Sound Meter, World Map, Budget, Screenshots, Terminal Practice and Matrix Viewer. Household items no longer need a price. Notes can import .txt, .md, .docx and .odt files. The Apps menu has a new clear glass look. The Android app and desktop app may now ask for the microphone, only for the Sound Meter
