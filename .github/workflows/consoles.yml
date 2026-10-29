@@ -69,6 +69,9 @@ jobs:
       - name: Build .cia (optional)
         continue-on-error: true
         run: |
+          set +e
+          (
+          set -e
           apt-get update -qq && apt-get install -y -qq curl unzip >/dev/null
           mkdir -p /tmp/ct && cd /tmp/ct
           # find the newest Linux download of each tool through the releases API
@@ -81,6 +84,9 @@ jobs:
           cd $GITHUB_WORKSPACE
           VERSION=$(grep -m1 '"version"' desktop/package.json | sed -E 's/.*"([0-9.]+)".*/\1/')
           make -C consoles/3ds cia VERSION=$VERSION
+          ) > cia.log 2>&1
+          code=$?
+          if [ $code -ne 0 ]; then echo "::warning::CIA step: $(tail -12 cia.log | tr '\n' '|' | cut -c1-1500)"; exit $code; fi
       - uses: actions/upload-artifact@v4
         with:
           name: console-3ds
