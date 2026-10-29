@@ -7,3 +7,5 @@ antisocial-host: $(SRC) $(wildcard ../common/*.h)
 VERSION ?= dev
 clean:
 	rm -f antisocial-host
+test: antisocial-host ../common/calc.cpp calc_test.cpp
+	$(CXX) -std=c++11 -o calc_test calc_test.cpp ../common/calc.cpp && ./calc_test && rm -f calc_test

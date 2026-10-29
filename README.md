@@ -122,6 +122,9 @@ there is no obfuscated code, no downloader, no remote code, and the only address
 functions inside it, which can look like "hooking" to a heuristic scanner, but it only blocks). If a scanner flags a download,
 compare its hash with the one on the release page, and report it to the vendor as a false positive.
 
+## Game consoles (experimental)
+Native Nintendo Switch (`.nro`), Wii U (`.rpx`, `.wuhb`) and 3DS (`.3dsx`, `.cia`) versions live in `consoles/`, with their own layouts for one-screen and two-screen consoles. See `consoles/README.md`.
+
 ## Get the apps
 
 | Platform | File |

@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build and smoke test the shared core
         run: |
-          make -C consoles/host VERSION=ci
+          make -C consoles/host VERSION=ci test
           consoles/host/antisocial-host switch /tmp/d /tmp/o "wait:0.5,A,wait:0.2,B,shot:home"
           consoles/host/antisocial-host 3ds /tmp/d3 /tmp/o3 "wait:0.5,A,wait:0.2,B,shot:home"
 

@@ -109,8 +109,13 @@ jobs:
           path: Anti-Social-*-android.apk
           if-no-files-found: error
 
+  consoles:
+    # experimental: if a console build breaks, the Windows, Linux and Android release still goes out
+    uses: ./.github/workflows/consoles.yml
+
   release:
-    needs: [desktop, android]
+    needs: [desktop, android, consoles]
+    if: ${{ !cancelled() && needs.desktop.result == 'success' && needs.android.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -124,10 +129,13 @@ jobs:
         run: |
           VERSION=$(node -p "require('./desktop/package.json').version")
           TAG="v$VERSION"
+          # console files (if they built), named like the other downloads
+          rm -f out/anti-social.elf
+          for f in out/anti-social.*; do [ -e "$f" ] || continue; ext="${f##*.}"; case $ext in nro) t=switch;; rpx|wuhb) t=wiiu;; 3dsx|cia) t=3ds;; *) continue;; esac; mv "$f" "out/Anti-Social-$VERSION-$t.$ext"; done
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" out/* --clobber
           else
             gh release create "$TAG" out/* --target "$GITHUB_SHA" \
               --title "$TAG: nobody is here" \
-              --notes "Windows installer + portable exe, Linux AppImage + deb, Android APK. Terms of Use: TOUCH GRASS."
+              --notes "Windows installer + portable exe, Linux AppImage + deb, Android APK. Experimental console builds (native, not a web app): Nintendo Switch .nro, Wii U .rpx and .wuhb, 3DS .3dsx and .cia, when they built. Terms of Use: TOUCH GRASS."
           fi

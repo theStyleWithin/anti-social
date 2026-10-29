@@ -26,3 +26,6 @@ Releases up to 0.16.0 contain none of that material and stay available under 0BS
 Pokémon and its names, characters, artwork and trademarks belong to Nintendo, Creatures, GAME FREAK and The Pokémon
 Company. Anti-Social is not affiliated with or endorsed by them. The Pokédex and Pokémon Bank do not read or change any
 game's save data.
+
+## GNU Unifont (console builds)
+The Switch, Wii U and 3DS builds draw text with glyphs from GNU Unifont, which is licensed under the GNU GPL version 2 or later with the font embedding exception (and the SIL OFL 1.1). See https://unifoundry.com/unifont/.
