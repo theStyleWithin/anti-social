@@ -9,3 +9,11 @@ mobile/android/local.properties
 mobile/android/app/src/main/assets/public/
 mobile/android/llama.cpp/
 mobile/android/app/.cxx/
+consoles/host/antisocial-host
+consoles/**/build/
+*.elf
+*.nro
+*.3dsx
+*.cia
+*.rpx
+*.wuhb
