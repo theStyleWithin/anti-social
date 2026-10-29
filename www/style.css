@@ -1234,3 +1234,11 @@ button.chip { background: none; color: inherit; cursor: pointer; font: inherit; 
 :root[data-theme="dark"] .app-card { background: linear-gradient(160deg, color-mix(in srgb, var(--bg) 40%, transparent), color-mix(in srgb, var(--bg) 22%, transparent) 55%, color-mix(in srgb, var(--accent) 14%, transparent)); border-color: color-mix(in srgb, #fff 26%, transparent); }
 :root[data-theme="dark"] .app-ico { background: radial-gradient(circle at 32% 24%, color-mix(in srgb, #fff 42%, transparent) 0, color-mix(in srgb, #fff 12%, transparent) 28%, transparent 48%), linear-gradient(155deg, color-mix(in srgb, var(--accent) 30%, transparent), color-mix(in srgb, var(--accent) 10%, transparent)); border-color: color-mix(in srgb, #fff 30%, transparent); }
 :root[data-theme="dark"] .app-ico svg { filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 70%, transparent)); }
+
+/* ---------- Pokédex: libraries without pictures (Nexomon, beta) ---------- */
+.pd-ph { display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 1; max-width: 96px; margin: 0 auto; border-radius: 22px; color: #fff; font-weight: 800; font-size: 34px; text-shadow: 0 1px 3px rgba(0,0,0,.35); box-shadow: inset 0 2px 2px rgba(255,255,255,.5), inset 0 -8px 12px rgba(0,0,0,.18); }
+.pd-ph.sm { width: 36px; height: 36px; max-width: 36px; font-size: 18px; border-radius: 11px; flex: none; }
+.pd-ph.big { max-width: 160px; font-size: 64px; border-radius: 36px; }
+.pd-row .badge { margin-left: 8px; }
+.pd-open .pd-ph { width: 64px; height: 64px; font-size: 26px; border-radius: 18px; }
+@media (max-width: 640px) { .pd-open .pd-ph { width: 56px; height: 56px; } }

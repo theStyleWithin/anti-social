@@ -16,7 +16,18 @@ const loadPals = () => palLoadP || (palLoadP = new Promise((res, rej) => {
   s.onload = () => res(window.PalDex); s.onerror = () => { palLoadP = null; rej(new Error('paldeck data missing')); };
   document.head.append(s);
 }));
-const RARITY_COLOR = { Common: '#8a8f98', Rare: '#3b82f6', Epic: '#a855f7', Legendary: '#e0a100' };
+let nexoLoadP = null;
+const loadNexo = () => nexoLoadP || (nexoLoadP = new Promise((res, rej) => {
+  if (window.NexoDex) return res(window.NexoDex);
+  const s = document.createElement('script'); s.src = 'nexomon/data.js';
+  s.onload = () => res(window.NexoDex); s.onerror = () => { nexoLoadP = null; rej(new Error('nexomon data missing')); };
+  document.head.append(s);
+}));
+const RARITY_COLOR = { Common: '#8a8f98', Uncommon: '#22a06b', Rare: '#3b82f6', Epic: '#a855f7', 'Mega Rare': '#a855f7', 'Special/Starter': '#0ea5a5', Legendary: '#e0a100' };
+// Nexomon has seven elements of its own
+const NEXO_TYPE = { Normal: '#a8a77a', Mineral: '#a1887f', Wind: '#7dd3e8', Water: '#3b82f6', Fire: '#ef4444', Electric: '#facc15', Plant: '#22c55e' };
+// the extra libraries: monsters from other games, kept apart from the Pokémon. Marked beta.
+const pdIsExtra = rid => rid === 'palworld' || rid === 'nexomon';
 const pdImg = (kind, n) => `pokedex/img/${kind}/${PC.pad3(n)}.png`;
 const pdMarks = ctx => PC.normMarks(ctx.apps.dexmark[0] && ctx.apps.dexmark[0].marks);
 const pdSaveMarks = async (acct, marks) => { await savePost(acct, { id: 'dexmark' + acct.id, accountId: acct.id, kind: 'dexmark', marks, createdAt: 1 }); render(true); };
@@ -25,10 +36,11 @@ const pdStateIcon = k => h('img', { class: 'pd-state ' + k, src: `pokedex/img/st
 // the species of one region (or all of them), as plain rows
 function pdRows(D, rid) {
   if (rid === 'palworld') return window.PalDex.pals.map(([name, num, rar], i) => ({ n: i + 1, reg: num === '—' ? '' : num, name, type: rar, sl: 0, pal: true, img: `palworld/img/${PC.pad3(i + 1)}.webp` }));
+  if (rid === 'nexomon') return window.NexoDex.mons.map(([name, type, rar], i) => ({ n: i + 1, reg: PC.pad3(i + 1), name, type: type + ' ' + rar, el: type, rar, sl: 0, nexo: true, noimg: true }));
   if (rid === 'national') return D.national.map((e, i) => ({ n: i + 1, reg: '', name: e[0], type: e[1], sl: 0 }));
   return (D.dex[rid] || []).map(r => ({ n: r[0], reg: r[1], name: D.national[r[0] - 1][0], type: D.national[r[0] - 1][1], sl: r[2], evo: r[3], loc: r[4], ex: r[5] }));
 }
-const pdRegion = (D, rid) => rid === 'palworld' ? { id: 'palworld', name: 'Paldeck', game: 'Palworld · every Pal', alpha: 0, dlc: 0, child: 0, pal: true } : rid === 'national' ? { id: 'national', name: 'National Pokédex', game: 'Every Pokémon, 1 to 1025', alpha: 0, dlc: 0, child: 0 } : D.regions.find(r => r.id === rid);
+const pdRegion = (D, rid) => rid === 'nexomon' ? { id: 'nexomon', name: 'Nexodex', game: 'Nexomon · all 310 (beta)', alpha: 0, dlc: 0, child: 0, nexo: true, only: 'caught' } : rid === 'palworld' ? { id: 'palworld', name: 'Paldeck', game: 'Palworld · every Pal', alpha: 0, dlc: 0, child: 0, pal: true } : rid === 'national' ? { id: 'national', name: 'National Pokédex', game: 'Every Pokémon, 1 to 1025', alpha: 0, dlc: 0, child: 0 } : D.regions.find(r => r.id === rid);
 // everything the data says about one species, across all regions
 const pdInfo = (D, n) => D.regions.map(r => { const row = (D.dex[r.id] || []).find(x => x[0] === n); return row ? { region: r, reg: row[1], sl: row[2], evo: row[3], loc: row[4], ex: row[5] } : null; }).filter(Boolean);
 
@@ -37,9 +49,9 @@ function pokedexView(acct, ctx, back, arg) {
   const title = appName(acct, 'pokedex');
   const box = h('div', {}, h('p', { class: 'muted', style: 'padding:16px' }, 'Loading...'));
   loadPokedex().then(async D => {
-    await loadPals().catch(() => null);
+    await loadPals().catch(() => null); await loadNexo().catch(() => null);
     const marks = pdMarks(ctx);
-    if (rid && !pdRegion(D, rid)) return box.replaceChildren(emptyState('No such region', 'That Pokédex is not here.'));
+    if (rid && (!pdRegion(D, rid) || (rid === 'nexomon' && !window.NexoDex))) return box.replaceChildren(emptyState('No such region', 'That Pokédex is not here.'));
     box.replaceChildren(...(rid && n ? pdDetail(acct, ctx, D, marks, rid, n) : rid ? pdRegionView(acct, ctx, D, marks, rid) : pdHome(acct, ctx, D, marks)).filter(Boolean));
   }).catch(() => box.replaceChildren(h('p', { class: 'err', style: 'padding:16px' }, 'The Pokédex could not be loaded.')));
   return [back(title), box];
@@ -61,8 +73,9 @@ function pdHome(acct, ctx, D, marks) {
   const paint = () => {
     const q = input.value; pdQuery = q;
     if (!q.trim()) { results.replaceChildren(); return; }
-    const hits = PC.search(all, q);
-    results.replaceChildren(hits.length ? h('div', { class: 'pd-list' }, hits.slice(0, 60).map(x => h('a', { class: 'pd-row', href: `#/apps/pokedex/national/${x.n}` }, h('img', { src: pdImg('icons', x.n), alt: '', loading: 'lazy' }), h('span', {}, h('b', {}, x.name), h('small', {}, ` #${PC.pad3(x.n)} · ${x.type}`))))) : h('p', { class: 'muted' }, 'Nothing by that name.'), hits.length > 60 ? h('p', { class: 'fine' }, `Showing 60 of ${hits.length}. Keep typing.`) : null);
+    const hits = PC.search(all, q), extra = [...(window.PalDex ? PC.search(pdRows(D, 'palworld'), q).slice(0, 8).map(x => ({ ...x, rid: 'palworld' })) : []), ...(window.NexoDex ? PC.search(pdRows(D, 'nexomon'), q).slice(0, 8).map(x => ({ ...x, rid: 'nexomon' })) : [])];
+    const exRow = x => h('a', { class: 'pd-row', href: `#/apps/pokedex/${x.rid}/${x.n}` }, x.img ? h('img', { src: x.img, alt: '', loading: 'lazy' }) : h('span', { class: 'pd-ph sm', style: `background:${NEXO_TYPE[x.el] || '#8a8f98'}`, 'aria-hidden': 'true' }, x.name[0]), h('span', {}, h('b', {}, x.name), h('small', {}, ` ${x.rid === 'nexomon' ? 'Nexodex' : 'Paldeck'} #${x.reg || PC.pad3(x.n)} · ${x.rid === 'nexomon' ? x.el + ', ' + x.rar : x.type}`), h('span', { class: 'badge' }, 'Beta')));
+    results.replaceChildren(hits.length || extra.length ? h('div', { class: 'pd-list' }, hits.slice(0, 60).map(x => h('a', { class: 'pd-row', href: `#/apps/pokedex/national/${x.n}` }, h('img', { src: pdImg('icons', x.n), alt: '', loading: 'lazy' }), h('span', {}, h('b', {}, x.name), h('small', {}, ` #${PC.pad3(x.n)} · ${x.type}`)))), extra.map(exRow)) : h('p', { class: 'muted' }, 'Nothing by that name.'), hits.length > 60 ? h('p', { class: 'fine' }, `Showing 60 of ${hits.length}. Keep typing.`) : null);
   };
   input.addEventListener('input', paint); paint();
   const natProg = PC.progress(marks, 'national', all.map(x => x.n));
@@ -72,7 +85,8 @@ function pdHome(acct, ctx, D, marks) {
       input, results),
     h('div', { class: 'app-pad' }, h('h3', {}, 'Pokédexes'), h('div', { class: 'pd-regions' }, tile({ id: 'national', name: 'National Pokédex', game: 'All 1025 species', dlc: 0 }), D.regions.filter(r => !r.dlc).map(tile))),
     h('div', { class: 'app-pad' }, h('h3', {}, 'Expansions (DLC)'), h('div', { class: 'pd-regions' }, D.regions.filter(r => r.dlc).map(tile))),
-    window.PalDex ? h('div', { class: 'app-pad' }, h('h3', {}, 'Palworld'), h('div', { class: 'pd-regions' }, tile(pdRegion(D, 'palworld')))) : null,
+    (window.PalDex || window.NexoDex) ? h('div', { class: 'app-pad' }, h('h3', {}, 'More monsters from other games ', h('span', { class: 'badge' }, 'Beta')), h('p', { class: 'muted', style: 'margin-top:0' }, 'A growing library of monsters from games that are not Pokémon. It is a beta: names and numbers come from fan lists, and some games have no pictures yet.'),
+      h('div', { class: 'pd-regions' }, window.PalDex ? tile(pdRegion(D, 'palworld')) : null, window.NexoDex ? tile(pdRegion(D, 'nexomon')) : null)) : null,
     pdCredit(),
   ];
 }
@@ -80,11 +94,11 @@ const pdCredit = () => h('p', { class: 'fine pd-credit' }, 'Pokédex data and pi
 
 /* ---------- one region ---------- */
 function pdRegionView(acct, ctx, D, marks, rid) {
-  const region = pdRegion(D, rid), rows = pdRows(D, rid), flags = PC.flagsFor(region).map(([k, l]) => [k, region.pal && k === 'shiny' ? 'Lucky' : l]);
+  const region = pdRegion(D, rid), rows = pdRows(D, rid), flags = PC.flagsFor(region).filter(([k]) => region.only ? k === region.only : true).map(([k, l]) => [k, region.pal && k === 'shiny' ? 'Lucky' : l]);
   const prog = PC.progress(marks, rid, rows.map(r => r.n));
-  const FILTERS = [['all', 'All'], ['caught', 'Caught'], ['missing', 'Not caught'], ['shiny', region.pal ? 'Lucky' : 'Shiny'], ['noshiny', region.pal ? 'Caught, not lucky' : 'Caught, not shiny'], ...(region.alpha ? [['alpha', 'Alpha']] : [])];
+  const FILTERS = [['all', 'All'], ['caught', 'Caught'], ['missing', 'Not caught'], ...(region.only ? [] : [['shiny', region.pal ? 'Lucky' : 'Shiny'], ['noshiny', region.pal ? 'Caught, not lucky' : 'Caught, not shiny']]), ...(region.alpha ? [['alpha', 'Alpha']] : []), ...(region.nexo ? window.NexoDex.rarities.map(r => ['r:' + r, r]) : [])];
   if (!FILTERS.some(f => f[0] === pdFilter)) pdFilter = 'all';
-  const passes = r => { const v = PC.getMark(marks, rid, r.n); return pdFilter === 'all' || (pdFilter === 'caught' && v & 1) || (pdFilter === 'missing' && !(v & 1)) || (pdFilter === 'shiny' && v & 10) || (pdFilter === 'noshiny' && v & 1 && !(v & 10)) || (pdFilter === 'alpha' && v & 12); };
+  const passes = r => { const v = PC.getMark(marks, rid, r.n); return pdFilter === 'all' || (pdFilter === 'caught' && v & 1) || (pdFilter === 'missing' && !(v & 1)) || (pdFilter === 'shiny' && v & 10) || (pdFilter === 'noshiny' && v & 1 && !(v & 10)) || (pdFilter === 'alpha' && v & 12) || (pdFilter.startsWith('r:') && r.rar === pdFilter.slice(2)); };
   let list = PC.search(rows, pdQuery).filter(passes);
   const total = list.length; list = list.slice(0, pdShown);
   const search = h('input', { type: 'search', placeholder: 'Search this Pokédex', value: pdQuery, 'aria-label': 'Search this Pokédex' });
@@ -96,7 +110,7 @@ function pdRegionView(acct, ctx, D, marks, rid) {
     const v = PC.getMark(marks, rid, r.n), sel = pdSel.has(r.n);
     return h('div', { class: 'pd-tile' + (v & 1 ? ' got' : '') + (sel ? ' sel' : '') },
       h('a', { class: 'pd-open', href: `#/apps/pokedex/${rid}/${r.n}`, 'aria-label': `${r.name}, number ${PC.pad3(r.n)}`, onclick: e => { if (pdMulti) { e.preventDefault(); pdSel.has(r.n) ? pdSel.delete(r.n) : pdSel.add(r.n); render(true); } } },
-        h('img', { src: r.img || pdImg('icons', r.n), alt: '', loading: 'lazy', draggable: 'false' }), h('span', { class: 'pd-num' }, '#' + (r.reg || PC.pad3(r.n))), h('span', { class: 'pd-name' }, r.name)),
+        r.noimg ? h('span', { class: 'pd-ph', style: `background:${NEXO_TYPE[r.el] || '#8a8f98'}`, 'aria-hidden': 'true' }, r.name[0]) : h('img', { src: r.img || pdImg('icons', r.n), alt: '', loading: 'lazy', draggable: 'false' }), h('span', { class: 'pd-num' }, '#' + (r.reg || PC.pad3(r.n))), h('span', { class: 'pd-name' }, r.name)),
       h('span', { class: 'pd-marks' }, v & 1 ? pdStateIcon('caught') : null, v & 2 ? pdStateIcon('shiny') : null, v & 4 ? pdStateIcon('alpha') : null, v & 8 ? pdStateIcon('shinyAlpha') : null),
       pdMulti ? h('span', { class: 'pd-check', 'aria-hidden': 'true' }, sel ? icon('check') : null) : h('button', { class: 'pd-quick', type: 'button', 'aria-label': (v & 1 ? 'Unmark ' : 'Mark ') + r.name + ' as caught', 'aria-pressed': String(!!(v & 1)), title: v & 1 ? 'Caught' : 'Mark as caught', onclick: () => mark(r.n, 'caught', !(v & 1)) }, icon('check')));
   };
@@ -134,6 +148,7 @@ function pdBulk(acct, marks, region, rows, flags) {
 /* ---------- one Pokémon ---------- */
 function pdDetail(acct, ctx, D, marks, rid, n) {
   if (rid === 'palworld') return pdPalDetail(acct, D, marks, n);
+  if (rid === 'nexomon') return pdNexoDetail(acct, D, marks, n);
   const region = pdRegion(D, rid), rows = pdRows(D, rid), i = rows.findIndex(r => r.n === n);
   if (i < 0) return [emptyState('Not in this Pokédex', `${D.national[n - 1] ? D.national[n - 1][0] : 'That Pokémon'} is not in ${region.name}.`), h('div', { class: 'btnrow', style: 'padding:0 16px' }, h('a', { class: 'btn', href: `#/apps/pokedex/national/${n}` }, 'See it in the National Pokédex'))];
   const row = rows[i], info = rid === 'national' ? pdInfo(D, n) : null, v = PC.getMark(marks, rid, n), flags = PC.flagsFor(region);
@@ -165,6 +180,27 @@ function pdDetail(acct, ctx, D, marks, rid, n) {
         h('div', { class: 'btnrow' }, flags.map(([k, l]) => h('button', { class: 'btn' + (v & PC.FLAG[k] ? ' primary' : ''), type: 'button', 'aria-pressed': String(!!(v & PC.FLAG[k])), disabled: !!(k !== 'caught' && row.sl && (k === 'shiny' || k === 'shinyAlpha')), onclick: () => pdSaveMarks(acct, PC.setMark(marks, rid, n, k, !(v & PC.FLAG[k]))) }, pdStateIcon(k), ' ', l))),
         typeof pkAddFromDex === 'function' ? h('div', { class: 'btnrow', style: 'margin-top:10px' }, h('button', { class: 'btn', type: 'button', onclick: () => pkAddFromDex(acct, ctx, n) }, 'Add to my Pokémon Bank')) : null)),
     pdCredit(),
+  ];
+}
+
+/* ---------- Nexomon (beta) ---------- */
+function pdNexoDetail(acct, D, marks, n) {
+  const rows = pdRows(D, 'nexomon'), i = rows.findIndex(r => r.n === n);
+  if (i < 0) return [emptyState('No such Nexomon', 'That number is not in the Nexodex.')];
+  const row = rows[i], v = PC.getMark(marks, 'nexomon', n), prev = rows[i - 1], next = rows[i + 1], go = x => `#/apps/pokedex/nexomon/${x.n}`;
+  const ec = NEXO_TYPE[row.el] || '#8a8f98', rc = RARITY_COLOR[row.rar] || '#8a8f98', same = rows.filter(r => r.el === row.el && r.n !== n && r.rar === row.rar).slice(0, 8);
+  return [
+    h('div', { class: 'pd-detail' },
+      h('div', { class: 'pd-nav' }, prev ? h('a', { class: 'btn', href: go(prev), 'aria-label': 'Previous: ' + prev.name }, '‹ ' + prev.name) : h('span'), h('a', { class: 'btn', href: '#/apps/pokedex/nexomon' }, 'Nexodex'), next ? h('a', { class: 'btn', href: go(next), 'aria-label': 'Next: ' + next.name }, next.name + ' ›') : h('span')),
+      h('div', { class: 'pd-card' },
+        h('div', { class: 'pd-art' }, h('span', { class: 'pd-ph big', style: `background:${ec}`, 'aria-hidden': 'true' }, row.name[0])),
+        h('div', { class: 'pd-info' }, h('h2', { style: 'margin:0' }, row.name), h('div', { class: 'muted' }, `Nexodex #${row.reg} of ${rows.length}`),
+          h('div', { class: 'pd-chips', style: 'margin:8px 0' }, h('span', { class: 'type-pill', style: `background:${ec};color:${PC.typeText(ec)}` }, row.el), h('span', { class: 'type-pill', style: `background:${rc};color:${PC.typeText(rc)}` }, row.rar)),
+          same.length ? h('div', { class: 'pd-field' }, h('small', {}, `Other ${row.rar} ${row.el}-type`), h('span', {}, same.map((r, k) => [k ? ', ' : '', h('a', { class: 'pd-link', href: go(r) }, r.name)]))) : null,
+          h('p', { class: 'muted' }, 'Pictures are not in this beta library yet.'))),
+      h('div', { class: 'pd-status' }, h('h3', { style: 'margin:0 0 8px' }, 'Your Nexodex'),
+        h('div', { class: 'btnrow' }, h('button', { class: 'btn' + (v & PC.FLAG.caught ? ' primary' : ''), type: 'button', 'aria-pressed': String(!!(v & PC.FLAG.caught)), onclick: () => pdSaveMarks(acct, PC.setMark(marks, 'nexomon', n, 'caught', !(v & PC.FLAG.caught))) }, pdStateIcon('caught'), ' Caught')))),
+    h('p', { class: 'fine pd-credit' }, 'Nexomon names, numbers, types and rarity come from a list made from nexomon.fandom.com (Nexomon database). Nexomon and its monsters belong to VEWO Interactive; this app is not affiliated with or endorsed by them. This library is a beta.'),
   ];
 }
 

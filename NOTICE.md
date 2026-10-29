@@ -17,6 +17,7 @@ Releases up to 0.16.0 contain none of that material and stay available under 0BS
 - **Electron** (MIT) and **Capacitor** (MIT): the desktop and Android shells.
 
 - **Palworld Paldeck** (names, Paldeck numbers, rarity and icons in `www/palworld/`): taken from a "Palworld Full Paldeck" list that was made from palworld.gg and marked "for personal reference use", built by `tools/build-palworld.py`. It is not GPL material and is not covered by this project's licence.
+- **Nexomon (beta library in the Pokédex)** (names, numbers, types and rarity in `www/nexomon/`): taken from a list of the original Nexomon game made from the Nexomon database on nexomon.fandom.com. No artwork is included. Nexomon and its monsters belong to VEWO Interactive. This app is not affiliated with or endorsed by them.
 
 ## Trademarks
 
