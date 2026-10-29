@@ -159,6 +159,10 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // The only permission the app ever uses is the microphone, for the Sound Meter. Nothing else is granted, and it is audio only.
+  const { session } = require('electron');
+  session.defaultSession.setPermissionRequestHandler((wc, permission, cb, details) => cb(permission === 'media' && (details.mediaTypes || []).every(t => t === 'audio') && String(details.requestingUrl || '').startsWith('file://')));
+  session.defaultSession.setPermissionCheckHandler((wc, permission) => permission === 'media');
   Menu.setApplicationMenu(null);
   createWindow();
   app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });

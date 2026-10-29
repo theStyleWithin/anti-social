@@ -472,6 +472,12 @@ function appsHome(acct, ctx) {
     ['pokedex', 'pokeball', 'Pokédex', (() => { const m = PokeCore.normMarks(A.dexmark[0] && A.dexmark[0].marks).national || {}, c = Object.values(m).filter(v => v & 1).length; return c ? `${c} of 1025 caught` : 'Every Pokémon, and what you have caught'; })()],
     ['pokebank', 'box', 'Pokémon Bank', A.pkbank.length ? `${pkCount(A.pkm.length)} in ${plural(A.pkbank.length, 'bank')}` : 'Boxes for the Pokémon you keep'],
     ['clock', 'clock', 'Digital Clock', 'Clock, world time, stopwatch and timer'],
+    ['sound', 'mic', 'Sound Meter', 'How loud is it? Measured by your microphone'],
+    ['worldmap', 'map', 'World Map', 'Countries, cities and distances, offline'],
+    ['budget', 'pie', 'Budget', (() => { const m = A.budget.find(r => r.month === ymOf(todayKey())); if (!m) return 'Plan the month, track what you spend'; const s = BudgetCore.summary(BudgetCore.norm(m)); return BudgetCore.hasData(BudgetCore.norm(m)) ? `${money(s.actBalance)} left so far this month` : 'This month is planned'; })()],
+    ['shots', 'image', 'Screenshots', A.shot.length ? `${plural(A.shot.length, 'screenshot')} in ${plural(new Set(A.shot.map(s => s.game)).size, 'game')}` : 'Gameplay screenshots, sorted by game'],
+    ['terminal', 'terminal', 'Terminal Practice', 'Learn Linux commands safely (pretend)'],
+    ['matrix', 'code', 'Matrix Viewer', 'Falling digits. Just to look at.'],
     ['achv', 'trophy', 'Achievements', (() => { const o = AchCore.overall(A.agame, A.ach); return A.agame.length ? `${o.unlocked} of ${o.total} unlocked · ${plural(A.agame.length, 'game')}` : 'Keep score of your game achievements'; })()],
   ];
   cards.splice(0, cards.length, ...cards.filter(c => !hidden.has(c[0])));
@@ -510,7 +516,7 @@ function appsHome(acct, ctx) {
 /* ---- rearranging the launcher: drag with a mouse, or touch and hold on a phone ---- */
 let appsReorder = false;
 // Every app, for the Settings list that shows or hides them. The Bible starts hidden; turn it on if you want it.
-const APP_LIST = [['calendar', 'Calendar'], ['calc', 'Calculator'], ['bank', 'Banking'], ['inventory', 'Household'], ['groceries', 'Groceries'], ['chores', 'Chores'], ['notes', 'Notes'], ['bible', 'Bible'], ['diary', 'Diary'], ['travel', 'Travel Log'], ['cookbook', 'Cookbook'], ['pokedex', 'Pokédex'], ['pokebank', 'Pokémon Bank'], ['achv', 'Achievements'], ['clock', 'Digital Clock']];
+const APP_LIST = [['calendar', 'Calendar'], ['calc', 'Calculator'], ['bank', 'Banking'], ['inventory', 'Household'], ['groceries', 'Groceries'], ['chores', 'Chores'], ['notes', 'Notes'], ['bible', 'Bible'], ['diary', 'Diary'], ['travel', 'Travel Log'], ['cookbook', 'Cookbook'], ['pokedex', 'Pokédex'], ['pokebank', 'Pokémon Bank'], ['achv', 'Achievements'], ['clock', 'Digital Clock'], ['sound', 'Sound Meter'], ['worldmap', 'World Map'], ['budget', 'Budget'], ['shots', 'Screenshots'], ['terminal', 'Terminal Practice'], ['matrix', 'Matrix Viewer']];
 const hiddenKey = acct => 'as.hiddenapps.' + acct.id;
 // Every app can be given your own name (per account). An empty name means the original one.
 const namesKey = acct => 'as.appnames.' + acct.id;
@@ -621,6 +627,12 @@ function appsView(acct, ctx, sub, arg) {
     case 'pokebank': return pokebankView(acct, ctx, back);
     case 'achv': return achievementsView(acct, ctx, back);
     case 'clock': return clockView(acct, ctx, back);
+    case 'sound': return soundView(acct, ctx, back);
+    case 'worldmap': return worldMapView(acct, ctx, back);
+    case 'budget': return budgetView(acct, ctx, back);
+    case 'shots': return shotsView(acct, ctx, back, arg);
+    case 'terminal': return terminalView(acct, ctx, back);
+    case 'matrix': return matrixView(acct, ctx, back);
     default: return appsHome(acct, ctx);
   }
 }
@@ -642,7 +654,26 @@ function notesView(acct, ctx, back, id) {
   };
   search.addEventListener('input', () => { notesQuery = search.value; draw(); });
   draw();
-  return [back('Notes'), h('div', { class: 'app-pad' }, h('div', { class: 'app-row' }, search, h('button', { class: 'btn primary', onclick: () => go('/apps/notes/' + uid()) }, 'New note')), list)];
+  const pick = h('input', { type: 'file', multiple: true, hidden: true, accept: DocxCore.TYPES.map(t => '.' + t).join(',') + ',text/plain', 'aria-label': 'Choose files to import as notes' });
+  pick.addEventListener('change', () => { const files = [...pick.files]; pick.value = ''; if (files.length) importNotes(acct, files); });
+  return [back('Notes'), h('div', { class: 'app-pad' }, h('div', { class: 'app-row' }, search, h('button', { class: 'btn', onclick: () => pick.click() }, 'Import'), h('button', { class: 'btn primary', onclick: () => go('/apps/notes/' + uid()) }, 'New note')), pick, list)];
+}
+
+// Each chosen file becomes a note: text files, Markdown, Word (.docx) and OpenDocument (.odt). Read on this device only.
+async function importNotes(acct, files) {
+  let made = 0; const failed = [];
+  for (const f of files) {
+    try {
+      if (f.size > DocxCore.MAX_FILE) throw new Error('over 40 MB');
+      const { title, body } = await DocxCore.toNote(f.name, new Uint8Array(await f.arrayBuffer()));
+      if (!body.trim()) throw new Error('nothing to read in it');
+      const now = Date.now();
+      if (!(await appSave(acct, { id: uid(), accountId: acct.id, kind: 'note', title, body, pinned: false, createdAt: now, updatedAt: now }))) break;
+      made++;
+    } catch (e) { failed.push(`${f.name} (${/zip|Word|OpenDocument/.test(e.message) ? 'not a readable document' : e.message.replace(/\.$/, '')})`); }
+  }
+  toast(made ? `Imported ${plural(made, 'note')}.${failed.length ? ' Could not read: ' + failed.join(', ') : ''}` : failed.length ? 'Could not import: ' + failed.join(', ') : 'Nothing was imported.');
+  render(true);
 }
 
 function noteEditor(acct, ctx, back, id) {
@@ -1078,7 +1109,7 @@ function invBars(groups, key) {
 function invExport(items) {
   const today = todayKey();
   const csv = AC.toCsv([['Item', 'Room', 'Category', 'Quantity', 'Price each', 'Total paid', 'Purchase date', 'Store', 'Serial or model', 'Warranty ends', 'Value each', 'Total value', 'Photos', 'Notes'],
-    ...[...items].sort((a, b) => (a.room || '').localeCompare(b.room || '') || a.name.localeCompare(b.name)).map(i => [i.name, i.room || '', i.category || '', AC.unitsOf(i), (i.cents / 100).toFixed(2), (AC.paidOf(i) / 100).toFixed(2), i.date || '', i.store || '', i.serial || '', i.warrantyEnd || '', (AC.unitValue(i, today) / 100).toFixed(2), (AC.worthOf(i, today) / 100).toFixed(2), photoCount(i), i.note || ''])]);
+    ...[...items].sort((a, b) => (a.room || '').localeCompare(b.room || '') || a.name.localeCompare(b.name)).map(i => [i.name, i.room || '', i.category || '', AC.unitsOf(i), i.noPrice ? '' : (i.cents / 100).toFixed(2), i.noPrice ? '' : (AC.paidOf(i) / 100).toFixed(2), i.date || '', i.store || '', i.serial || '', i.warrantyEnd || '', (AC.unitValue(i, today) / 100).toFixed(2), (AC.worthOf(i, today) / 100).toFixed(2), photoCount(i), i.note || ''])]);
   saveFile('anti-social-household.csv', 'text/csv', csv).then(r => toast(r.ok ? `Saved to ${r.where}. Handy for an insurance list.` : r.where));
 }
 
@@ -1188,8 +1219,8 @@ function assetDetail(acct, ctx, it) {
         : h('div', { class: 'viewer-empty' }, icon('camera'), h('span', {}, 'No photos yet.'), h('button', { class: 'btn primary', onclick: () => { close(); assetEditor(acct, ctx, it); } }, 'Add photos')),
       h('div', { style: 'margin-top:14px' },
         fact('Room', it.room), fact('Category', it.category), fact('Quantity', AC.unitsOf(it) > 1 ? String(AC.unitsOf(it)) : ''),
-        fact('Price', `${money(it.cents)}${AC.unitsOf(it) > 1 ? ' each' : ''}`), AC.unitsOf(it) > 1 ? fact('Total paid', money(paid)) : null,
-        fact('Worth now (estimate)', money(worth)), fact('Bought', it.date ? shortDate(it.date) : ''), fact('Store', it.store), fact('Model or serial', it.serial),
+        fact('Price', it.noPrice ? 'Not set yet. Tap Edit to add it.' : `${money(it.cents)}${AC.unitsOf(it) > 1 ? ' each' : ''}`), AC.unitsOf(it) > 1 && !it.noPrice ? fact('Total paid', money(paid)) : null,
+        fact('Worth now (estimate)', it.noPrice && it.valueCents == null ? '' : money(worth)), fact('Bought', it.date ? shortDate(it.date) : ''), fact('Store', it.store), fact('Model or serial', it.serial),
         fact('Warranty', w === null ? '' : w < 0 ? `Ended ${shortDate(it.warrantyEnd)}` : w === 0 ? 'Ends today' : `Until ${shortDate(it.warrantyEnd)} (${plural(w, 'day')} left)`)),
       it.note ? h('p', { class: 'viewer-note' }, it.note) : null,
       h('div', { class: 'btnrow', style: 'margin-top:12px' }, h('button', { class: 'btn primary', onclick: () => { close(); assetEditor(acct, ctx, it); } }, 'Edit'))));
@@ -1220,7 +1251,7 @@ function assetEditor(acct, ctx, it, prefill) {
   const category = h('select', { 'aria-label': 'Item category' }, AC.ASSET_CATEGORIES.map(c => h('option', { value: c }, c)));
   category.value = AC.ASSET_CATEGORIES.includes(rec.category) ? rec.category : 'Other';
   const qty = h('input', { type: 'number', min: '1', max: '9999', step: '1', value: String(AC.unitsOf(rec)), 'aria-label': 'Quantity' });
-  const price = h('input', { value: rec.cents ? (rec.cents / 100).toFixed(2) : (isNew ? '' : '0.00'), inputmode: 'decimal', placeholder: '0.00', 'aria-label': 'Price each' });
+  const price = h('input', { value: rec.noPrice ? '' : rec.cents ? (rec.cents / 100).toFixed(2) : (isNew ? '' : '0.00'), inputmode: 'decimal', placeholder: 'Not sure? Leave empty', 'aria-label': 'Price each' });
   const date = h('input', { type: 'date', value: rec.date || '', 'aria-label': 'Purchase date' });
   const store = h('input', { value: rec.store || '', maxlength: 60, placeholder: 'Where from?', 'aria-label': 'Store' });
   const serial = h('input', { value: rec.serial || '', maxlength: 60, placeholder: 'Model or serial number', 'aria-label': 'Serial or model' });
@@ -1272,13 +1303,14 @@ function assetEditor(acct, ctx, it, prefill) {
         !isNew && h('button', { class: 'btn', onclick: () => { close(); const { id, createdAt, photoIds, thumbs, mtoken, ...copy } = rec; assetEditor(acct, ctx, null, { ...copy, name: rec.name + ' (copy)' }); } }, 'Duplicate'),
         !isNew && h('button', { class: 'btn danger', onclick: async () => { if (!confirm('Delete this item and its photos?')) return; await deleteMedia(acct, rec.mtoken); await appDelete(rec.id); close(); render(true); } }, 'Delete')))));
   save.addEventListener('click', async () => {
-    const cents = AC.parseMoney(price.value);
-    const q = Number(qty.value), vc = value.value.trim() === '' ? null : AC.parseMoney(value.value), ly = life.value.trim() === '' ? null : Number(life.value);
-    if (!name.value.trim()) return void (err.textContent = 'Give it a name.');
-    if (cents === null || cents < 0) return void (err.textContent = 'Price like 49 or 49.99. Use 0 for a gift.');
-    if (!Number.isInteger(q) || q < 1 || q > 9999) return void (err.textContent = 'Quantity is a whole number from 1 to 9,999.');
-    if (vc !== null && vc < 0) return void (err.textContent = 'Worth now cannot be negative.');
-    if (ly !== null && !(ly >= 0.5 && ly <= 100)) return void (err.textContent = 'Useful life is 0.5 to 100 years.');
+    // Nothing is required: forgot the price, the date or even the name? Save it now and fill it in later.
+    const priceText = price.value.trim(), parsed = priceText === '' ? null : AC.parseMoney(priceText);
+    if (priceText !== '' && (parsed === null || parsed < 0)) return void (err.textContent = 'That price does not look like an amount. Try 49 or 49.99, or leave it empty if you do not know.');
+    const cents = parsed === null ? 0 : parsed, noPrice = parsed === null;
+    const q = qty.value.trim() === '' ? 1 : Math.max(1, Math.min(9999, Math.floor(Number(qty.value)) || 1)), vc = value.value.trim() === '' ? null : AC.parseMoney(value.value), ly = life.value.trim() === '' ? null : Number(life.value);
+    if (vc !== null && vc < 0) return void (err.textContent = 'Worth now cannot be negative. Leave it empty if you do not know.');
+    if (value.value.trim() !== '' && vc === null) return void (err.textContent = 'Worth now does not look like an amount. Leave it empty if you do not know.');
+    if (ly !== null && !(ly >= 0.5 && ly <= 100)) return void (err.textContent = 'Useful life is 0.5 to 100 years, or leave it empty.');
     if (date.value && !AC.isKey(date.value)) return void (err.textContent = 'That purchase date is not a date.');
     if (warranty.value && !AC.isKey(warranty.value)) return void (err.textContent = 'That warranty date is not a date.');
     save.disabled = true;
@@ -1290,7 +1322,7 @@ function assetEditor(acct, ctx, it, prefill) {
       p.id = id; made.push(id);
     }
     // 2) then the item itself, holding the thumbnails and the order
-    Object.assign(rec, { name: name.value.trim(), room: room.value.trim(), category: category.value, qty: q, cents, date: date.value || '', store: store.value.trim(), serial: serial.value.trim(), warrantyEnd: warranty.value || '', valueCents: vc, lifeYears: ly, note: note.value.trim(), updatedAt: Date.now(), mtoken: photos.length ? token : (rec.mtoken || null), photoIds: photos.map(p => p.id), thumbs: photos.map(p => p.t) });
+    Object.assign(rec, { name: name.value.trim() || 'Untitled item', room: room.value.trim(), category: category.value, qty: q, cents, noPrice, date: date.value || '', store: store.value.trim(), serial: serial.value.trim(), warrantyEnd: warranty.value || '', valueCents: vc, lifeYears: ly, note: note.value.trim(), updatedAt: Date.now(), mtoken: photos.length ? token : (rec.mtoken || null), photoIds: photos.map(p => p.id), thumbs: photos.map(p => p.t) });
     if (!(await appSave(acct, rec))) { for (const m of made) await appDelete(m); save.disabled = false; return; }
     // 3) finally forget photos you removed
     for (const id of originalIds.filter(id => !photos.some(p => p.id === id))) await appDelete(id);

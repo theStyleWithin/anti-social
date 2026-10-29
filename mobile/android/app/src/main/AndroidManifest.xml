@@ -41,6 +41,10 @@
     <!-- Internet is used only by the optional TokenReply setting for AI members (api.tokenreply.com, nothing else; the page's security policy allows no other address). Off unless you turn it on. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- The microphone is used only by the Sound Meter, to measure loudness. Nothing is recorded or sent anywhere; Android asks you the first time. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
     <!-- Pulled in by a library we do not need; strip it so the app asks for nothing. -->
     <uses-permission android:name="android.permission.DUMP" tools:node="remove" />
 </manifest>
