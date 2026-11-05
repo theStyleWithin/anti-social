@@ -9,6 +9,7 @@
 Anti-Social v0.26.0 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (drag-to-reorder, themes, the Bible, Travel Log, Cookbook and the v0.12.0 account features are automated-test verified, awaiting a hand test; the Android file saver in v0.12.0 is new native code and has not yet been run on a real phone); plus automated tests):
+- **Newer apps (v0.20.0 to v0.26.0):** Language Lab, Calorie Counter, Push-Up Counter, Music Player, the viewers, YouTube playback, the desktop layout and Updates are checked by automated tests; the Fireplace, Aquarium, Music Player and YouTube embeds have been tried on a real phone. The console versions, background video playback, the Updates installer and the Music Player folder picker have **not yet been hand tested on real hardware**.
 - **Android:** installed and used on a real phone, including account switching, Populated mode, Characters, the storage limit and the Apps.
 - **Features:** sign-up with and without a passcode, posting with images, likes, reposts and replies, avatar and banner images, the empty notifications tab, the Explore page that never finds anyone, themes, export and delete.
 - **Vault and duress PIN:** checked end to end. Data on disk is unreadable, it comes back after you unlock, a wrong passcode is rejected, and the duress PIN erases everything.
@@ -23,6 +24,20 @@ whether a hot dog is a sandwich.
 **No one will ever see any of it.** There is no server. There is no one.
 Your account lives on your device, your posts live on your device, and your audience
 is a flat, unblinking **0**.
+
+## Why the apps are built in
+
+Anti-Social is not an app store, and it is not trying to become one. It is one offline home for the small jobs you already do, so you do not have to go hunting for a separate tool for each of them.
+
+| The usual way | The Anti-Social way |
+|---|---|
+| Find and install another app for every small job | The tools you would open every day are already built in |
+| Each tool is its own product, with its own sign-up | One shell, many local tools, no accounts |
+| Every tool wants its own permissions and its own network access | Nothing touches the network unless you switch it on |
+| Every tool keeps its own data, its own backup and its own updates | One vault, one export and eject, one update button |
+| A catalogue that grows to get bigger | Only what you would actually open belongs here |
+
+A new piece earns its place by being something you would use inside the shell, not something that might be nice for someone someday. Fewer reasons to leave, not more things to manage.
 
 ## Features
 
@@ -60,13 +75,21 @@ is a flat, unblinking **0**.
   - **Pokédex:** every Pokémon by game (Let's Go, FireRed/LeafGreen, Brilliant Diamond/Shining Pearl, Legends: Arceus, Sword/Shield and both expansions, Scarlet/Violet and both expansions, Legends: Z-A and its expansion) plus the National Pokédex. Search, a page for each Pokémon with its types, evolutions, where to find it and a shiny view, and a tracker for Caught, Shiny, Alpha and Shiny Alpha with bulk actions and multi-select. Data and pictures from pkDex (GPL-2.0)
   - **Palworld Paldeck (inside the Pokédex):** a separate category with every Pal in the list (288), by Paldeck number with its variants (#5B and so on), rarity, an icon and a page each, and a Caught / Lucky tracker of its own. The data is a Paldeck list made from palworld.gg
   - **More monsters from other games (beta, inside the Pokédex):** the Nexodex, all 310 Nexomon from the original Nexomon (number, type and rarity: Common, Uncommon, Rare, Mega Rare, Special/Starter, Legendary), with a Caught tick for each, filters by rarity and search by name, number, element or rarity. There are no pictures for it yet, so each one gets a coloured tile in its element's colour. It sits beside the Paldeck as a beta library; more games may follow.
+  - **Language Lab:** short offline lessons in Spanish, French, German, Italian, Portuguese, Japanese and Korean (with Hiragana and Hangul units). Matching, tiles, typing and listening, a spaced-repetition review, a streak, a dictionary and spoken words if your device has a voice for the language. Everything is written for this app and works offline
+  - **Calorie Counter:** a food diary with built-in common foods, your own foods and meals, calorie and macro goals, and a daily summary. A notebook, not medical advice
+  - **Push-Up Counter:** put your phone on the floor and every time your nose touches the screen it counts a rep. An optional voice check listens for you counting out loud (switch it on or off, for anyone worried about cheating). The microphone is used only during a set
+  - **Music Player:** your own music, offline. Choose a music folder (the system folder picker) and it scans every subfolder; songs play right from the folder without being copied. Library tiles, playlists, a queue, a now-playing disc, synced lyrics from `.lrc` files, a ten-band equalizer with bass, virtualizer and reverb, a spectrum visualizer gallery and themes. You can also add individual songs
+  - **Lava Lamp, Fireplace and Aquarium:** viewers made to be looked at. The Fireplace has six looks, logs you place that char and burn away, and ambient sound. The Aquarium starts empty: add fish, sharks and rays, feed them, and watch day turn to night
   - **Pokémon Bank:** banks of boxes in the layout of each game family (32 boxes of 30, 40 of 25 for Let's Go, and so on), in the spirit of pkHouse. Two panels side by side to move Pokémon between boxes and banks (click, pick up and put down, or drag), a details bar, search across every bank, sorting, and per-Pokémon details you type in (nature, ability, moves, IVs, EVs, trainer, notes). Import `.pk8`, `.pk9`, `.pa8`, `.pb7` and `.pk3` files from PKHeX or pkHouse and pkHouse bank files (`.bin`), and export them back unchanged. Trade by sending a card file (`.json`) to a friend. It never reads or changes a game's save file. **Switch SD card:** plug a Switch SD card into the computer or (with a card reader) the phone and the app finds pkHouse's banks and its automatic save backups on it (plus JKSV and Checkpoint backups of the Pokémon games); import a bank, copy a backup out to an emulator's save folder, or send a bank or a save folder from an emulator back onto the card for pkHouse to restore on the Switch. It asks before it writes and never deletes. A Switch keeps its saves inside the console, so only backups that a tool copied to the card can be found
+- **YouTube links play in the timeline:** a post with a YouTube link shows a card; tap it and the video plays right there (it asks first, and you can set it to never, ask, or always). On Android a playing video keeps going with the screen off
+- **Desktop layout (desktop app):** drag either wall of the timeline to make it wider or narrower, and pin a built-in app into the empty space on each side (in Settings, or by dragging an app card to the far left or right of the Apps page)
+- **Updates:** Settings, Updates checks this project's GitHub releases when you ask (or once a day if you turn that on) and, on Android and the desktop apps, downloads the new version, verifies it and opens its installer. No launcher needed
 - **Templates:** Anti-Social (original), Chat Rooms (a server with channels), Classic Blue (an early-2010s social network) and Communities (a Reddit-style community page: orange header, vote arrows with scores, "Posted by u/you", comments, an About panel and rules). A template changes only how things look and what they are called, never your data.
 - **Multiple accounts:** click your account at the bottom left on desktop, or your avatar at the top left on a phone, to switch or add one, with a joke about it
 - The Apps menu is made of clear glass bubbles
 - Light, dark or auto theme
 - Export your data as JSON, or delete it all
-- Native apps for Windows, Linux and Android. Works offline. Obviously.
+- Native apps for Windows, Linux and Android, plus experimental Switch, Wii U and 3DS versions. Works offline. Obviously.
 
 ## Version history
 
@@ -112,12 +135,12 @@ Anti-Social does not touch the internet. The page ships with a rule that blocks
 every network request except one optional address, so it *can't* phone home even if it wanted to.
 You can download this folder and double-click `index.html` with Wi-Fi off. It works. The desktop apps only hand a link to your own browser if you click one.
 
-There are two exceptions, and both are off until you use them. In Chat Rooms, Settings, AI members, you can let a service called
+There are a few exceptions, and every one is off until you use it. YouTube links play from YouTube only after you agree (see below), and Settings, Updates talks to GitHub only when you press Check for updates (or turn on the daily check). In Chat Rooms, Settings, AI members, you can let a service called
 TokenReply write your AI members' replies instead of a model file on your device. In Achievements you can add your RetroAchievements
 username and Web API key and fetch a game's achievements and your progress. The page's rule allows exactly
-`https://api.tokenreply.com` and `https://retroachievements.org` and nothing else. If you use TokenReply, your API key, the character's description and the recent
+`https://api.tokenreply.com`, `https://retroachievements.org`, `https://api.github.com` (update checks, only a read of the latest release) and, for YouTube videos, YouTube's own player and picture servers, and nothing else. If you use TokenReply, your API key, the character's description and the recent
 chat are sent there; switch back to "On this device" and nothing is sent. For RetroAchievements, only your username, key and the game number are sent, and only when you press a button. Your keys stay on your device and are not part of exported accounts or backups (and can be locked inside the vault).
-Because of this, the Android app now carries the internet permission; it is used for nothing else. The Sound Meter uses the microphone (Android asks the first time; the desktop app allows audio only), measures the sound on the spot and keeps nothing.
+Because of this, the Android app carries the internet permission; it is used for nothing else. To play a YouTube video, YouTube sees your internet address and that you opened the video, and its ads are part of its own player (this app does not change them); you can switch it off, or just open the link in your browser. The Android app also asks to install updates you chose to download, to keep a playing video going with the screen off (a small notification shows), and to read a music folder you pick. The Push-Up Counter uses the microphone only if you turn on its voice check. The Sound Meter uses the microphone (Android asks the first time; the desktop app allows audio only), measures the sound on the spot and keeps nothing.
 If your account has a vault passcode, you can also lock the API key with it: it is then stored encrypted inside the vault, readable only while the vault is open, and never included in exported files.
 
 ## About antivirus warnings
@@ -125,8 +148,8 @@ If your account has a vault passcode, you can also lock the API key with it: it 
 The Windows apps are not code-signed (a certificate costs money), and they bundle an AI engine (llama.cpp) as native
 libraries. Unsigned Electron apps with native code are a common source of false alarms on scanners like VirusTotal:
 one or two engines out of seventy may complain about the installer or the engine libraries. The source is all in this repository:
-there is no obfuscated code, no downloader, no remote code, and the only address the page may contact is the optional
-`api.tokenreply.com`. The AI engine process is deliberately cut off from the network (this is done by disabling network
+there is no obfuscated code, no downloader, no remote code, and the only addresses the page may contact are the optional
+ones listed above. The AI engine process is deliberately cut off from the network (this is done by disabling network
 functions inside it, which can look like "hooking" to a heuristic scanner, but it only blocks). If a scanner flags a download,
 compare its hash with the one on the release page, and report it to the vendor as a false positive.
 
@@ -140,8 +163,9 @@ Native Nintendo Switch (`.nro`), Wii U (`.rpx`, `.wuhb`) and 3DS (`.3dsx`, `.cia
 | Windows | `Anti-Social-Setup-*.exe` (installer) or `Anti-Social-*-portable.exe` (no install) |
 | Linux | `.AppImage` (any distro) or `.deb` (Debian/Ubuntu) |
 | Android | `.apk` (sideload: allow "install unknown apps") |
+| Switch, Wii U, 3DS (experimental) | `.nro`, `.rpx` / `.wuhb`, `.3dsx` / `.cia` |
 
-Grab them from the Releases page of this repo. Check the SHA-256 shown there against your download.
+Grab them from the Releases page of this repo. Check the SHA-256 shown there against your download. After that, Settings, Updates keeps Android and the desktop apps current without any launcher (a launcher such as Hopper works too).
 
 ## Build it yourself
 
@@ -184,7 +208,7 @@ be a crime, and so can lying to officers about what a PIN does. This is a privac
 
 **Populated mode.** The crowd is calculated on screen from a short seed code (same seed, same people) and is never written to disk, so it uses no storage. Generated accounts are scenery: they have no way to respond to anything. You can reply to, like and follow them, and nothing ever comes back. Your own replies, likes and follows are saved like any post, so with a passcode they are encrypted too, including which stranger you reacted to.
 
-**Apps.** Everything in Apps is saved like your posts, so with a passcode it is encrypted too: notes, diary entries, events, receipts, household items and their photos, grocery lists, chores and their history. Household photos are stored as separate records tied to their item by a random token. The token shows that some records belong together, nothing about what they are. Apps use only your own device and count toward your storage limit. The Banking app is a notebook and connects to nothing.
+**Apps.** Everything in Apps is saved like your posts, so with a passcode it is encrypted too: notes, diary entries, events, receipts, household items and their photos, grocery lists, chores and their history. Household photos are stored as separate records tied to their item by a random token. The token shows that some records belong together, nothing about what they are. Apps use only your own device and count toward your storage limit. The Banking app is a notebook and connects to nothing. Songs you copy into the Music Player are kept in the app's own storage and are not encrypted by the vault; songs played from a folder stay in that folder and are only read when played.
 
 **Characters.** Your characters and your edits to generated people are saved like your posts, so with a passcode they are encrypted too: names, bios, pictures and the fact that they exist. Characters are private to the account that made them. Images you add count toward your storage limit. There is no way to share a character with anyone else; they are included only in your own data export. A custom character never carries the "procedurally generated" label, so it can never pass as a generated stranger.
 
@@ -232,4 +256,5 @@ The starter recipes in the Cookbook were written for Anti-Social (the lists of i
 A template changes how the whole app looks and what things are called. It never changes where your data lives or what the app can do, and you can switch back any time in Settings. The in-app names are generic on purpose (the look is inspired by familiar apps, but nothing here uses their names or logos).
 
 - **Chat Rooms:** a server with channels, a chat column and a member list. The generated members (Populated mode) are not real, and they only post in #general; extra channels you create hold only your own messages. Deleting a channel deletes the messages you wrote in it. Voice channels and "Add a server" are for show.
+- **Communities:** a Reddit-style community page with an orange header, vote arrows with scores, "Posted by u/you", comments, an About panel and rules. Appearance and wording only.
 - **Classic Blue:** an early-2010s social network look. Appearance and wording only; everything else works the same, and the generated friends in Populated mode are still not real.
