@@ -58,6 +58,23 @@ const ICONS = {
   code: '<path d="M8 8l-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/>',
   apple: '<path d="M12 7c-1.5-2-5-2-6.5 1C4 11 5 16 7.5 19c1.2 1.5 2.6 1.8 4.5.8 1.9 1 3.3.7 4.5-.8 2.5-3 3.5-8 2-11-1.5-3-5-3-6.5-1z"/><path d="M12 7c0-2 1-3.5 3-4"/>',
   dumbbell: '<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/>',
+  music: '<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
+  play: '<path d="M7 4l13 8-13 8z"/>',
+  pause: '<path d="M7 4h3v16H7zM14 4h3v16h-3z"/>',
+  next: '<path d="M6 5l10 7-10 7zM19 5v14"/>',
+  prev: '<path d="M18 5L8 12l10 7zM5 5v14"/>',
+  shuffle: '<path d="M3 7h3c4 0 5 10 9 10h5M3 17h3c1.5 0 2.5-1.2 3.3-2.8M15 7h5M17 4.5l3 2.5-3 2.5M17 14.5l3 2.5-3 2.5"/>',
+  repeat: '<path d="M4 11V9a3 3 0 013-3h12M16 3l3 3-3 3M20 13v2a3 3 0 01-3 3H5M8 21l-3-3 3-3"/>',
+  repeat1: '<path d="M4 11V9a3 3 0 013-3h12M16 3l3 3-3 3M20 13v2a3 3 0 01-3 3H5M8 21l-3-3 3-3M11 10.5l1.6-1.1V14"/>',
+  queue: '<path d="M3 6h13M3 11h13M3 16h7M18 19V9l4-1v9"/><circle cx="16.2" cy="19" r="1.8"/>',
+  more: '<circle cx="12" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="19" r="1.5" fill="currentColor"/>',
+  sliders: '<path d="M5 4v16M12 4v16M19 4v16M3 9h4M10 15h4M17 8h4"/>',
+  timer: '<circle cx="12" cy="13.5" r="7"/><path d="M12 9.5v4l3 2M9.5 3h5"/>',
+  lyrics: '<path d="M4 5h16M4 10h10M4 15h16M4 20h8"/>',
+  disc: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/>',
+  folder: '<path d="M3 6a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>',
+  wave: '<path d="M3 12h3l2-7 3 14 3-10 2 3h5"/>',
+  tag: '<path d="M20 12l-8 8-9-9V4h7z"/><circle cx="8" cy="8" r="1.4"/>',
   speak: '<path d="M4 4h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-3 3v-3H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M9 18h6l3 3v-3h2a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-3"/>',
   lamp: '<path d="M9 2h6l1.5 5h-9zM7.5 7L6 20h12L16.5 7M8 20v2h8v-2"/><circle cx="11" cy="13" r="1.6"/><circle cx="13.5" cy="10" r="1"/>',
   flame: '<path d="M12 3c.5 3.5 5 5.5 5 10.5a5 5 0 0 1-10 0c0-2 1-3.5 2.5-4.5.3 1.7 1 2.5 2 2.5C11 9 11 6 12 3z"/>',
@@ -1638,7 +1655,7 @@ async function render(keepScroll = false) {
     if (all.bad) console.warn(`${all.bad} post(s) could not be decrypted`);
     // Your likes, reposts and follows of generated accounts live beside your posts but are not posts.
     const posts = all.filter(p => !p.kind);                 // real posts only; everything else is a record of some other kind
-    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], srv: [], bot: [], aimsg: [], aimode: [], aikey: [], dexmark: [], pkbank: [], pkm: [], agame: [], ach: [], rakey: [], clockcfg: [], sound: [], budget: [], shotgame: [], shot: [], termstate: [], cbinder: [], ccard: [], ebook: [], lang: [], calday: [], calprof: [], pushup: [] };
+    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], srv: [], bot: [], aimsg: [], aimode: [], aikey: [], dexmark: [], pkbank: [], pkm: [], agame: [], ach: [], rakey: [], clockcfg: [], sound: [], budget: [], shotgame: [], shot: [], termstate: [], cbinder: [], ccard: [], ebook: [], lang: [], calday: [], calprof: [], pushup: [], mlib: [], mprefs: [] };
     for (const p of all) if (apps[p.kind]) apps[p.kind].push(p);
     castMap = new Map(all.filter(p => p.kind === 'cast').map(p => [p.ref, p]));
     const reactions = new Map(all.filter(p => p.kind === 'ghost').map(p => [p.target, p]));
