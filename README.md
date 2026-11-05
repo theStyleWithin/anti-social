@@ -6,7 +6,7 @@
 
 ## Status: fully featured and complete
 
-Anti-Social v0.26.0 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.27.0 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (drag-to-reorder, themes, the Bible, Travel Log, Cookbook and the v0.12.0 account features are automated-test verified, awaiting a hand test; the Android file saver in v0.12.0 is new native code and has not yet been run on a real phone); plus automated tests):
 - **Newer apps (v0.20.0 to v0.26.0):** Language Lab, Calorie Counter, Push-Up Counter, Music Player, the viewers, YouTube playback, the desktop layout and Updates are checked by automated tests; the Fireplace, Aquarium, Music Player and YouTube embeds have been tried on a real phone. The console versions, background video playback, the Updates installer and the Music Player folder picker have **not yet been hand tested on real hardware**.
@@ -93,6 +93,7 @@ A new piece earns its place by being something you would use inside the shell, n
 
 ## Version history
 
+- **v0.27.0:** the Switch and Wii U versions get the desktop layout (app rail, open app, side panels) at a native 1280x720, plus Diary, Calendar, Groceries, Chores and Settings with colour themes; the 3DS is unchanged
 - **v0.26.0:** Settings > Updates checks this project's GitHub releases (on request, or once a day if you turn it on) and, on Android and the desktop apps, downloads the new version, checks it, and opens its installer; no launcher needed.
 - **v0.25.1:** Music Player can choose a music folder (system folder picker), scans subfolders and plays songs in place, remembers the folder and rescans on open; Korean added to Language Lab; on Android a playing YouTube video keeps going with the app in the background or the screen off (new notification permission, optional).
 - **v0.25.0:** YouTube links in posts play in the timeline (asks first, with a fallback player); Language Lab (offline lessons in seven languages with spaced repetition); Calorie Counter (diary, built-in foods, goals); Push-Up Counter (count reps with your nose on the screen, optional voice check); Music Player (your own music offline, ten-band equalizer, bass, reverb, visualizers, lyrics, queue, themes)
