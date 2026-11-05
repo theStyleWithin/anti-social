@@ -343,6 +343,6 @@ function musicView(acct, ctx, back) {
   // when something changes under the lists (a song was added or removed elsewhere), keep the page in step
   let shownCur = MP.cur; const themeSync = () => { if (!root.isConnected) { MP.listeners.delete(themeSync); return; } applyTheme(); const st = page.querySelector('.mp-status'); if (st) { if (MP.status) st.textContent = MP.status; else st.remove(); } else if (MP.status && cur().v === 'home') { const hd = page.querySelector('.mp-head'); if (hd) hd.after(h('p', { class: 'mp-status', role: 'status' }, MP.status)); } if (MP.cur !== shownCur) { shownCur = MP.cur; if (cur().v !== 'now') miniBar(); } }; MP.listeners.add(themeSync);
   paint();
-  if (!MP.autoRan && P.autoscan && P.folders.length && mpCanFolders()) { MP.autoRan = true; mpScanAll().then(() => { if (root.isConnected) paint(); }); } else if (mpCanFolders()) mpEnrich();
+  setTimeout(() => { if (!root.isConnected) return; if (!MP.autoRan && P.autoscan && P.folders.length && mpCanFolders()) { MP.autoRan = true; mpScanAll().then(() => { if (root.isConnected) paint(); }); } else if (mpCanFolders()) mpEnrich(); }, 0);
   return [back(appName(acct, 'music')), root];
 }
