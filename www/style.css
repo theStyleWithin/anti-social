@@ -1465,3 +1465,28 @@ html[data-tpl="reddit"] .post .time::before { content: "· "; }
 .aq-list { display: flex; flex-direction: column; gap: 6px; } .aq-row { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 10px; } .aq-row.on { border-color: var(--accent, #1d9bf0); } .aq-row span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .aq-stage { aspect-ratio: 16 / 9; height: auto; }
 .vw-bar .btn { background: rgba(10,10,14,.65); color: #fff; border: 1px solid rgba(255,255,255,.3); backdrop-filter: blur(6px); } .vw-bar .btn.primary { background: var(--accent, #8b5cf6); border-color: transparent; }
+
+/* desktop layout: resizable timeline walls and pinned apps */
+.main { position: relative; }
+.tl-grip { display: none; }
+.pane, .pane-slot { display: none; }
+@media (min-width: 1000px) {
+  .desk { display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+  .desk .shell { flex: none; width: calc(590px + var(--tl-w, 600px)); max-width: none; grid-template-columns: 260px minmax(0, var(--tl-w, 600px)) minmax(0, 330px); margin: 0; }
+  .tl-grip { display: block; position: absolute; top: 0; bottom: 0; width: 14px; cursor: col-resize; z-index: 6; touch-action: none; }
+  .tl-grip.l { left: -7px; } .tl-grip.r { right: -7px; }
+  .tl-grip:hover, .tl-grip:focus-visible, .tl-grip.drag { background: linear-gradient(to right, transparent 5px, var(--accent) 5px, var(--accent) 9px, transparent 9px); outline: 0; }
+  body.tl-dragging { cursor: col-resize; user-select: none; } body.tl-dragging * { cursor: col-resize !important; }
+  .pane-slot { display: block; flex: 1 1 0; min-width: 0; max-width: 560px; }
+  .pane { display: flex; flex-direction: column; flex: 1 1 0; min-width: 0; max-width: 560px; position: sticky; top: 12px; margin: 12px; height: calc(100vh - 24px); height: calc(100dvh - 24px); border: 1px solid var(--line); border-radius: 16px; background: var(--bg); overflow: hidden; }
+  .desk.pane-off .pane, .desk.pane-off .pane-slot { display: none; }
+  .pane-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--line); flex: none; }
+  .pane-head > svg { width: 20px; height: 20px; flex: none; color: var(--accent); }
+  .pane-head select { flex: 1; min-width: 0; }
+  .pane-x { flex: none; width: 30px; height: 30px; border-radius: 50%; border: 0; background: none; color: var(--muted); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .pane-x:hover { background: var(--hover); color: var(--fg); } .pane-x svg { width: 16px; height: 16px; }
+  .pane-body { flex: 1; min-height: 0; overflow-y: auto; position: relative; }
+  .pane[data-root] .topbar button.back { display: none; }
+  .pane .topbar { padding: 0 12px; gap: 12px; }
+}
+.pane-head select { padding: 7px 12px; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 999px; font: inherit; }

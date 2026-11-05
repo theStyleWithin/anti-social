@@ -38,7 +38,8 @@ const Viewer = (() => {
   // Ambient sound made from nothing but filtered noise and short tones, so there are no audio files to ship. It stays quiet until the first tap
   // (browsers insist on that), remembers on/off and volume on this device, and shuts itself down when you leave the app.
   function ambience(key, alive) {
-    let st = { on: true, vol: 0.5 };
+    const pinned = !!window.__inPane; if (pinned) key += '.pinned';   // an app pinned beside the timeline starts quiet; it has its own sound setting
+    let st = { on: !pinned, vol: 0.5 };
     try { const v = JSON.parse(localStorage.getItem(key) || 'null'); if (v && typeof v === 'object') st = { on: v.on !== false, vol: Math.min(1, Math.max(0, +v.vol || 0.5)) }; } catch { /* default */ }
     let ctx = null, master = null, brown = null, white = null, timer = 0, dead = false; const hooks = [];
     const save = () => { try { localStorage.setItem(key, JSON.stringify(st)); } catch { /* not remembered */ } };

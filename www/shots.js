@@ -133,7 +133,7 @@ function ssImport(acct, ctx, preset) {
     }
     ssBusy = false; close();
     toast(n ? `Added ${plural(n, 'screenshot')}.${skipped ? ` ${plural(skipped, 'file')} could not be read.` : ''}` : skipped ? 'Those files could not be read as pictures.' : 'Nothing was added.');
-    if (n) { ssTab = 'games'; location.hash = '#/apps/shots/' + gid; }
+    if (n) { ssTab = 'games'; go('/apps/shots/' + gid); }
     render(true);
   });
 }
@@ -168,7 +168,7 @@ function ssDeleteGame(acct, ctx, game, shots) {
   const close = modal(h('div', { class: 'modal-body' }, h('p', {}, shots.length ? `Delete "${game.name}" and its ${ssPlural(shots.length)}? There is no undo.` : `Delete the empty folder "${game.name}"?`),
     h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: () => close() }, 'Keep it'), h('button', { class: 'btn danger', onclick: async () => {
       for (const s of shots) { await deleteMedia(acct, s.mtoken); await appDelete(s.id); }
-      await appDelete(game.id); close(); toast('Deleted.'); location.hash = '#/apps/shots'; render(true);
+      await appDelete(game.id); close(); toast('Deleted.'); go('/apps/shots');
     } }, 'Delete'))));
 }
 

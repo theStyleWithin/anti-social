@@ -366,6 +366,7 @@ function toast(msg) {
 }
 
 function go(path) {
+  if (typeof Desk !== 'undefined' && Desk.route(path)) return;
   if (location.hash === '#' + path) render(); else location.hash = path;
 }
 
@@ -1253,6 +1254,7 @@ function settingsView(acct, ctxBg, ctx) {
     h('section', {}, h('h3', {}, 'Display'), h('p', {}, 'Pick a look. Nobody will see it.'),
       h('div', { class: 'btnrow' }, themeBtn('auto', 'Auto'), themeBtn('light', 'Light'), themeBtn('dark', 'Dark'))),
     templateSection(),
+    Desk.settingsSection(acct),
     h('section', {}, h('h3', {}, 'Color themes'), h('p', {}, 'The text color is picked for you so it always stays readable.'),
       h('div', { class: 'skins' }, ThemeCore.PRESETS.map(p => swatch(p.id, p.name, p.bg, p.accent)), swatch('custom', 'Custom', custom.bg, custom.accent))),
     h('section', {}, h('h3', {}, 'Make your own'), h('p', {}, 'Choose two colors. Everything else follows.'),
@@ -1588,7 +1590,7 @@ function shell(acct, route, main, ctx, chId) {
   if (id === 'chat') return shellChat(acct, route, main, ctx, chId);
   if (id === 'blue') return shellBlue(acct, route, main, ctx);
   if (id === 'reddit') return shellReddit(acct, route, main, ctx);
-  return shellDefault(acct, route, main);
+  return Desk.wrap(shellDefault(acct, route, main), acct, ctx);
 }
 function shellDefault(acct, route, main) {
   const link = (path, name, label) => h('a', { href: '#' + path, class: route === name ? 'active' : '', 'aria-label': label, 'aria-current': route === name ? 'page' : null }, icon({ profile: 'user', explore: 'search', notifications: 'bell', apps: 'grid' }[name] || name), h('span', {}, label));
@@ -1647,7 +1649,9 @@ async function render(keepScroll = false) {
       profile: () => profileView(acct, ctx), settings: () => { if (arg === 'security' || arg === 'characters' || (arg === 'ai' && tplId() === 'chat')) settingsTab = arg; return settingsView(acct, ctx.apps.bg[0], ctx); }, post: () => postView(acct, ctx, arg),
     }[route]();
     document.title = route === 'home' ? 'Home / Anti-Social' : route[0].toUpperCase() + route.slice(1) + ' / Anti-Social';
+    const deskScroll = Desk.scrolls();
     root.replaceChildren(shell(acct, route, main, ctx, chId));
+    Desk.restore(deskScroll);
     if (tplId() === 'chat') {
       // in the chat layout the panes scroll, not the page; the message list sticks to the newest message
       const list = $('.chat-list'), pane = $('.main');

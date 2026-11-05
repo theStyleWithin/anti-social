@@ -166,7 +166,7 @@ async function kdForm(acct, ctx, card, opt = {}) {
     if (old) await deleteMedia(acct, old);
     close(); toast(isNew ? 'Added to your binder.' : 'Saved.');
     if (isNew) kdPageOf[bid] = 1e6;       // open on the last page, where it landed
-    if (isNew && location.hash.startsWith('#/apps/cards')) location.hash = '#/apps/cards/' + bid;
+    if (isNew && location.hash.startsWith('#/apps/cards')) go('/apps/cards/' + bid);
     render(true);
   });
   setTimeout(() => (f.name.value ? f.hp : f.name).focus({ preventScroll: true }), 80);
