@@ -88,6 +88,19 @@ const Desk = (() => {
       h('label', { class: 'mx-range' }, h('span', {}, 'Timeline width'), range, out),
       h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: () => { L.tw = DEF; L.left = ''; L.right = ''; save(); apply(); render(true); } }, 'Reset the layout')));
   }
+  /* ----- drag an app card from the Apps page into the empty space ----- */
+  function dragZones(acct) {
+    if (!enabled() || tplId() !== 'default' || innerWidth < CHROME + MIN + 2 * (SIDE_MIN + 24)) return null;
+    const w = Math.max(SIDE_MIN, Math.round((innerWidth - CHROME - width()) / 2)), els = {};
+    for (const side of ['left', 'right']) {
+      const cur = valid(acct, L[side]) ? appName(acct, L[side]) : '';
+      els[side] = h('div', { class: 'pin-zone ' + side, 'aria-hidden': 'true', style: `width:${w - 24}px` }, h('div', {}, icon('pin'), h('b', {}, cur ? 'Replace ' + cur : 'Pin it here'), h('small', {}, 'Let go to keep it on this side')));
+      document.body.append(els[side]);
+    }
+    requestAnimationFrame(() => Object.values(els).forEach(e => e.classList.add('show')));
+    return { hit: x => (x < w ? 'left' : x > innerWidth - w ? 'right' : ''), hot: side => { els.left.classList.toggle('hot', side === 'left'); els.right.classList.toggle('hot', side === 'right'); }, done: () => Object.values(els).forEach(e => e.remove()) };
+  }
+  const pin = (side, id) => setApp(side, id);
   apply();
-  return { enabled, wrap, route, scrolls, restore, settingsSection };
+  return { enabled, dragZones, pin, wrap, route, scrolls, restore, settingsSection };
 })();

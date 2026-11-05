@@ -512,7 +512,7 @@ function appsHome(acct, ctx) {
   return [
     topbar('Apps', { action: h('button', { class: 'btn' + (appsReorder ? ' primary' : ''), 'aria-pressed': String(appsReorder), onclick: () => { appsReorder = !appsReorder; render(true); } }, appsReorder ? 'Done' : 'Reorder') }),
     h('div', { class: 'apps-intro' }, 'If you are going to be anti-social, you might as well get something done. Everything here works offline, stays on this device, and is encrypted too if you use a passcode.',
-      h('div', { class: 'fine', style: 'padding:6px 0 0' }, appsReorder ? 'Drag a card, or use the arrows, to put the apps in your order.' : 'Tip: drag any app to rearrange them (on a phone, touch and hold first).')),
+      h('div', { class: 'fine', style: 'padding:6px 0 0' }, appsReorder ? 'Drag a card, or use the arrows, to put the apps in your order.' : 'Tip: drag any app to rearrange them (on a phone, touch and hold first).' + (typeof Desk !== 'undefined' && Desk.enabled() ? ' On a wide screen, drag one to the far left or right to pin it beside the timeline.' : ''))),
     grid,
     appsReorder && custom ? h('div', { class: 'btnrow', style: 'padding:0 16px 16px' }, h('button', { class: 'btn', onclick: () => { ls(appOrderKey(acct), null); toast('Back to the original order.'); render(true); } }, 'Reset order')) : null,
   ];
@@ -548,7 +548,7 @@ function enableAppDrag(grid, acct) {
   const scrollerOf = el => { for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) { const o = getComputedStyle(p).overflowY; if ((o === 'auto' || o === 'scroll') && p.scrollHeight > p.clientHeight + 1) return p; } return null; };
   const scrollPos = () => st.scroller ? { x: st.scroller.scrollLeft, y: st.scroller.scrollTop } : { x: window.scrollX, y: window.scrollY };
   const cleanup = () => {
-    if (st) { clearTimeout(st.timer); cancelAnimationFrame(st.raf); st.clone?.remove(); st.card.classList.remove('ghosted'); document.body.classList.remove('app-dragging'); }
+    if (st) { clearTimeout(st.timer); cancelAnimationFrame(st.raf); st.clone?.remove(); st.zones?.done(); st.card.classList.remove('ghosted'); document.body.classList.remove('app-dragging'); }
     st = null;
     document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', end); document.removeEventListener('pointercancel', end); document.removeEventListener('touchmove', onTouchMove);
   };
@@ -561,6 +561,7 @@ function enableAppDrag(grid, acct) {
     // coordinates, and decide where the card goes from those, not from cards that are still sliding about.
     const sp = scrollPos();
     st.slots = cardsNow().map(c => { const b = c.getBoundingClientRect(); return { l: b.left + sp.x, t: b.top + sp.y, w: b.width, h: b.height }; });
+    st.zones = typeof Desk !== 'undefined' ? Desk.dragZones(acct) : null;   // desktop: the empty space beside the timeline becomes a place to pin the app
     st.clone = st.card.cloneNode(true); st.clone.classList.add('app-drag-clone'); st.clone.removeAttribute('href');
     Object.assign(st.clone.style, { width: r.width + 'px', height: r.height + 'px' });
     document.body.append(st.clone); st.card.classList.add('ghosted'); document.body.classList.add('app-dragging');
@@ -576,7 +577,11 @@ function enableAppDrag(grid, acct) {
     st.raf = requestAnimationFrame(autoScroll);
   };
   const place = () => {
-    st.clone.style.transform = `translate3d(${st.x - st.offX}px, ${st.y - st.offY}px, 0) scale(1.04)`;
+    const zone = st.zones ? st.zones.hit(st.x) : '';
+    if (st.zones) st.zones.hot(zone);
+    st.zone = zone;
+    st.clone.style.transform = `translate3d(${st.x - st.offX}px, ${st.y - st.offY}px, 0) scale(${zone ? 0.8 : 1.04})`;
+    if (zone) return;                                        // over a pin zone: the cards stay as they are
     const sp = scrollPos(), px = st.x + sp.x, py = st.y + sp.y;
     const j = st.slots.findIndex(s => px >= s.l && px <= s.l + s.w && py >= s.t && py <= s.t + s.h);
     const cards = cardsNow(), from = cards.indexOf(st.card);
@@ -605,6 +610,9 @@ function enableAppDrag(grid, acct) {
   const end = e => {
     if (!st || e.pointerId !== st.id) return;
     const was = st.active;
+    if (was && st.zone && e.type !== 'pointercancel') {      // let go over a pin zone: pin the app to that side, leave the order alone
+      const id = st.card.dataset.app, side = st.zone; suppress = true; setTimeout(() => { suppress = false; }, 80); cleanup(); Desk.pin(side, id); return;
+    }
     if (was) {
       const ids = cardsNow().map(c => c.dataset.app);
       try { const cr = st.clone.getBoundingClientRect(); st.card.classList.remove('ghosted'); const tr = st.card.getBoundingClientRect(); st.card.animate([{ transform: `translate(${cr.left - tr.left}px, ${cr.top - tr.top}px) scale(1.04)` }, { transform: 'translate(0, 0) scale(1)' }], { duration: 180, easing: 'cubic-bezier(.2,.8,.2,1)' }); } catch { /* no glide, it just lands */ }
