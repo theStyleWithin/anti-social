@@ -1,6 +1,6 @@
 'use strict';
 /* Folder access for the Switch SD card feature, seen from the page as window.AntiSocialFS:
-   {kind, detect(), pick(title), list(id, rel), read(id, rel), write(id, rel, bytes), exists(id, rel)}.
+   {kind, detect(), pick(title), list(id, rel), read(id, rel), readRange(id, rel, offset, length), write(id, rel, bytes), exists(id, rel)}.
    The desktop apps provide it themselves. Here it is built from the Android app's native side, or, in a browser that
    has it, from the File System Access API. Folders are only ever reached after the person picks them. */
 (() => {
@@ -19,6 +19,7 @@
       pick: () => call('pick', json),
       list: (id, rel) => call('list', json, String(id), String(rel || '')),
       read: (id, rel) => call('read', unb64, String(id), String(rel)),
+      readRange: (id, rel, off, len) => call('readRange', unb64, String(id), String(rel), String(off), String(len)),
       write: (id, rel, bytes) => call('write', () => true, String(id), String(rel), b64(bytes)),
       exists: (id, rel) => call('exists', s => s === 'true', String(id), String(rel)),
     };
@@ -35,6 +36,7 @@
       async pick(title) { try { const h = await window.showDirectoryPicker({ mode: 'readwrite' }); const id = 'b' + (++seq); dirs.set(id, h); return { id, label: h.name }; } catch (e) { if (e && e.name === 'AbortError') return null; throw e; } },
       async list(id, rel) { const d = await walkTo(root(id), rel, false), out = []; for await (const [name, h] of d.entries()) { let size = 0, mtime = 0; if (h.kind === 'file') { const f = await h.getFile(); size = f.size; mtime = f.lastModified; } out.push({ name, dir: h.kind === 'directory', size, mtime }); } return out; },
       async read(id, rel) { const [dir, name] = split(rel), f = await (await (await walkTo(root(id), dir, false)).getFileHandle(name)).getFile(); if (f.size > 64 * 1024 * 1024) throw new Error('That file is too big to open.'); return new Uint8Array(await f.arrayBuffer()); },
+      async readRange(id, rel, off, len) { const [dir, name] = split(rel), f = await (await (await walkTo(root(id), dir, false)).getFileHandle(name)).getFile(); return new Uint8Array(await f.slice(off, off + len).arrayBuffer()); },
       async write(id, rel, bytes) { const [dir, name] = split(rel), fh = await (await walkTo(root(id), dir, true)).getFileHandle(name, { create: true }), w = await fh.createWritable(); await w.write(bytes); await w.close(); return true; },
       async exists(id, rel) { try { const [dir, name] = split(rel); const d = await walkTo(root(id), dir, false); try { await d.getFileHandle(name); return true; } catch { try { await d.getDirectoryHandle(name); return true; } catch { return false; } } } catch { return false; } },
     };

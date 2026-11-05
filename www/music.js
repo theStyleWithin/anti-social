@@ -3,7 +3,7 @@
    lyrics from .lrc files, a ten-band equalizer with bass, stereo and reverb, moving visualizers, a sleep timer, and a look you can change. */
 const MC = MusicCore;
 const MP = { acct: null, tracks: [], covers: {}, prefs: null, audio: null, queue: [], order: [], pos: -1, shuffle: false, repeat: 'off', cur: null, url: '', lyrics: null, sleep: null, saveT: 0, libT: 0, listeners: new Set(), seq: 0 };
-const mpDefaults = () => ({ playlists: [], fav: [], plays: {}, recent: [], theme: { accent: '#fdc82f', bg: 'art', bgImage: '', blur: 18, dim: 45, art: 'disc', outline: true, viz: 'ring', scale: 1, tiles: ['tracks', 'albums', 'artists', 'folders', 'genres'] }, fx: { eqOn: true, gains: new Array(10).fill(0), bass: 0, virt: 0, reverb: 'none', preset: 'Normal', custom: {} }, vol: 1, last: null });
+const mpDefaults = () => ({ folders: [], autoscan: true, playlists: [], fav: [], plays: {}, recent: [], theme: { accent: '#fdc82f', bg: 'art', bgImage: '', blur: 18, dim: 45, art: 'disc', outline: true, viz: 'ring', scale: 1, tiles: ['tracks', 'albums', 'artists', 'folders', 'genres'] }, fx: { eqOn: true, gains: new Array(10).fill(0), bass: 0, virt: 0, reverb: 'none', preset: 'Normal', custom: {} }, vol: 1, last: null });
 /* ----- where the music is kept: audio files and lyrics in their own small database ----- */
 const mdb = (() => { let p = null; const open = () => p || (p = new Promise((res, rej) => { const r = indexedDB.open('anti-social-music', 1); r.onupgradeneeded = () => { r.result.createObjectStore('f'); r.result.createObjectStore('l'); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }));
   const tx = async (s, mode, fn) => { const d = await open(); return new Promise((res, rej) => { const t = d.transaction(s, mode), q = fn(t.objectStore(s)); t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error); }); };
@@ -27,9 +27,12 @@ function mpLoad(acct, ctx) {
 /* ----- playing ----- */
 async function mpLoadTrack(t, play, at = 0) {
   if (!t) return; const my = ++MP.seq; MP.cur = t; MP.lyrics = null; mpEmit();
-  const blob = await mdb.get('f', mpKey(t.id)); if (my !== MP.seq) return; if (!blob) { toast(`"${t.title}" is missing from this device. Remove it and add it again.`); return; }
+  let blob = null, lrcText = null;
+  if (t.src) { try { const bytes = await window.AntiSocialFS.read(t.src.fid, t.src.rel); if (my !== MP.seq) return; blob = new Blob([bytes], { type: mpMime(t.src.rel) }); mpApplyTags(t, bytes); if (t.src.lrc) { try { lrcText = new TextDecoder().decode(await window.AntiSocialFS.read(t.src.fid, t.src.lrc)); } catch { /* no lyrics */ } } } catch (e) { toast('"' + t.title + '" could not be opened from its folder. Is the folder still there? ' + (e && e.message ? e.message : '')); return; } }
+  else blob = await mdb.get('f', mpKey(t.id));
+  if (my !== MP.seq) return; if (!blob) { toast(`"${t.title}" is missing from this device. Remove it and add it again.`); return; }
   if (MP.url) URL.revokeObjectURL(MP.url); MP.url = URL.createObjectURL(blob); MP.audio.src = MP.url; if (at) MP.audio.currentTime = at;
-  const lr = await mdb.get('l', mpKey(t.id)); if (my === MP.seq) { MP.lyrics = lr ? { text: lr, lines: MC.parseLrc(lr) } : null; mpEmit(); }
+  const lr = t.src ? lrcText : await mdb.get('l', mpKey(t.id)); if (my === MP.seq) { MP.lyrics = lr ? { text: lr, lines: MC.parseLrc(lr) } : null; mpEmit(); }
   if (play) { MusicFx.start(MP.audio); try { await MP.audio.play(); } catch (e) { /* needs a tap first */ } const s = MP.prefs.plays[t.id] || { n: 0, last: 0 }; MP.prefs.plays[t.id] = { n: s.n + 1, last: Date.now() }; MP.prefs.recent = [t.id, ...MP.prefs.recent.filter(x => x !== t.id)].slice(0, 60); mpSavePrefsSoon(); }
   mpMedia(); mpEmit();
 }
@@ -57,6 +60,51 @@ function mpMedia() {
   try { const t = MP.cur; if (!t || !navigator.mediaSession) return; const cover = t.cover && MP.covers[t.cover]; navigator.mediaSession.metadata = new MediaMetadata({ title: t.title, artist: t.artist, album: t.album, artwork: cover ? [{ src: cover, sizes: '300x300', type: 'image/jpeg' }] : [] });
     const ms = navigator.mediaSession; ms.setActionHandler('play', mpToggle); ms.setActionHandler('pause', mpToggle); ms.setActionHandler('nexttrack', () => mpStep(1)); ms.setActionHandler('previoustrack', () => mpStep(-1)); ms.setActionHandler('seekto', e => { MP.audio.currentTime = e.seekTime; }); } catch { /* not supported */ }
 }
+/* ----- a music folder: scan it for songs (subfolders too), read their details in the background, play them straight from there ----- */
+const mpMime = rel => ({ mp3: 'audio/mpeg', m4a: 'audio/mp4', m4b: 'audio/mp4', mp4: 'audio/mp4', aac: 'audio/aac', flac: 'audio/flac', ogg: 'audio/ogg', oga: 'audio/ogg', opus: 'audio/ogg', wav: 'audio/wav', weba: 'audio/webm', webm: 'audio/webm' })[((String(rel).match(/\.([^.]+)$/) || [])[1] || '').toLowerCase()] || 'audio/mpeg';
+const mpCanFolders = () => !!(window.AntiSocialFS && typeof window.AntiSocialFS.pick === 'function' && typeof window.AntiSocialFS.list === 'function');
+const mpSleep = ms => new Promise(r => setTimeout(r, ms));
+// copies what a file's tags say onto the track (only when the file really has tags; otherwise the names from its folders stay)
+async function mpApplyTags(t, bytes) {
+  if (t.tagged) return; t.tagged = true; let tg; try { tg = MC.readTags(bytes.subarray(0, Math.min(bytes.length, 6e6)), t.src ? t.src.rel.split('/').pop() : t.title, t.album); } catch { return; }
+  if (tg.tagged) { t.title = tg.title || t.title; t.artist = tg.artist || t.artist; if (tg.album && tg.album !== 'Unknown album') t.album = tg.album; if (tg.genre && tg.genre !== 'Unknown genre') t.genre = tg.genre; t.track = tg.track || t.track; t.year = tg.year || t.year; t.albumArtist = tg.albumArtist || t.albumArtist; }
+  const ck = MC.key(t.album) + '|' + MC.key(t.artist);
+  if (tg.cover && !MP.covers[ck]) { const th = await mpThumb(tg.cover.bytes, tg.cover.mime); if (th) MP.covers[ck] = th; }
+  if (MP.covers[ck]) t.cover = ck; mpSaveLibSoon();
+}
+let mpEnriching = false;
+async function mpEnrich() {
+  if (mpEnriching || !mpCanFolders()) return; mpEnriching = true; const acctId = MP.acct && MP.acct.id; let n = 0;
+  try { const todo = MP.tracks.filter(t => t.src && !t.tagged), total = todo.length; for (const t of todo) { if (!MP.acct || MP.acct.id !== acctId) break;
+      try { let head = await window.AntiSocialFS.readRange(t.src.fid, t.src.rel, 0, 262144); const need = MC.id3Size(head); if (need > head.length && need <= 6e6) head = await window.AntiSocialFS.readRange(t.src.fid, t.src.rel, 0, need + 16); await mpApplyTags(t, head); } catch { t.tagged = true; }
+      n++; MP.status = 'Reading song details… ' + n + ' of ' + total; if (n % 20 === 0) { mpSaveLibSoon(); mpEmit(); } await mpSleep(6); } }
+  finally { mpEnriching = false; if (MP.status && MP.status.startsWith('Reading')) MP.status = ''; mpSaveLibSoon(); mpEmit(); }
+}
+async function mpScanFolder(f) {
+  const FS = window.AntiSocialFS, found = [], lrcs = new Map(), queue = ['']; let dirs = 0, rootOk = false;
+  while (queue.length && dirs < 6000) {
+    const rel = queue.shift(); let ents; try { ents = await FS.list(f.id, rel); } catch (e) { if (!rel) throw e; continue; } if (!rel) rootOk = true; dirs++;
+    MP.status = 'Looking for music in ' + f.label + '… ' + found.length + ' songs'; if (dirs % 8 === 0) mpEmit();
+    for (const e of ents) { const path = rel ? rel + '/' + e.name : e.name;
+      if (e.dir) { if (!e.name.startsWith('.') && !/^(android|\$recycle\.bin|lost\.dir|system volume information)$/i.test(e.name)) queue.push(path); }
+      else if (MP_AUDIO.test(e.name) && !/\.mp4$/i.test(e.name)) found.push({ rel: path, name: e.name, size: e.size || 0, mtime: e.mtime || 0 });
+      else if (/\.lrc$/i.test(e.name)) lrcs.set(path.replace(/\.lrc$/i, '').toLowerCase(), path); } }
+  const mine = MP.tracks.filter(t => t.src && t.src.fid === f.id), have = new Map(mine.map(t => [t.src.rel, t])), seen = new Set(); let added = 0;
+  for (const e of found) {
+    seen.add(e.rel); const lrc = lrcs.get(e.rel.replace(/\.[^.]+$/, '').toLowerCase()) || ''; const ex = have.get(e.rel);
+    if (ex) { ex.src.lrc = lrc; continue; }
+    const parts = e.rel.split('/'), dir = parts.slice(0, -1), album = dir[dir.length - 1] || f.label, artistDir = dir.length >= 2 ? dir[dir.length - 2] : '', nm = MC.fromName(e.name, album);
+    MP.tracks.push({ id: 's' + MC.trackId({ name: f.id + '/' + e.rel, size: e.size, lastModified: e.mtime }), src: { fid: f.id, rel: e.rel, lrc }, title: nm.title, artist: nm.artist || artistDir || 'Unknown artist', album, albumArtist: '', track: nm.track || 0, year: 0, genre: 'Unknown genre', folder: album, dur: 0, size: e.size, added: Date.now(), cover: '', tagged: false }); added++;
+  }
+  let removed = 0; if (rootOk) { const gone = mine.filter(t => !seen.has(t.src.rel)).map(t => t.id); if (gone.length) { removed = gone.length; await mpRemove(gone); } }
+  f.last = Date.now(); f.count = found.length; mpSaveLibSoon(); mpSavePrefsSoon(); MP.status = ''; mpEmit(); return { found: found.length, added, removed };
+}
+async function mpAddFolder() {
+  const r = await window.AntiSocialFS.pick('Choose your music folder'); if (!r) return null;
+  const P = MP.prefs; let f = P.folders.find(x => x.id === r.id); if (!f) { f = { id: r.id, label: r.label || 'Music' }; P.folders.push(f); mpSavePrefsSoon(); } return f;
+}
+async function mpScanAll() { for (const f of MP.prefs.folders) { try { await mpScanFolder(f); } catch (e) { MP.status = ''; toast('Could not read the folder "' + f.label + '". Choose it again from Settings. ' + (e && e.message ? e.message : '')); } } mpEnrich(); }
+
 /* ----- adding music ----- */
 const MP_AUDIO = /\.(mp3|m4a|m4b|aac|flac|ogg|oga|opus|wav|weba|webm|mp4)$/i;
 async function mpThumb(bytes, mime) {
@@ -137,7 +185,8 @@ function musicView(acct, ctx, back) {
     const row = (name, n, ico, fn, menu) => h('div', { class: 'mp-pl', role: 'button', tabindex: '0', onclick: fn, onkeydown: e => { if (e.key === 'Enter') fn(); } }, h('div', { class: 'mp-pl-i' }, icon(ico)), h('div', { class: 'mp-row-t' }, h('b', {}, name), h('small', {}, `${n} ${n === 1 ? 'track' : 'tracks'}`)), menu || null);
     return h('div', {},
       h('div', { class: 'mp-head' }, h('h2', {}, 'Music Player'), h('div', {}, icoBtn('search', 'Search all songs', () => go({ v: 'list', by: 'tracks', label: 'Tracks', focus: true })), icoBtn('plus', 'Add music', addMusic), icoBtn('menu', 'Look and settings', () => go({ v: 'settings' })))),
-      MP.tracks.length ? null : h('div', { class: 'mp-welcome' }, h('b', {}, 'Your music goes here'), h('p', {}, 'Add songs from your device (or a whole folder). They are kept inside Anti-Social, play offline, and never leave your device.'), h('div', { class: 'btnrow' }, h('button', { class: 'btn primary', onclick: addMusic }, 'Add music'))),
+      MP.tracks.length ? null : h('div', { class: 'mp-welcome' }, h('b', {}, 'Your music goes here'), h('p', {}, 'Add songs from your device (or a whole folder). They are kept inside Anti-Social, play offline, and never leave your device.'), h('div', { class: 'btnrow' }, mpCanFolders() ? h('button', { class: 'btn primary', onclick: chooseFolder }, 'Choose a music folder') : null, h('button', { class: 'btn' + (mpCanFolders() ? '' : ' primary'), onclick: addMusic }, 'Add songs'))),
+      MP.status ? h('p', { class: 'mp-status', role: 'status' }, MP.status) : null,
       h('div', { class: 'mp-tiles' }, T.tiles.filter(k => defs[k]).map(k => tile(k, defs[k][0], defs[k][1]))),
       h('div', { class: 'mp-sec' }, h('b', {}, `Playlists (${smart.length + P.playlists.length})`), icoBtn('plus', 'New playlist', () => newPlaylist())),
       smart.map(([id, name, ico, ids]) => row(name, ids.length, ico, () => go({ v: 'playlist', id, name, ids }))),
@@ -147,12 +196,16 @@ function musicView(acct, ctx, back) {
   function playlistMenu(p) {
     const close = modal(h('div', {}, h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => close() }, icon('x')), h('b', {}, p.name)), h('div', { class: 'mp-menu' }, h('button', { type: 'button', onclick: () => { close(); const n = prompt('Rename the playlist', p.name); if (n && n.trim()) { p.name = n.trim().slice(0, 60); mpSavePrefsSoon(); paint(); } } }, 'Rename'), h('button', { type: 'button', onclick: () => { close(); if (confirm(`Delete the playlist "${p.name}"? The songs stay in your library.`)) { P.playlists = P.playlists.filter(x => x !== p); mpSavePrefsSoon(); paint(); } } }, 'Delete'))));
   }
+  async function chooseFolder() {
+    try { const f = await mpAddFolder(); if (!f) return; toast('Looking through the folder and its subfolders…'); const r = await mpScanFolder(f); toast(r.found + ' songs found' + (r.added ? ', ' + r.added + ' new' : '') + '.'); paint(); mpEnrich(); }
+    catch (e) { toast('That folder could not be read. ' + (e && e.message ? e.message : '')); }
+  }
   function addMusic() {
     const files = h('input', { type: 'file', multiple: true, accept: 'audio/*,.mp3,.m4a,.flac,.ogg,.opus,.wav,.aac,.lrc,.txt', hidden: true }), folder = h('input', { type: 'file', multiple: true, hidden: true }); folder.setAttribute('webkitdirectory', ''); folder.setAttribute('directory', '');
     const status = h('p', { class: 'fine', role: 'status' }, ''), bar = h('div', { class: 'lg-bar big' }, h('i', { style: 'width:0%' }));
     const run = async list => { if (!list.length) return; files.disabled = folder.disabled = true; bar.firstChild.style.width = '2%'; const r = await mpImport(list, (d, n, name) => { bar.firstChild.style.width = Math.round(d / Math.max(1, n) * 100) + '%'; status.textContent = `Adding ${d + 1} of ${n}: ${name}`; }); bar.firstChild.style.width = '100%'; status.textContent = `${r.added} added${r.skipped ? `, ${r.skipped} already here` : ''}${r.total - r.added - r.skipped ? `, ${r.total - r.added - r.skipped} could not be read` : ''}.`; files.disabled = folder.disabled = false; paint(); };
     files.addEventListener('change', e => run(e.target.files)); folder.addEventListener('change', e => run(e.target.files));
-    const close = modal(h('div', {}, h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => close() }, icon('x')), h('b', {}, 'Add music')), h('div', { class: 'mp-pad' }, h('p', { class: 'muted' }, 'Pick songs, or a whole folder. A .lrc file with the same name as a song gives it lyrics. Songs are copied into this app on this device only.'), h('div', { class: 'btnrow' }, h('button', { class: 'btn primary', onclick: () => files.click() }, 'Choose songs'), h('button', { class: 'btn', onclick: () => folder.click() }, 'Choose a folder')), files, folder, bar, status)));
+    const close = modal(h('div', {}, h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => close() }, icon('x')), h('b', {}, 'Add music')), h('div', { class: 'mp-pad' }, h('p', { class: 'muted' }, 'Pick songs, or a whole folder. A .lrc file with the same name as a song gives it lyrics. Songs are copied into this app on this device only.'), h('div', { class: 'btnrow' }, mpCanFolders() ? h('button', { class: 'btn primary', onclick: () => { close(); chooseFolder(); } }, 'Choose a music folder (scans subfolders)') : null, h('button', { class: 'btn' + (mpCanFolders() ? '' : ' primary'), onclick: () => files.click() }, 'Choose songs'), mpCanFolders() ? null : h('button', { class: 'btn', onclick: () => folder.click() }, 'Choose a folder')), mpCanFolders() ? h('p', { class: 'fine' }, 'A music folder is read where it is, so nothing is copied. The player keeps up with it when you add or remove songs there.') : null, files, folder, bar, status)));
   }
 
   function list(by, label, focus) {
@@ -261,13 +314,15 @@ function musicView(acct, ctx, back) {
     const sel = (label, key, opts) => { const s = h('select', { 'aria-label': label, onchange: e => set(key, e.target.value, true) }, opts.map(([v, n]) => h('option', { value: v }, n))); s.value = T[key]; return h('label', { class: 'field' }, h('span', {}, label), s); };
     const pic = h('input', { type: 'file', accept: 'image/*', hidden: true, onchange: async e => { const f = e.target.files[0]; if (!f) return; try { const bmp = await createImageBitmap(f), s = Math.min(1, 1400 / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas'); c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s); c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height); T.bgImage = c.toDataURL('image/jpeg', 0.82); T.bg = 'image'; mpSavePrefsSoon(); applyTheme(); paint(); } catch { toast('That picture could not be used.'); } } });
     const tileOpts = [['tracks', 'Tracks'], ['albums', 'Albums'], ['artists', 'Artists'], ['folders', 'Folders'], ['genres', 'Genres']];
-    const bytes = MP.tracks.reduce((s, t) => s + (t.size || 0), 0);
+    const bytes = MP.tracks.reduce((s, t) => s + (t.src ? 0 : (t.size || 0)), 0);
     return h('div', {}, h('div', { class: 'mp-top' }, icoBtn('back', 'Back', pop), h('h2', {}, 'Look and settings')),
       h('div', { class: 'mp-pad' }, h('h3', { class: 'lg-h2' }, 'Colour'), h('div', { class: 'ck-themes', role: 'radiogroup', 'aria-label': 'Accent colour' }, swatches.map(c => h('button', { class: 'ck-swatch' + (T.accent === c ? ' on' : ''), type: 'button', role: 'radio', 'aria-checked': String(T.accent === c), 'aria-label': c, style: `background:${c}`, onclick: () => set('accent', c, true) })), h('input', { type: 'color', value: T.accent, 'aria-label': 'Pick any colour', oninput: e => set('accent', e.target.value) })),
         h('h3', { class: 'lg-h2' }, 'Background'), sel('Background', 'bg', [['none', 'Plain'], ['art', 'The album art, blurred'], ['image', 'My own picture']]), h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: () => pic.click() }, T.bgImage ? 'Change my picture' : 'Choose a picture'), T.bgImage ? h('button', { class: 'btn', onclick: () => { T.bgImage = ''; if (T.bg === 'image') T.bg = 'none'; mpSavePrefsSoon(); applyTheme(); paint(); } }, 'Remove it') : null), pic, range('Blur', 'blur', 0, 40), range('Darken', 'dim', 0, 80, 5),
         h('h3', { class: 'lg-h2' }, 'Now playing'), sel('Album art', 'art', [['disc', 'A spinning disc'], ['square', 'A square']]), h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: T.outline, onchange: e => set('outline', e.target.checked) }), ' Outline the text so it stays readable on busy pictures'), range('Text size', 'scale', 0.85, 1.4, 0.05), h('button', { class: 'btn', onclick: () => go({ v: 'viz' }) }, 'Choose a visualizer…'),
         h('h3', { class: 'lg-h2' }, 'Home screen'), h('div', { class: 'btnrow' }, tileOpts.map(([k, n]) => h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: T.tiles.includes(k), onchange: e => { T.tiles = tileOpts.map(x => x[0]).filter(x => (x === k ? e.target.checked : T.tiles.includes(x))); mpSavePrefsSoon(); } }), ' ' + n))),
-        h('h3', { class: 'lg-h2' }, 'Library'), h('p', { class: 'fine' }, `${MP.tracks.length} songs, ${(bytes / 1048576).toFixed(0)} MB kept in this app on this device.`), h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: addMusic }, 'Add music'), h('button', { class: 'btn danger', onclick: async () => { if (!confirm('Remove every song from this app? Your original files are not touched.')) return; await mpRemove(MP.tracks.map(t => t.id)); toast('Library cleared.'); paint(); } }, 'Remove everything'))));
+        h('h3', { class: 'lg-h2' }, 'Music folders'), mpCanFolders() ? h('div', {}, P.folders.length ? P.folders.map(f => h('div', { class: 'kc-item static' }, h('span', { class: 'kc-item-n' }, h('b', {}, f.label), h('small', {}, f.last ? (f.count || 0) + ' songs · scanned ' + new Date(f.last).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Not scanned yet')), h('button', { class: 'btn', onclick: async () => { toast('Scanning…'); try { const r = await mpScanFolder(f); toast(r.found + ' songs' + (r.added ? ', ' + r.added + ' new' : '') + (r.removed ? ', ' + r.removed + ' gone' : '') + '.'); mpEnrich(); paint(); } catch (e) { toast('That folder could not be read. Choose it again.'); } } }, 'Scan now'), h('button', { class: 'kc-x', type: 'button', 'aria-label': 'Stop using ' + f.label, onclick: async () => { if (!confirm('Stop using "' + f.label + '"? Its songs leave this app. The files are not touched.')) return; P.folders = P.folders.filter(x => x !== f); await mpRemove(MP.tracks.filter(t => t.src && t.src.fid === f.id).map(t => t.id)); mpSavePrefsSoon(); paint(); } }, icon('x')))) : h('p', { class: 'fine' }, 'No music folder yet. Pick the folder your music lives in and every song in it and its subfolders is added.'),
+        h('div', { class: 'btnrow' }, h('button', { class: 'btn primary', onclick: chooseFolder }, P.folders.length ? 'Add another folder' : 'Choose a music folder')), h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: P.autoscan, onchange: e => { P.autoscan = e.target.checked; mpSavePrefsSoon(); } }), ' Look for new songs in these folders when the player opens')) : h('p', { class: 'fine' }, 'This device does not let the app pick a folder, so add songs with Add songs.'),
+        h('h3', { class: 'lg-h2' }, 'Library'), h('p', { class: 'fine' }, MP.tracks.length + ' songs' + (bytes ? ', ' + (bytes / 1048576).toFixed(0) + ' MB copied into this app' : '') + '.'), h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: addMusic }, 'Add songs'), h('button', { class: 'btn danger', onclick: async () => { if (!confirm('Remove every song from this app? Your original files are not touched.')) return; await mpRemove(MP.tracks.map(t => t.id)); toast('Library cleared.'); paint(); } }, 'Remove everything'))));
   }
 
   /* ----- the small player along the bottom ----- */
@@ -286,7 +341,8 @@ function musicView(acct, ctx, back) {
     page.replaceChildren(el); miniBar(); root.dataset.view = v.v;
   }
   // when something changes under the lists (a song was added or removed elsewhere), keep the page in step
-  let shownCur = MP.cur; const themeSync = () => { if (!root.isConnected) { MP.listeners.delete(themeSync); return; } applyTheme(); if (MP.cur !== shownCur) { shownCur = MP.cur; if (cur().v !== 'now') miniBar(); } }; MP.listeners.add(themeSync);
+  let shownCur = MP.cur; const themeSync = () => { if (!root.isConnected) { MP.listeners.delete(themeSync); return; } applyTheme(); const st = page.querySelector('.mp-status'); if (st) { if (MP.status) st.textContent = MP.status; else st.remove(); } else if (MP.status && cur().v === 'home') { const hd = page.querySelector('.mp-head'); if (hd) hd.after(h('p', { class: 'mp-status', role: 'status' }, MP.status)); } if (MP.cur !== shownCur) { shownCur = MP.cur; if (cur().v !== 'now') miniBar(); } }; MP.listeners.add(themeSync);
   paint();
+  if (!MP.autoRan && P.autoscan && P.folders.length && mpCanFolders()) { MP.autoRan = true; mpScanAll().then(() => { if (root.isConnected) paint(); }); } else if (mpCanFolders()) mpEnrich();
   return [back(appName(acct, 'music')), root];
 }

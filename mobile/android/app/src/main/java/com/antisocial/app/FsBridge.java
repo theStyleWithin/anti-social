@@ -157,6 +157,27 @@ public class FsBridge {
         });
     }
 
+    /** Reads a slice of a file (the start of a song, where its tags are) without loading the whole thing. */
+    @JavascriptInterface
+    public void readRange(String rid, String id, String rel, String offset, String length) {
+        pool.execute(() -> {
+            try {
+                String[] p = parts(rel);
+                DocumentFile f = walk(root(id), p, p.length, false);
+                if (f == null || !f.isFile()) { done(rid, false, "Not found."); return; }
+                long off = Math.max(0, Long.parseLong(offset)); int len = (int) Math.min(MAX_FILE, Math.max(0, Long.parseLong(length)));
+                ByteArrayOutputStream out = new ByteArrayOutputStream(Math.max(1024, len));
+                try (InputStream in = activity.getContentResolver().openInputStream(f.getUri())) {
+                    if (in == null) throw new Exception("The file could not be opened.");
+                    long skipped = 0; while (skipped < off) { long n = in.skip(off - skipped); if (n <= 0) break; skipped += n; }
+                    byte[] buf = new byte[65536]; int want = len, n;
+                    while (want > 0 && (n = in.read(buf, 0, Math.min(buf.length, want))) > 0) { out.write(buf, 0, n); want -= n; }
+                }
+                done(rid, true, Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP));
+            } catch (Throwable t) { done(rid, false, String.valueOf(t.getMessage())); }
+        });
+    }
+
     @JavascriptInterface
     public void write(String rid, String id, String rel, String base64) {
         pool.execute(() -> {

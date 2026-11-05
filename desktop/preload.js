@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld('AntiSocialFS', {
   pick: title => ipcRenderer.invoke('fs:pick', String(title || '')),
   list: (id, rel) => ipcRenderer.invoke('fs:list', String(id), String(rel || '')),
   read: (id, rel) => ipcRenderer.invoke('fs:read', String(id), String(rel)),
+  readRange: (id, rel, off, len) => ipcRenderer.invoke('fs:readRange', String(id), String(rel), Number(off), Number(len)),
   write: (id, rel, bytes) => ipcRenderer.invoke('fs:write', String(id), String(rel), bytes),
   exists: (id, rel) => ipcRenderer.invoke('fs:exists', String(id), String(rel)),
 });

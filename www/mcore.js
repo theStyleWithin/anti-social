@@ -60,7 +60,7 @@ const MusicCore = (() => {
   }
   // From a filename like "03 - Artist - Title.mp3" or "Artist - Title.flac"
   function fromName(name, folder) {
-    let base = String(name).replace(/\.[^.]+$/, '').replace(/_/g, ' ').trim(), track = 0; const m = base.match(/^(\d{1,3})\s*[-._)]\s*(.+)$/); if (m) { track = +m[1]; base = m[2]; }
+    let base = String(name).replace(/\.[^.]+$/, '').replace(/_/g, ' ').trim(), track = 0; const m = base.match(/^(\d{1,3})\s*[-._)]\s*(.+)$/) || base.match(/^(\d{2,3})\s+(\D.*)$/); if (m) { track = +m[1]; base = m[2]; }
     const parts = base.split(/\s+-\s+/); const out = { track };
     if (parts.length >= 2) { out.artist = parts[0].trim(); out.title = parts.slice(1).join(' - ').trim(); } else out.title = base || name;
     if (folder) out.album = folder; return out;
@@ -71,7 +71,7 @@ const MusicCore = (() => {
     try { if (id3Size(bytes)) t = readId3(bytes); else if (e === 'flac' || td('latin1', bytes.subarray(0, 4)) === 'fLaC') t = readFlac(bytes); else if (['m4a', 'mp4', 'm4b', 'aac'].includes(e) || td('latin1', bytes.subarray(4, 8)) === 'ftyp') t = readMp4(bytes); } catch { t = {}; }
     if (!t.title && !t.artist) { try { const v1 = readId3v1(bytes); if (v1.title) t = { ...t, ...v1 }; } catch { /* none */ } }
     const f = fromName(name, folder);
-    return { title: t.title || f.title, artist: t.artist || t.albumArtist || f.artist || 'Unknown artist', album: t.album || f.album || 'Unknown album', albumArtist: t.albumArtist || '', track: t.track || f.track || 0, year: t.year || 0, genre: t.genre || 'Unknown genre', cover: t.cover || null, lyrics: t.lyrics || '' };
+    return { tagged: !!(t.title || t.artist), title: t.title || f.title, artist: t.artist || t.albumArtist || f.artist || 'Unknown artist', album: t.album || f.album || 'Unknown album', albumArtist: t.albumArtist || '', track: t.track || f.track || 0, year: t.year || 0, genre: t.genre || 'Unknown genre', cover: t.cover || null, lyrics: t.lyrics || '' };
   }
   /* ----- lyrics ----- */
   function parseLrc(text) {

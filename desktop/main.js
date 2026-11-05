@@ -55,7 +55,10 @@ ipcMain.handle('ai:generate', guard(async (e, req) => {
 // call is checked to stay inside that folder.
 const folders = new Map();           // id -> absolute folder
 const MAX_FILE = 64 * 1024 * 1024;
-const addFolder = dir => { const id = crypto.randomBytes(8).toString('hex'); folders.set(id, fs.realpathSync(dir)); return id; };
+const savedFile = () => path.join(app.getPath('userData'), 'folders.json');
+const addFolder = (dir, keep) => { const id = crypto.randomBytes(8).toString('hex'); folders.set(id, fs.realpathSync(dir)); if (keep) { try { const all = JSON.parse(fs.readFileSync(savedFile(), 'utf8') || '{}'); all[id] = folders.get(id); fs.writeFileSync(savedFile(), JSON.stringify(all)); } catch { try { fs.writeFileSync(savedFile(), JSON.stringify({ [id]: folders.get(id) })); } catch { /* not remembered */ } } } return id; };
+// folders the person picked earlier are open again, by the same ids, if they still exist
+try { for (const [id, dir] of Object.entries(JSON.parse(fs.readFileSync(savedFile(), 'utf8') || '{}'))) if (/^[0-9a-f]{16}$/.test(id) && fs.existsSync(dir)) folders.set(id, fs.realpathSync(dir)); } catch { /* none yet */ }
 function inside(id, rel, mustExist) {
   const root = folders.get(id);
   if (!root) throw new Error('That folder is not open any more. Choose it again.');
@@ -87,7 +90,7 @@ ipcMain.handle('fs:detect', guard(async () => cardCandidates().map(dir => ({ id:
 ipcMain.handle('fs:pick', guard(async (e, title) => {
   const r = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender), { title: String(title || 'Choose a folder').slice(0, 100), properties: ['openDirectory', 'createDirectory'] });
   if (r.canceled || !r.filePaths[0]) return null;
-  return { id: addFolder(r.filePaths[0]), label: r.filePaths[0] };
+  return { id: addFolder(r.filePaths[0], true), label: r.filePaths[0] };
 }));
 ipcMain.handle('fs:list', guard(async (_e, id, rel) => {
   const dir = inside(id, rel || '.', true), out = [];
@@ -100,6 +103,11 @@ ipcMain.handle('fs:read', guard(async (_e, id, rel) => {
   const full = inside(id, rel, true), st = fs.statSync(full);
   if (!st.isFile() || st.size > MAX_FILE) throw new Error('That file is too big to open.');
   return new Uint8Array(fs.readFileSync(full));
+}));
+ipcMain.handle('fs:readRange', guard(async (_e, id, rel, off, len) => {
+  const full = inside(id, rel, true), st = fs.statSync(full); if (!st.isFile()) throw new Error('That is not a file.');
+  off = Math.max(0, Math.floor(Number(off) || 0)); len = Math.min(MAX_FILE, Math.max(0, Math.floor(Number(len) || 0)));
+  const fd = fs.openSync(full, 'r'); try { const buf = Buffer.alloc(Math.min(len, Math.max(0, st.size - off))); const n = fs.readSync(fd, buf, 0, buf.length, off); return new Uint8Array(buf.subarray(0, n)); } finally { fs.closeSync(fd); }
 }));
 ipcMain.handle('fs:write', guard(async (_e, id, rel, bytes) => {
   const full = inside(id, rel, false);
