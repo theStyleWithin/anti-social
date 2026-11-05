@@ -6,7 +6,7 @@
 
 ## Status: fully featured and complete
 
-Anti-Social v0.24.1 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.24.2 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (drag-to-reorder, themes, the Bible, Travel Log, Cookbook and the v0.12.0 account features are automated-test verified, awaiting a hand test; the Android file saver in v0.12.0 is new native code and has not yet been run on a real phone); plus automated tests):
 - **Android:** installed and used on a real phone, including account switching, Populated mode, Characters, the storage limit and the Apps.
@@ -70,6 +70,7 @@ is a flat, unblinking **0**.
 
 ## Version history
 
+- **v0.24.2:** a polite tip note at the very bottom of Settings
 - **v0.24.1:** drag an app card to the far left or right of the Apps page to pin it beside the timeline (desktop app)
 - **v0.24.0:** desktop app: drag either wall of the timeline to make it wider or narrower, and pin a built-in app of your choice into the empty space on each side (both optional, in Settings, Desktop layout)
 - **v0.23.0:** Lava Lamp, Fireplace (six looks; place logs and watch them char and burn away; ambient sound) and Aquarium (starts empty; add fish, sharks and rays, feed them, day and night, ambient sound)
