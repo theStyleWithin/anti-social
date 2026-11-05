@@ -1496,3 +1496,6 @@ html[data-tpl="reddit"] .post .time::before { content: "· "; }
 .pin-zone.left { left: 12px; } .pin-zone.right { right: 12px; }
 .pin-zone.show { opacity: 1; } .pin-zone.hot { background: color-mix(in srgb, var(--accent) 22%, transparent); transform: scale(1.01); }
 .pin-zone > div { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0 16px; } .pin-zone svg { width: 30px; height: 30px; } .pin-zone small { color: var(--muted); }
+
+.support-note { margin: 8px 16px 90px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; line-height: 1.5; text-align: center; }
+.support-note a { color: var(--accent); }
