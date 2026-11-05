@@ -485,6 +485,7 @@ function appsHome(acct, ctx) {
     ['books', 'books', 'Books', A.ebook.length ? `${plural(A.ebook.length, 'book')} on your shelf` : 'Read your own books, offline'],
     ['lang', 'speak', 'Language Lab', (() => { try { const r = (A.lang || []).reduce((n, x) => n + (x.xp || 0), 0); return r ? `${r} XP so far` : 'Spanish, French, German, Italian, Portuguese, Japanese'; } catch { return 'Learn a language, offline'; } })()],
     ['kcal', 'apple', 'Calorie Counter', (() => { try { const d = (A.calday || []).find(x => x.date === KcalCore.dayKey()); if (!d || !d.items.length) return 'Log what you eat, track your goal'; const t = KcalCore.totals(d), pr = (A.calprof || [])[0]; return pr ? `${t.kcal} of ${pr.goal} calories today` : `${t.kcal} calories today`; } catch { return 'Log what you eat'; } })()],
+    ['pushup', 'dumbbell', 'Push-Up Counter', (() => { try { const s = (A.pushup || []); const today = s.filter(x => x.date === PushCore.dayKey()).reduce((n, x) => n + x.reps, 0); return today ? `${today} push-ups today` : 'Count push-ups with your nose'; } catch { return 'Count push-ups with your nose'; } })()],
     ['achv', 'trophy', 'Achievements', (() => { const o = AchCore.overall(A.agame, A.ach); return A.agame.length ? `${o.unlocked} of ${o.total} unlocked · ${plural(A.agame.length, 'game')}` : 'Keep score of your game achievements'; })()],
   ];
   cards.splice(0, cards.length, ...cards.filter(c => !hidden.has(c[0])));
@@ -523,7 +524,7 @@ function appsHome(acct, ctx) {
 /* ---- rearranging the launcher: drag with a mouse, or touch and hold on a phone ---- */
 let appsReorder = false;
 // Every app, for the Settings list that shows or hides them. The Bible starts hidden; turn it on if you want it.
-const APP_LIST = [['calendar', 'Calendar'], ['calc', 'Calculator'], ['bank', 'Banking'], ['inventory', 'Household'], ['groceries', 'Groceries'], ['chores', 'Chores'], ['notes', 'Notes'], ['bible', 'Bible'], ['diary', 'Diary'], ['travel', 'Travel Log'], ['cookbook', 'Cookbook'], ['pokedex', 'Pokédex'], ['pokebank', 'Pokémon Bank'], ['achv', 'Achievements'], ['clock', 'Digital Clock'], ['sound', 'Sound Meter'], ['worldmap', 'World Map'], ['budget', 'Budget'], ['shots', 'Screenshots'], ['terminal', 'Terminal Practice'], ['matrix', 'Matrix Viewer'], ['lava', 'Lava Lamp'], ['fire', 'Fireplace'], ['aquarium', 'Aquarium'], ['cards', 'Card Binder'], ['books', 'Books'], ['lang', 'Language Lab'], ['kcal', 'Calorie Counter']];
+const APP_LIST = [['calendar', 'Calendar'], ['calc', 'Calculator'], ['bank', 'Banking'], ['inventory', 'Household'], ['groceries', 'Groceries'], ['chores', 'Chores'], ['notes', 'Notes'], ['bible', 'Bible'], ['diary', 'Diary'], ['travel', 'Travel Log'], ['cookbook', 'Cookbook'], ['pokedex', 'Pokédex'], ['pokebank', 'Pokémon Bank'], ['achv', 'Achievements'], ['clock', 'Digital Clock'], ['sound', 'Sound Meter'], ['worldmap', 'World Map'], ['budget', 'Budget'], ['shots', 'Screenshots'], ['terminal', 'Terminal Practice'], ['matrix', 'Matrix Viewer'], ['lava', 'Lava Lamp'], ['fire', 'Fireplace'], ['aquarium', 'Aquarium'], ['cards', 'Card Binder'], ['books', 'Books'], ['lang', 'Language Lab'], ['kcal', 'Calorie Counter'], ['pushup', 'Push-Up Counter']];
 const hiddenKey = acct => 'as.hiddenapps.' + acct.id;
 // Every app can be given your own name (per account). An empty name means the original one.
 const namesKey = acct => 'as.appnames.' + acct.id;
@@ -671,6 +672,7 @@ function appsView(acct, ctx, sub, arg) {
     case 'books': return booksView(acct, ctx, back, arg);
     case 'lang': return langView(acct, ctx, back);
     case 'kcal': return kcalView(acct, ctx, back);
+    case 'pushup': return pushupView(acct, ctx, back);
     default: return appsHome(acct, ctx);
   }
 }
