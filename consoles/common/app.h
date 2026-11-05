@@ -37,6 +37,7 @@ struct Env {
   std::string dataDir;          // where notes and posts are kept, always ends with '/'
   std::string platform = "dev";
   bool dual = false;            // two screens: the second one carries the touch controls
+  bool hd = false;              // a full 1280x720 screen (Switch, Wii U TV): the desktop-style layout with a side rail
   bool quit = false;
 };
 
@@ -63,13 +64,19 @@ class Screen {
 namespace theme {
 using gfx::rgba;
 const gfx::Color bg = rgba(11, 11, 16), panel = rgba(24, 24, 33), line = rgba(48, 48, 62), text = rgba(240, 240, 245), muted = rgba(138, 143, 152),
-                 accent = rgba(139, 92, 246), accentDim = rgba(88, 60, 160), good = rgba(52, 211, 153), bad = rgba(248, 113, 113);
+                 good = rgba(52, 211, 153), bad = rgba(248, 113, 113);
+extern gfx::Color accent, accentDim;                     // the colour theme: chosen in Settings
+void setAccent(gfx::Color c);
 }
 
 // helpers every screen uses
 std::string agoText(long now, long then);                // "just now", "3 min ago", "2 days ago"
 std::string clockText(long epoch, bool h24, bool seconds);
 std::string dateText(long epoch);
+void dateParts(long epoch, int& year, int& month, int& day, int& weekday);   // month 1-12, weekday 0 = Sunday
+std::string isoDate(int y, int m, int d);               // 2026-01-31
+int daysInMonth(int y, int m);
+int weekdayOf(int y, int m, int d);
 std::string fmtDuration(double seconds, bool tenths);    // 1:02:03 or 02:03.4
 int barHeight(const gfx::Fb& fb);                        // header and footer height: bigger on the big screen
 void drawHeader(gfx::Fb& fb, const std::string& title, const std::string& right = "");
@@ -81,4 +88,4 @@ void drawButton(gfx::Fb& fb, Rect r, const std::string& label, bool focused = fa
 void drawPanel(gfx::Fb& fb, Rect r, bool selected = false);
 void drawHelpPanel(gfx::Fb& fb, const std::string& title, const std::string& hint);   // the default second screen
 
-Screen* makeLauncher(Env& env);
+Screen* makeLauncher(Env& env);   // the home screen; on a big screen (env.hd) this is the desktop-style shell

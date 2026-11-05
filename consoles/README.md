@@ -1,12 +1,12 @@
 # Anti-Social on game consoles
 
 Native builds (not a web app) for the Nintendo Switch, Wii U and 3DS. They have the same idea as the main app, a social network with nobody on it, but are
-a smaller set of apps: Timeline, Notes, Calculator, Clock (with stopwatch and timer), Matrix and About. Everything is kept on the SD card.
+a smaller set of apps than the desktop. On the 3DS: Timeline, Notes, Calculator, Clock (with stopwatch and timer), Matrix and About. On the Switch and Wii U, which are powerful enough, the layout is the desktop app's: a rail of apps on the left, the open app in the middle and side panels on the right, drawn at a native 1280x720, with more apps (Diary, Calendar, Groceries, Chores, Settings with colour themes). Everything is kept on the SD card.
 
 | Console | Files | Screens | Data folder on the SD card |
 |---|---|---|---|
-| Switch | `.nro` | one screen, 640x360 drawn, doubled to 1280x720 | `switch/anti-social/` |
-| Wii U | `.rpx`, `.wuhb` | TV 640x360 (content) + GamePad 427x240 (touch controls) | `wiiu/anti-social/` |
+| Switch | `.nro` | one screen, drawn natively at 1280x720 (touch works) | `switch/anti-social/` |
+| Wii U | `.rpx`, `.wuhb` | TV 1280x720 (the desktop-style layout) + GamePad 854x480 (touch controls) | `wiiu/anti-social/` |
 | 3DS | `.3dsx`, `.cia` | top 400x240 (content) + bottom 320x240 (touch controls) | `3ds/anti-social/` |
 
 The layouts are made for each console. On the Switch everything is on one screen, with big touch buttons. On the Wii U and 3DS the top or TV screen shows what you

@@ -154,7 +154,7 @@ functions inside it, which can look like "hooking" to a heuristic scanner, but i
 compare its hash with the one on the release page, and report it to the vendor as a false positive.
 
 ## Game consoles (experimental)
-Native Nintendo Switch (`.nro`), Wii U (`.rpx`, `.wuhb`) and 3DS (`.3dsx`, `.cia`) versions live in `consoles/`, with their own layouts for one-screen and two-screen consoles. See `consoles/README.md`.
+Native Nintendo Switch (`.nro`), Wii U (`.rpx`, `.wuhb`) and 3DS (`.3dsx`, `.cia`) versions live in `consoles/`, with their own layouts for one-screen and two-screen consoles. The Switch and Wii U versions use the desktop app's layout (app rail, open app, side panels) at a native 1280x720 and include Timeline, Notes, Diary, Calendar, Groceries, Chores, Calculator, Clock, Matrix and Settings; the 3DS keeps a smaller set. They cannot run the full web app, so they are native programs that follow the desktop design. See `consoles/README.md`.
 
 ## Get the apps
 

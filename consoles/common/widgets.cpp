@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 using namespace theme;
+namespace theme { gfx::Color accent = rgba(139, 92, 246), accentDim = rgba(88, 60, 160); void setAccent(gfx::Color c) { accent = c; accentDim = gfx::mix(c, rgba(0, 0, 0), 110); } }
 
 std::string agoText(long now, long then) {
   if (!then || !now) return "";
@@ -31,7 +32,7 @@ std::string fmtDuration(double s, bool tenths) {
   return b;
 }
 
-int barHeight(const gfx::Fb& fb) { return fb.h >= 300 ? 30 : 24; }
+int barHeight(const gfx::Fb& fb) { return fb.h >= 600 ? 36 : fb.h >= 300 ? 30 : 24; }
 Rect contentArea(const gfx::Fb& fb, bool footer) { int b = barHeight(fb); return {0, b + 1, fb.w, fb.h - b - 1 - (footer ? b + 1 : 0)}; }
 Rect inset(Rect r, int d) { return {r.x + d, r.y + d, std::max(0, r.w - 2 * d), std::max(0, r.h - 2 * d)}; }
 
@@ -64,3 +65,8 @@ void drawHelpPanel(gfx::Fb& fb, const std::string& title, const std::string& hin
   for (auto& l : ls) { gfx::text(fb, 12, y, l, muted); y += 18; }
 }
 void Screen::drawSub(gfx::Fb& fb, Env&) { drawHelpPanel(fb, title().empty() ? "Anti-Social" : title(), hint()); }
+
+void dateParts(long epoch, int& y, int& m, int& d, int& wd) { struct tm t = toLocal(epoch); y = t.tm_year + 1900; m = t.tm_mon + 1; d = t.tm_mday; wd = t.tm_wday % 7; }
+std::string isoDate(int y, int m, int d) { char b[16]; snprintf(b, sizeof b, "%04d-%02d-%02d", y, m, d); return b; }
+int daysInMonth(int y, int m) { static const int n[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}; int d = n[(m - 1 + 12) % 12]; if (m == 2 && ((y % 4 == 0 && y % 100) || y % 400 == 0)) d = 29; return d; }
+int weekdayOf(int y, int m, int d) { static const int t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4}; if (m < 3) y--; return (y + y / 4 - y / 100 + y / 400 + t[m - 1] + d) % 7; }

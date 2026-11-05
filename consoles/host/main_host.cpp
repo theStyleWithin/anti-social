@@ -19,8 +19,8 @@ int main(int argc, char** argv) {
   if (argc < 5) { fprintf(stderr, "usage: %s profile datadir outdir script\n", argv[0]); return 2; }
   std::string prof = argv[1]; int mw = 640, mh = 360, sw = 0, sh = 0; Env env;
   if (prof == "3ds") { mw = 400; mh = 240; sw = 320; sh = 240; env.dual = true; env.platform = "Nintendo 3DS"; }
-  else if (prof == "wiiu") { sw = 427; sh = 240; env.dual = true; env.platform = "Wii U"; }
-  else if (prof == "switch") env.platform = "Nintendo Switch";
+  else if (prof == "wiiu") { mw = 1280; mh = 720; sw = 854; sh = 480; env.dual = true; env.hd = true; env.platform = "Wii U"; }
+  else if (prof == "switch") { mw = 1280; mh = 720; env.hd = true; env.platform = "Nintendo Switch"; }
   else { fprintf(stderr, "unknown profile %s\n", prof.c_str()); return 2; }
   env.dataDir = std::string(argv[2]) + "/"; env.epoch = 1767225600 + 9 * 3600 + 41 * 60;   // 2026-01-01 09:41 UTC
   store::mkdirs(env.dataDir); std::string out = std::string(argv[3]) + "/"; store::mkdirs(out);

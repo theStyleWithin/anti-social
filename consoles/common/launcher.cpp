@@ -84,4 +84,4 @@ class Launcher : public Screen {
   }
 };
 }  // namespace
-Screen* makeLauncher(Env& env) { return new Launcher(env); }
+Screen* makeLauncher(Env& env) { loadSettings(env); return env.hd ? makeDesk(env) : new Launcher(env); }

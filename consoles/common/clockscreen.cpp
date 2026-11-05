@@ -8,7 +8,7 @@ using namespace theme;
 const gfx::Color kInk[] = {gfx::rgba(61, 255, 114), gfx::rgba(255, 176, 0), gfx::rgba(255, 74, 74), gfx::rgba(53, 224, 255), gfx::rgba(232, 232, 232), gfx::rgba(255, 95, 178)};
 enum { ID_TAB = 10, ID_H24 = 20, ID_INK = 21, ID_SW_GO = 30, ID_SW_LAP = 31, ID_SW_RESET = 32, ID_T_M1 = 40, ID_T_P1 = 41, ID_T_M10 = 42, ID_T_P10 = 43, ID_T_GO = 44, ID_T_RESET = 45, ID_BACK = 99 };
 class Clock : public Screen {
-  int tab = 0, ink = 0; bool h24 = false; Hits hits;
+  int tab = 0, ink = 0; bool h24 = use24h(); Hits hits;
   double swRun = 0, swStart = 0, swBase = 0; bool swOn = false; std::vector<double> laps;
   double tLeft = 300, tSet = 300, tEnd = 0; bool tOn = false, rang = false; double flash = 0;
   void act(int id, Env& env) {
