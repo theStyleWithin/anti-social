@@ -1327,7 +1327,7 @@ function settingsView(acct, ctxBg, ctx) {
     topbar('Settings'),
     h('div', { class: 'tabs', role: 'tablist' }, tab('general', 'General'), tab('characters', 'Characters'), tplId() === 'chat' ? tab('ai', 'AI members') : null, tab('security', 'Privacy & Security')),
     h('div', { class: 'settings' }, settingsTab === 'security' ? security : settingsTab === 'characters' ? charactersTab(acct) : settingsTab === 'ai' && tplId() === 'chat' ? aiTab(acct, ctx) : general),
-    h('p', { class: 'support-note' }, 'If you enjoy hoptunes, a tip of any amount is appreciated: Cash App $Normand64. You can also support my Locals at ', h('a', { href: 'https://locals.com/gamehopper', target: '_blank', rel: 'noopener noreferrer' }, 'locals.com/gamehopper'), '. There is no shame in freeloading.'),
+    h('p', { class: 'support-note' }, 'If you enjoy anti social, a tip of any amount is appreciated: Cash App $Normand64. You can also support my Locals at ', h('a', { href: 'https://locals.com/gamehopper', target: '_blank', rel: 'noopener noreferrer' }, 'locals.com/gamehopper'), '. There is no shame in freeloading.'),
   ];
 }
 
