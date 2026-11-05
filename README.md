@@ -6,7 +6,7 @@
 
 ## Status: fully featured and complete
 
-Anti-Social v0.25.1 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.26.0 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (drag-to-reorder, themes, the Bible, Travel Log, Cookbook and the v0.12.0 account features are automated-test verified, awaiting a hand test; the Android file saver in v0.12.0 is new native code and has not yet been run on a real phone); plus automated tests):
 - **Android:** installed and used on a real phone, including account switching, Populated mode, Characters, the storage limit and the Apps.
@@ -70,6 +70,7 @@ is a flat, unblinking **0**.
 
 ## Version history
 
+- **v0.26.0:** Settings > Updates checks this project's GitHub releases (on request, or once a day if you turn it on) and, on Android and the desktop apps, downloads the new version, checks it, and opens its installer; no launcher needed.
 - **v0.25.1:** Music Player can choose a music folder (system folder picker), scans subfolders and plays songs in place, remembers the folder and rescans on open; Korean added to Language Lab; on Android a playing YouTube video keeps going with the app in the background or the screen off (new notification permission, optional).
 - **v0.25.0:** YouTube links in posts play in the timeline (asks first, with a fallback player); Language Lab (offline lessons in seven languages with spaced repetition); Calorie Counter (diary, built-in foods, goals); Push-Up Counter (count reps with your nose on the screen, optional voice check); Music Player (your own music offline, ten-band equalizer, bass, reverb, visualizers, lyrics, queue, themes)
 - **v0.24.2:** a polite tip note at the very bottom of Settings
