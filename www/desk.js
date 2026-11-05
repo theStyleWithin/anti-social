@@ -2,7 +2,9 @@
 /* Desktop layout (the Windows and Linux app, default look): drag either wall of the timeline to make it wider or narrower,
    and, if you like, pin a built-in app in the empty space on each side. Both are optional; nothing changes until you use them. */
 const Desk = (() => {
-  const KEY = 'as.layout', MIN = 420, DEF = 600, SIDE_MIN = 280, CHROME = 590;   // 260 for the menu and 330 for the right column
+  const KEY = 'as.layout', MIN = 420, DEF = 600, SIDE_MIN = 280, MENU = 260, TRENDS = 330;   // the menu, and the right column (search, trends, who to follow) that a pinned app on the right replaces
+  let hideTrends = false;
+  const chrome = () => MENU + (hideTrends ? 0 : TRENDS);
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const enabled = () => { try { return (window.AntiSocialAI && window.AntiSocialAI.kind === 'desktop') || localStorage.getItem('as.desk') === '1'; } catch { return false; } };
   const load = () => { try { const v = JSON.parse(localStorage.getItem(KEY) || 'null') || {}; return { tw: clamp(+v.tw || DEF, MIN, 4000), left: typeof v.left === 'string' ? v.left : '', right: typeof v.right === 'string' ? v.right : '' }; } catch { return { tw: DEF, left: '', right: '' }; } };
@@ -11,10 +13,10 @@ const Desk = (() => {
   const args = { left: '', right: '' };     // which part of the pinned app is showing (a note, a book...), until you leave it
   let busy = null;                          // which pane you last touched, so an app that jumps to one of its own pages stays in its pane
   const anyPane = () => !!(L.left || L.right);
-  const maxTw = () => Math.max(MIN, innerWidth - CHROME - (anyPane() ? 2 * (SIDE_MIN + 24) : 24));
+  const maxTw = () => Math.max(MIN, innerWidth - chrome() - (anyPane() ? 2 * (SIDE_MIN + 24) : 24));
   const width = () => clamp(L.tw, MIN, maxTw());
   const apply = () => { document.documentElement.style.setProperty('--tl-w', width() + 'px'); fit(); };
-  function fit() { const d = document.querySelector('.desk'); if (!d) return; const spare = (innerWidth - CHROME - width()) / 2; d.classList.toggle('pane-off', spare < SIDE_MIN + 24); }
+  function fit() { const d = document.querySelector('.desk'); if (!d) return; const spare = (innerWidth - chrome() - width()) / 2; d.classList.toggle('pane-off', spare < SIDE_MIN + 24); }
   window.addEventListener('resize', apply);
 
   /* ----- dragging the walls ----- */
@@ -68,7 +70,8 @@ const Desk = (() => {
   function wrap(shellEl, acct, ctx) {
     if (!enabled()) return shellEl;
     const main = shellEl.querySelector('.main'); if (main) main.append(grip('l'), grip('r'));
-    const desk = h('div', { class: 'desk' + (anyPane() ? ' has-panes' : '') }, pane('left', acct, ctx), shellEl, pane('right', acct, ctx));
+    hideTrends = valid(acct, L.right);
+    const desk = h('div', { class: 'desk' + (anyPane() ? ' has-panes' : '') + (hideTrends ? ' pin-right' : '') }, pane('left', acct, ctx), shellEl, pane('right', acct, ctx));
     apply(); return desk;
   }
   const scrolls = () => { const o = {}; document.querySelectorAll('.pane-body').forEach(b => { o[b.parentElement.dataset.side] = b.scrollTop; }); return o; };
@@ -90,8 +93,8 @@ const Desk = (() => {
   }
   /* ----- drag an app card from the Apps page into the empty space ----- */
   function dragZones(acct) {
-    if (!enabled() || tplId() !== 'default' || innerWidth < CHROME + MIN + 2 * (SIDE_MIN + 24)) return null;
-    const w = Math.max(SIDE_MIN, Math.round((innerWidth - CHROME - width()) / 2)), els = {};
+    if (!enabled() || tplId() !== 'default' || innerWidth < chrome() + MIN + 2 * (SIDE_MIN + 24)) return null;
+    const w = Math.max(SIDE_MIN, Math.round((innerWidth - chrome() - width()) / 2)), els = {};
     for (const side of ['left', 'right']) {
       const cur = valid(acct, L[side]) ? appName(acct, L[side]) : '';
       els[side] = h('div', { class: 'pin-zone ' + side, 'aria-hidden': 'true', style: `width:${w - 24}px` }, h('div', {}, icon('pin'), h('b', {}, cur ? 'Replace ' + cur : 'Pin it here'), h('small', {}, 'Let go to keep it on this side')));
