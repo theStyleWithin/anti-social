@@ -1,5 +1,5 @@
 'use strict';
-/* Language Lab: short lessons in Spanish, French, German, Italian, Portuguese and Japanese. Everything is in the app, so it works offline.
+/* Language Lab: short lessons in Spanish, French, German, Italian, Portuguese, Japanese and Korean. Everything is in the app, so it works offline.
    Words you miss come back sooner, words you know come back later. Progress is kept per account, on this device. */
 const LC = LangCore;
 let lgCode = null, lgKeyHandler = null;
