@@ -15,7 +15,9 @@ const YT = (() => {
   const links = text => [...new Set(String(text || '').match(/https?:\/\/[^\s]+/g) || [])].map(u => u.replace(/[).,;!?]+$/, '')).map(parse).filter(Boolean).filter((v, i, a) => a.findIndex(x => x.id === v.id) === i).slice(0, 3);
   const mode = () => { try { const m = localStorage.getItem('as.yt'); return m === 'always' || m === 'never' ? m : 'ask'; } catch { return 'ask'; } };
   const setMode = m => { try { localStorage.setItem('as.yt', m); } catch { /* not remembered */ } };
-  const embedUrl = v => `https://www.youtube-nocookie.com/embed/${v.id}?autoplay=1&rel=0&modestbranding=1&playsinline=1${v.start ? '&start=' + v.start : ''}`;
+  // the privacy-enhanced player first; "Try the standard player" switches to youtube.com if that one will not play where you are
+const embedUrl = (v, std) => `https://www.youtube${std ? '' : '-nocookie'}.com/embed/${v.id}?autoplay=1&rel=0&modestbranding=1&playsinline=1&origin=${encodeURIComponent(ORIGIN)}${v.start ? '&start=' + v.start : ''}`;
+  const ORIGIN = /^https?:/.test(location.origin) ? location.origin : 'https://anti-social.app';
   let playing = null;   // only one video plays at a time
   function consent() {
     return new Promise(res => { const close = modal(h('div', {}, h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => { close(); res(false); } }, icon('x')), h('b', {}, 'Play videos here?')),
@@ -28,12 +30,12 @@ const YT = (() => {
     const placeholder = (thumb) => { box.replaceChildren(h('button', { class: 'yt-card' + (v.short ? ' short' : ''), type: 'button', 'aria-label': 'Play the YouTube video here', onclick: play },
       thumb ? h('img', { src: `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer', onerror: e => { e.target.remove(); } }) : null,
       h('span', { class: 'yt-play' }, icon('play')), h('span', { class: 'yt-tag' }, thumb ? 'YouTube' : 'YouTube video · tap to play here')), h('div', { class: 'yt-bar' }, open)); };
-    async function play(e) {
+    async function play(e, std) {
       if (e) e.stopPropagation(); if (mode() === 'never') { window.open(v.url, '_blank', 'noopener'); return; }
       if (mode() === 'ask' && !(await consent())) return;
       if (playing && playing !== box) playing.__stop(); playing = box;
-      const frame = h('iframe', { src: embedUrl(v), title: 'YouTube video', allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen', allowfullscreen: 'true', referrerpolicy: 'strict-origin-when-cross-origin', loading: 'eager' });
-      box.replaceChildren(h('div', { class: 'yt-player' + (v.short ? ' short' : '') }, frame), h('div', { class: 'yt-bar' }, h('button', { class: 'btn', type: 'button', onclick: ev => { ev.stopPropagation(); box.__stop(); } }, 'Close video'), open)); loaded = true;
+      const frame = h('iframe', { src: embedUrl(v, std), title: 'YouTube video', allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen', allowfullscreen: 'true', referrerpolicy: 'strict-origin-when-cross-origin', loading: 'eager' });
+      box.replaceChildren(h('div', { class: 'yt-player' + (v.short ? ' short' : '') }, frame), h('div', { class: 'yt-bar' }, h('button', { class: 'btn', type: 'button', onclick: ev => { ev.stopPropagation(); box.__stop(); } }, 'Close video'), h('span', { class: 'yt-help' }, std ? 'Not playing? ' : 'Not playing? ', std ? null : h('button', { class: 'yt-link', type: 'button', onclick: ev => { ev.stopPropagation(); loaded = false; play(null, true); } }, 'Try the standard player'), std ? null : ' or ', open))); loaded = true;
     }
     box.__stop = () => { if (!loaded) return; loaded = false; if (playing === box) playing = null; placeholder(mode() === 'always'); };
     placeholder(mode() === 'always'); box.addEventListener('click', e => e.stopPropagation()); return box;
