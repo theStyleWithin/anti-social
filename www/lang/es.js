@@ -1,0 +1,21 @@
+LangData.add({ id: 'es', name: 'Spanish', native: 'Español', tts: 'es-ES', articles: ['el', 'la', 'los', 'las', 'un', 'una'],
+  words: {
+    greet: 'hola;adiós;buenos días;buenas noches;bienvenido;por favor;gracias;de nada;lo siento;perdón;sí;no',
+    basics: 'yo;tú;él;ella;nosotros;ellos;y;pero;con;grande;pequeño;bueno',
+    numbers: 'uno;dos;tres;cuatro;cinco;seis;siete;ocho;nueve;diez;veinte;cien',
+    food: 'el agua;el pan;la leche;el café;el té;la manzana;el arroz;la carne;el pescado;el huevo;el queso;la sopa',
+    family: 'la madre;el padre;la hermana;el hermano;la hija;el hijo;el amigo;el hombre;la mujer;el niño;la familia;el bebé',
+    places: 'la casa;la ciudad;la escuela;el hotel;el aeropuerto;la estación;la calle;el restaurante;la tienda;el hospital;la playa;el baño',
+    verbs: 'comer;beber;ir;querer;tener;ver;hablar;amar;leer;escribir;dormir;trabajar',
+    time: 'hoy;mañana;ayer;ahora;el día;la noche;la semana;rojo;azul;verde;blanco;negro',
+  },
+  phrases: {
+    greet: '¿Cómo estás?;Estoy bien, gracias;Me llamo Ana;Mucho gusto;Hasta mañana',
+    basics: 'Soy estudiante;Ella es mi amiga;Estamos felices;¿Hablas inglés?;No entiendo',
+    numbers: 'Tengo dos hermanos;Quiero tres manzanas;Hay cuatro personas;Tengo veinte años;Tengo un gato',
+    food: 'Quiero agua;Me gusta el café;El pan está bueno;Comemos arroz;¿Quieres té?',
+    family: 'Mi madre es simpática;Mi padre trabaja mucho;Amo a mi familia;La mujer tiene un niño;Él es mi hermano',
+    places: '¿Dónde está el baño?;Voy a la escuela;El hotel está cerca;Vivo en una ciudad grande;¿Cómo llego a la estación?',
+    verbs: 'Como pan;Ella bebe agua;Vamos a la playa;Me encanta leer;Él duerme mucho',
+    time: 'Trabajo hoy;Mañana duermo mucho;La casa es blanca;El cielo es azul;Por la noche leo',
+  } });

@@ -1,0 +1,21 @@
+LangData.add({ id: 'de', name: 'German', native: 'Deutsch', tts: 'de-DE', articles: ['der', 'die', 'das', 'ein', 'eine'],
+  words: {
+    greet: 'hallo;auf Wiedersehen;guten Morgen;gute Nacht;willkommen;bitte;danke;gern geschehen;es tut mir leid;Entschuldigung;ja;nein',
+    basics: 'ich;du;er;sie;wir;sie (Plural);und;aber;mit;groß;klein;gut',
+    numbers: 'eins;zwei;drei;vier;fünf;sechs;sieben;acht;neun;zehn;zwanzig;hundert',
+    food: 'das Wasser;das Brot;die Milch;der Kaffee;der Tee;der Apfel;der Reis;das Fleisch;der Fisch;das Ei;der Käse;die Suppe',
+    family: 'die Mutter;der Vater;die Schwester;der Bruder;die Tochter;der Sohn;der Freund;der Mann;die Frau;das Kind;die Familie;das Baby',
+    places: 'das Haus;die Stadt;die Schule;das Hotel;der Flughafen;der Bahnhof;die Straße;das Restaurant;das Geschäft;das Krankenhaus;der Strand;die Toilette',
+    verbs: 'essen;trinken;gehen;wollen;haben;sehen;sprechen;lieben;lesen;schreiben;schlafen;arbeiten',
+    time: 'heute;morgen;gestern;jetzt;der Tag;die Nacht;die Woche;rot;blau;grün;weiß;schwarz',
+  },
+  phrases: {
+    greet: 'Wie geht es dir?;Mir geht es gut, danke;Ich heiße Anna;Freut mich;Bis morgen',
+    basics: 'Ich bin Student;Sie ist meine Freundin;Wir sind glücklich;Sprichst du Englisch?;Ich verstehe nicht',
+    numbers: 'Ich habe zwei Brüder;Ich möchte drei Äpfel;Es gibt vier Personen;Ich bin zwanzig Jahre alt;Ich habe eine Katze',
+    food: 'Ich möchte Wasser;Ich mag Kaffee;Das Brot ist gut;Wir essen Reis;Möchtest du Tee?',
+    family: 'Meine Mutter ist nett;Mein Vater arbeitet viel;Ich liebe meine Familie;Die Frau hat ein Kind;Er ist mein Bruder',
+    places: 'Wo ist die Toilette?;Ich gehe zur Schule;Das Hotel ist in der Nähe;Ich wohne in einer großen Stadt;Wie komme ich zum Bahnhof?',
+    verbs: 'Ich esse Brot;Sie trinkt Wasser;Wir gehen zum Strand;Ich lese gern;Er schläft viel',
+    time: 'Ich arbeite heute;Morgen schlafe ich viel;Das Haus ist weiß;Der Himmel ist blau;Nachts lese ich',
+  } });

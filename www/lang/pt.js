@@ -1,0 +1,21 @@
+LangData.add({ id: 'pt', name: 'Portuguese', native: 'Português', tts: 'pt-BR', articles: ['o', 'a', 'os', 'as', 'um', 'uma'], note: 'Brazilian Portuguese',
+  words: {
+    greet: 'olá;tchau;bom dia;boa noite;bem-vindo;por favor;obrigado;de nada;desculpe;com licença;sim;não',
+    basics: 'eu;você;ele;ela;nós;eles;e;mas;com;grande;pequeno;bom',
+    numbers: 'um;dois;três;quatro;cinco;seis;sete;oito;nove;dez;vinte;cem',
+    food: 'a água;o pão;o leite;o café;o chá;a maçã;o arroz;a carne;o peixe;o ovo;o queijo;a sopa',
+    family: 'a mãe;o pai;a irmã;o irmão;a filha;o filho;o amigo;o homem;a mulher;a criança;a família;o bebê',
+    places: 'a casa;a cidade;a escola;o hotel;o aeroporto;a estação;a rua;o restaurante;a loja;o hospital;a praia;o banheiro',
+    verbs: 'comer;beber;ir;querer;ter;ver;falar;amar;ler;escrever;dormir;trabalhar',
+    time: 'hoje;amanhã;ontem;agora;o dia;a noite;a semana;vermelho;azul;verde;branco;preto',
+  },
+  phrases: {
+    greet: 'Como você está?;Estou bem, obrigado;Meu nome é Ana;Prazer em conhecer;Até amanhã',
+    basics: 'Eu sou estudante;Ela é minha amiga;Nós estamos felizes;Você fala inglês?;Eu não entendo',
+    numbers: 'Eu tenho dois irmãos;Eu quero três maçãs;Há quatro pessoas;Eu tenho vinte anos;Eu tenho um gato',
+    food: 'Eu quero água;Eu gosto de café;O pão está bom;Nós comemos arroz;Você quer chá?',
+    family: 'Minha mãe é simpática;Meu pai trabalha muito;Eu amo minha família;A mulher tem uma criança;Ele é meu irmão',
+    places: 'Onde fica o banheiro?;Eu vou para a escola;O hotel é perto;Eu moro em uma cidade grande;Como chego à estação?',
+    verbs: 'Eu como pão;Ela bebe água;Nós vamos à praia;Eu adoro ler;Ele dorme muito',
+    time: 'Eu trabalho hoje;Amanhã eu durmo muito;A casa é branca;O céu é azul;À noite eu leio',
+  } });

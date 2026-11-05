@@ -1,0 +1,21 @@
+LangData.add({ id: 'fr', name: 'French', native: 'Français', tts: 'fr-FR', articles: ['le', 'la', 'les', 'un', 'une', "l'", 'du', 'de la'],
+  words: {
+    greet: "salut;au revoir;bonjour;bonne nuit;bienvenue;s'il vous plaît;merci;de rien;désolé;excusez-moi;oui;non",
+    basics: 'je;tu;il;elle;nous;ils;et;mais;avec;grand;petit;bon',
+    numbers: 'un;deux;trois;quatre;cinq;six;sept;huit;neuf;dix;vingt;cent',
+    food: "l'eau;le pain;le lait;le café;le thé;la pomme;le riz;la viande;le poisson;l'œuf;le fromage;la soupe",
+    family: "la mère;le père;la sœur;le frère;la fille;le fils;l'ami;l'homme;la femme;l'enfant;la famille;le bébé",
+    places: "la maison;la ville;l'école;l'hôtel;l'aéroport;la gare;la rue;le restaurant;le magasin;l'hôpital;la plage;les toilettes",
+    verbs: 'manger;boire;aller;vouloir;avoir;voir;parler;aimer;lire;écrire;dormir;travailler',
+    time: "aujourd'hui;demain;hier;maintenant;le jour;la nuit;la semaine;rouge;bleu;vert;blanc;noir",
+  },
+  phrases: {
+    greet: "Comment allez-vous ?;Je vais bien, merci;Je m'appelle Anna;Enchanté;À demain",
+    basics: 'Je suis étudiant;Elle est mon amie;Nous sommes heureux;Parlez-vous anglais ?;Je ne comprends pas',
+    numbers: "J'ai deux frères;Je veux trois pommes;Il y a quatre personnes;J'ai vingt ans;J'ai un chat",
+    food: "Je veux de l'eau;J'aime le café;Le pain est bon;Nous mangeons du riz;Voulez-vous du thé ?",
+    family: "Ma mère est gentille;Mon père travaille beaucoup;J'aime ma famille;La femme a un enfant;Il est mon frère",
+    places: "Où sont les toilettes ?;Je vais à l'école;L'hôtel est proche;J'habite dans une grande ville;Comment aller à la gare ?",
+    verbs: "Je mange du pain;Elle boit de l'eau;Nous allons à la plage;J'aime lire;Il dort beaucoup",
+    time: 'Je travaille aujourd\'hui;Demain je dors beaucoup;La maison est blanche;Le ciel est bleu;La nuit je lis',
+  } });

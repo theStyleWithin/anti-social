@@ -1,0 +1,21 @@
+LangData.add({ id: 'it', name: 'Italian', native: 'Italiano', tts: 'it-IT', articles: ['il', 'lo', 'la', 'i', 'gli', 'le', 'un', 'uno', 'una', "l'"],
+  words: {
+    greet: 'ciao;arrivederci;buongiorno;buonanotte;benvenuto;per favore;grazie;prego;mi dispiace;scusi;sì;no',
+    basics: 'io;tu;lui;lei;noi;loro;e;ma;con;grande;piccolo;buono',
+    numbers: 'uno;due;tre;quattro;cinque;sei;sette;otto;nove;dieci;venti;cento',
+    food: "l'acqua;il pane;il latte;il caffè;il tè;la mela;il riso;la carne;il pesce;l'uovo;il formaggio;la zuppa",
+    family: "la madre;il padre;la sorella;il fratello;la figlia;il figlio;l'amico;l'uomo;la donna;il bambino;la famiglia;il neonato",
+    places: "la casa;la città;la scuola;l'hotel;l'aeroporto;la stazione;la strada;il ristorante;il negozio;l'ospedale;la spiaggia;il bagno",
+    verbs: 'mangiare;bere;andare;volere;avere;vedere;parlare;amare;leggere;scrivere;dormire;lavorare',
+    time: 'oggi;domani;ieri;adesso;il giorno;la notte;la settimana;rosso;blu;verde;bianco;nero',
+  },
+  phrases: {
+    greet: 'Come stai?;Sto bene, grazie;Mi chiamo Anna;Piacere;A domani',
+    basics: 'Sono uno studente;Lei è la mia amica;Siamo felici;Parli inglese?;Non capisco',
+    numbers: "Ho due fratelli;Voglio tre mele;Ci sono quattro persone;Ho vent'anni;Ho un gatto",
+    food: "Voglio l'acqua;Mi piace il caffè;Il pane è buono;Mangiamo il riso;Vuoi il tè?",
+    family: 'Mia madre è gentile;Mio padre lavora molto;Amo la mia famiglia;La donna ha un bambino;Lui è mio fratello',
+    places: "Dov'è il bagno?;Vado a scuola;L'hotel è vicino;Vivo in una grande città;Come arrivo alla stazione?",
+    verbs: "Mangio il pane;Lei beve l'acqua;Andiamo alla spiaggia;Amo leggere;Lui dorme molto",
+    time: 'Lavoro oggi;Domani dormo molto;La casa è bianca;Il cielo è blu;Di notte leggo',
+  } });
