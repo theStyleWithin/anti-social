@@ -42,3 +42,11 @@
     };
   }
 })();
+
+/* Updates on Android: the page asks the native side to fetch the new APK and open the installer. */
+(() => {
+  const n = window.AntiSocialUpdNative; if (window.AntiSocialUpd || !n) return;
+  const pend = new Map(); let seq = 0;
+  window.__asupd = { done(rid, ok, msg) { const p = pend.get(rid); if (!p) return; pend.delete(rid); ok ? p.res(msg) : p.rej(new Error(msg)); } };
+  window.AntiSocialUpd = { info: { os: 'android' }, download: (url, name, sha) => new Promise((res, rej) => { const rid = 'u' + (++seq); pend.set(rid, { res, rej }); try { n.download(rid, String(url), String(name), String(sha || '')); } catch (e) { pend.delete(rid); rej(e); } }) };
+})();

@@ -86,6 +86,20 @@ function cardCandidates() {
   }
   return [...new Set(out)];
 }
+/* ---------- updates: download the new version from this project's GitHub release (the page asks; nothing happens on its own) ---------- */
+const UPD_PREFIX = 'https://github.com/theStyleWithin/anti-social/releases/download/';
+ipcMain.handle('upd:download', guard(async (_e, url, name, sha256) => {
+  url = String(url || ''); name = path.basename(String(name || ''));
+  if (!url.startsWith(UPD_PREFIX) || !/^[\w.\- ]+$/.test(name) || !/\.(exe|AppImage|deb)$/i.test(name)) throw new Error('That download is not allowed.');
+  const res = await net.fetch(url); if (!res.ok) throw new Error(`The download failed (${res.status}).`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  if (/^[0-9a-f]{64}$/i.test(sha256 || '') && crypto.createHash('sha256').update(buf).digest('hex') !== String(sha256).toLowerCase()) throw new Error('The file did not match its checksum, so it was thrown away.');
+  const dir = app.getPath('downloads'); fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, name); fs.writeFileSync(file, buf, { mode: 0o755 });
+  if (/Setup-.*\.exe$/i.test(name) || /\.deb$/i.test(name)) { const err = await shell.openPath(file); if (err) { shell.showItemInFolder(file); return 'Saved to your Downloads folder. Open it to install, then restart the app.'; } return 'The installer is open. Close Anti-Social, finish the installer, then open the app again.'; }
+  shell.showItemInFolder(file); return 'Saved to your Downloads folder. Close Anti-Social and run the new file.';
+}));
+
 ipcMain.handle('fs:detect', guard(async () => cardCandidates().map(dir => ({ id: addFolder(dir), label: dir }))));
 ipcMain.handle('fs:pick', guard(async (e, title) => {
   const r = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender), { title: String(title || 'Choose a folder').slice(0, 100), properties: ['openDirectory', 'createDirectory'] });

@@ -33,6 +33,7 @@ public class MainActivity extends BridgeActivity {
         fs = new FsBridge(this, getBridge().getWebView());
         getBridge().getWebView().addJavascriptInterface(fs, "AntiSocialFSNative");
         // Optional lookups on retroachievements.org (a few fixed, read-only calls), only when the person asks.
+        getBridge().getWebView().addJavascriptInterface(new Updater(this, getBridge().getWebView()), "AntiSocialUpdNative");
         keepVideoAlive();
         getBridge().getWebView().addJavascriptInterface(new RaBridge(this, getBridge().getWebView()), "AntiSocialRANative");
     }

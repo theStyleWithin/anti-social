@@ -37,3 +37,9 @@ contextBridge.exposeInMainWorld('AntiSocialRA', {
   kind: 'desktop',
   get: (call, params) => ipcRenderer.invoke('ra:get', String(call), Object.fromEntries(Object.entries(params || {}).map(([k, v]) => [String(k), String(v)]))),
 });
+
+// Updates: the page can ask which download fits this computer and have this app fetch it from the project's GitHub release.
+contextBridge.exposeInMainWorld('AntiSocialUpd', {
+  info: (() => ({ os: process.platform === 'win32' ? 'windows' : process.platform === 'linux' ? 'linux' : process.platform === 'darwin' ? 'mac' : '', portable: !!process.env.PORTABLE_EXECUTABLE_DIR, appimage: !!process.env.APPIMAGE }))(),
+  download: (url, name, sha256) => ipcRenderer.invoke('upd:download', String(url), String(name), String(sha256 || '')),
+});

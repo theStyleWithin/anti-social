@@ -1276,6 +1276,7 @@ function settingsView(acct, ctxBg, ctx) {
     templateSection(),
     Desk.settingsSection(acct),
     YT.settingsSection(),
+    Upd.settingsSection(),
     h('section', {}, h('h3', {}, 'Color themes'), h('p', {}, 'The text color is picked for you so it always stays readable.'),
       h('div', { class: 'skins' }, ThemeCore.PRESETS.map(p => swatch(p.id, p.name, p.bg, p.accent)), swatch('custom', 'Custom', custom.bg, custom.accent))),
     h('section', {}, h('h3', {}, 'Make your own'), h('p', {}, 'Choose two colors. Everything else follows.'),
@@ -1719,3 +1720,4 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 }
 aiInit();
 render();
+Upd.startup();

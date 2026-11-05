@@ -53,6 +53,9 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Lets the Updates button in Settings open the installer for a new version you chose to download. Android still asks you before it installs. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <!-- Pulled in by a library we do not need; strip it so the app asks for nothing. -->
     <uses-permission android:name="android.permission.DUMP" tools:node="remove" />
 </manifest>
