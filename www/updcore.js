@@ -1,7 +1,7 @@
 'use strict';
 /* Updates: pure logic (no network, no page). Compares versions and picks the right download from a GitHub release. */
 const UpdCore = (() => {
-  const APP_VERSION = '0.27.0', REPO = 'theStyleWithin/anti-social';
+  const APP_VERSION = '0.27.1', REPO = 'theStyleWithin/anti-social';
   const nums = v => String(v || '').replace(/^v/i, '').split(/[.\-+]/).slice(0, 3).map(n => parseInt(n, 10) || 0);
   const compare = (a, b) => { const x = nums(a), y = nums(b); for (let i = 0; i < 3; i++) { const d = (x[i] || 0) - (y[i] || 0); if (d) return d < 0 ? -1 : 1; } return 0; };
   // hint: {os: 'android'|'windows'|'linux'|'mac'|'', portable, appimage}

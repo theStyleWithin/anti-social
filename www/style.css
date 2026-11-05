@@ -1625,5 +1625,14 @@ body.pu-lock { overflow: hidden; }
 .yt-help { font-size: 12.5px; color: var(--muted); text-align: right; } .yt-link { border: 0; background: none; padding: 0; font: inherit; color: var(--accent); cursor: pointer; text-decoration: underline; } .yt-bar { flex-wrap: wrap; }
 .mp-status { margin: -4px 0 10px; padding: 8px 12px; border-radius: 12px; background: rgba(127,127,127,.15); font-size: .9em; }
 .upd-notes { white-space: pre-wrap; font: inherit; font-size: 13px; max-height: 220px; overflow: auto; margin: 6px 0; padding: 8px 10px; border-radius: 10px; background: rgba(127,127,127,.12); }
-/* a pinned app on the right takes the place of the search / trends column; the menu on the left stays */
-.desk.pin-right:not(.pane-off) .side { display: none; }
+/* the right column (search, trends, who to follow) can be hidden by dragging its edge; the menu stays */
+.side-grip, .side-tab { display: none; }
+@media (min-width: 1000px) {
+  .side { position: relative; transition: opacity .15s; }
+  .side-grip { display: block; position: absolute; top: 0; bottom: 0; left: 8px; width: 12px; cursor: ew-resize; z-index: 5; touch-action: none; }
+  .side-grip:hover, .side-grip:focus-visible, .side-grip.drag { background: linear-gradient(to right, transparent 5px, var(--accent) 5px, var(--accent) 9px, transparent 9px); outline: 0; }
+  html:not([data-tpl]) .desk.side-off .side { display: none; }
+  html:not([data-tpl]) .desk.side-off .shell { width: calc(260px + var(--tl-w, 600px)); grid-template-columns: 260px minmax(0, var(--tl-w, 600px)); }
+  html:not([data-tpl]) .desk.side-off .side-tab { display: flex; position: absolute; top: 10px; right: 12px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--muted); align-items: center; justify-content: center; cursor: pointer; z-index: 7; }
+  html:not([data-tpl]) .desk.side-off .side-tab:hover { background: var(--hover); color: var(--fg); } .side-tab svg { width: 18px; height: 18px; }
+}

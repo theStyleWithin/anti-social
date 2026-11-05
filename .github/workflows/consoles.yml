@@ -40,7 +40,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install wut
-        run: dkp-pacman -Syu --noconfirm wut wut-tools || dkp-pacman -S --noconfirm wut wut-tools
+        # the devkitPro package server sometimes answers 403 for a while; try again a few times before giving up
+        run: |
+          for i in 1 2 3 4 5 6; do
+            dkp-pacman -Syu --noconfirm wut wut-tools && exit 0
+            dkp-pacman -S --noconfirm wut wut-tools && exit 0
+            echo "devkitPro download failed (try $i), waiting..."; sleep $((i * 20))
+          done
+          exit 1
       - name: Build .rpx and .wuhb
         run: |
           VERSION=$(grep -m1 '"version"' desktop/package.json | sed -E 's/.*"([0-9.]+)".*/\1/')
@@ -61,7 +68,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install libctru and tools
-        run: dkp-pacman -Syu --noconfirm libctru 3dstools || dkp-pacman -S --noconfirm libctru 3dstools
+        run: |
+          for i in 1 2 3 4 5 6; do
+            dkp-pacman -Syu --noconfirm libctru 3dstools && exit 0
+            dkp-pacman -S --noconfirm libctru 3dstools && exit 0
+            echo "devkitPro download failed (try $i), waiting..."; sleep $((i * 20))
+          done
+          exit 1
       - name: Build .3dsx
         run: |
           VERSION=$(grep -m1 '"version"' desktop/package.json | sed -E 's/.*"([0-9.]+)".*/\1/')

@@ -2,12 +2,11 @@
 /* Desktop layout (the Windows and Linux app, default look): drag either wall of the timeline to make it wider or narrower,
    and, if you like, pin a built-in app in the empty space on each side. Both are optional; nothing changes until you use them. */
 const Desk = (() => {
-  const KEY = 'as.layout', MIN = 420, DEF = 600, SIDE_MIN = 280, MENU = 260, TRENDS = 330;   // the menu, and the right column (search, trends, who to follow) that a pinned app on the right replaces
-  let hideTrends = false;
-  const chrome = () => MENU + (hideTrends ? 0 : TRENDS);
+  const KEY = 'as.layout', MIN = 420, DEF = 600, SIDE_MIN = 280, MENU = 260, TRENDS = 330;   // the menu, and the right column (search, trends, who to follow), which you can hide
+  const chrome = () => MENU + (L.hideSide ? 0 : TRENDS);
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const enabled = () => { try { return (window.AntiSocialAI && window.AntiSocialAI.kind === 'desktop') || localStorage.getItem('as.desk') === '1'; } catch { return false; } };
-  const load = () => { try { const v = JSON.parse(localStorage.getItem(KEY) || 'null') || {}; return { tw: clamp(+v.tw || DEF, MIN, 4000), left: typeof v.left === 'string' ? v.left : '', right: typeof v.right === 'string' ? v.right : '' }; } catch { return { tw: DEF, left: '', right: '' }; } };
+  const load = () => { try { const v = JSON.parse(localStorage.getItem(KEY) || 'null') || {}; return { tw: clamp(+v.tw || DEF, MIN, 4000), left: typeof v.left === 'string' ? v.left : '', right: typeof v.right === 'string' ? v.right : '', hideSide: v.hideSide === true }; } catch { return { tw: DEF, left: '', right: '', hideSide: false }; } };
   const L = load();
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(L)); } catch { /* not remembered */ } };
   const args = { left: '', right: '' };     // which part of the pinned app is showing (a note, a book...), until you leave it
@@ -32,6 +31,20 @@ const Desk = (() => {
     g.addEventListener('keydown', e => { const k = { ArrowRight: 1, ArrowLeft: -1 }[e.key]; if (!k) { if (e.key === 'Home') { e.preventDefault(); L.tw = DEF; apply(); save(); } return; } e.preventDefault(); L.tw = clamp(width() + k * sign * (e.shiftKey ? 80 : 20), MIN, maxTw()); apply(); save(); });
     return g;
   };
+
+  /* ----- hiding the right column (search, trends, who to follow): optional, drag its edge to the right ----- */
+  const setSide = hide => { L.hideSide = !!hide; save(); const d = document.querySelector('.desk'); if (d) d.classList.toggle('side-off', L.hideSide); apply(); };
+  const sideGrip = () => {
+    const g = h('div', { class: 'side-grip', role: 'button', tabindex: '0', 'aria-label': 'Hide this column', title: 'Drag this edge to the right to hide this column. You can bring it back from the top right of the timeline or in Settings.' });
+    const side = () => g.parentElement; let x0 = 0, dx = 0;
+    g.addEventListener('pointerdown', e => { if (e.button !== 0) return; e.preventDefault(); x0 = e.clientX; dx = 0; g.setPointerCapture(e.pointerId); g.classList.add('drag'); document.body.classList.add('tl-dragging'); });
+    g.addEventListener('pointermove', e => { if (!g.hasPointerCapture(e.pointerId)) return; dx = Math.max(0, e.clientX - x0); const s = side(); if (s) { s.style.transform = `translateX(${dx}px)`; s.style.opacity = String(Math.max(0.25, 1 - dx / 240)); } });
+    const end = e => { if (!g.classList.contains('drag')) return; g.classList.remove('drag'); document.body.classList.remove('tl-dragging'); try { g.releasePointerCapture(e.pointerId); } catch { /* fine */ } const s = side(); if (s) { s.style.transform = ''; s.style.opacity = ''; } if (dx > 70) setSide(true); };
+    g.addEventListener('pointerup', end); g.addEventListener('pointercancel', end);
+    g.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === ' ' || e.key === 'Delete') { e.preventDefault(); setSide(true); } });
+    return g;
+  };
+  const sideTab = () => h('button', { class: 'side-tab', type: 'button', 'aria-label': 'Show the search and trends column', title: 'Show the search and trends column', onclick: () => setSide(false) }, icon('search'));
 
   /* ----- pinned apps ----- */
   const choices = acct => { const hid = hiddenApps(acct); return APP_LIST.filter(([id]) => !hid.has(id)).map(([id]) => [id, appName(acct, id)]); };
@@ -69,9 +82,9 @@ const Desk = (() => {
   /* ----- the page ----- */
   function wrap(shellEl, acct, ctx) {
     if (!enabled()) return shellEl;
-    const main = shellEl.querySelector('.main'); if (main) main.append(grip('l'), grip('r'));
-    hideTrends = valid(acct, L.right);
-    const desk = h('div', { class: 'desk' + (anyPane() ? ' has-panes' : '') + (hideTrends ? ' pin-right' : '') }, pane('left', acct, ctx), shellEl, pane('right', acct, ctx));
+    const main = shellEl.querySelector('.main'); if (main) main.append(grip('l'), grip('r'), sideTab());
+    const side = shellEl.querySelector('.side'); if (side) side.append(sideGrip());
+    const desk = h('div', { class: 'desk' + (anyPane() ? ' has-panes' : '') + (L.hideSide ? ' side-off' : '') }, pane('left', acct, ctx), shellEl, pane('right', acct, ctx));
     apply(); return desk;
   }
   const scrolls = () => { const o = {}; document.querySelectorAll('.pane-body').forEach(b => { o[b.parentElement.dataset.side] = b.scrollTop; }); return o; };
@@ -88,8 +101,9 @@ const Desk = (() => {
     return h('section', {}, h('h3', {}, 'Desktop layout'),
       h('p', {}, 'On a wide screen you can make the timeline wider or narrower by dragging the line on either side of it, and pin an app into the empty space on each side. Both are optional.' + (tplId() === 'default' ? '' : ' This works with the default look.')),
       h('div', { class: 'tool-fields' }, pick('left'), pick('right')),
+      h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!L.hideSide, onchange: e => setSide(e.target.checked) }), ' ', h('span', {}, 'Hide the search and trends column on the right', h('small', { class: 'muted', style: 'display:block' }, 'Or drag its left edge to the right. Optional; it is independent of pinned apps.'))),
       h('label', { class: 'mx-range' }, h('span', {}, 'Timeline width'), range, out),
-      h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: () => { L.tw = DEF; L.left = ''; L.right = ''; save(); apply(); render(true); } }, 'Reset the layout')));
+      h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: () => { L.tw = DEF; L.left = ''; L.right = ''; L.hideSide = false; save(); apply(); render(true); } }, 'Reset the layout')));
   }
   /* ----- drag an app card from the Apps page into the empty space ----- */
   function dragZones(acct) {
