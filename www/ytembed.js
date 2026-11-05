@@ -24,6 +24,8 @@ const embedUrl = (v, std) => `https://www.youtube${std ? '' : '-nocookie'}.com/e
       h('div', { class: 'mp-pad' }, h('p', {}, 'Anti-Social is offline by default. To play a YouTube video in the timeline it has to connect to YouTube, which then sees your internet address and that you opened the video. Nothing else from the app is sent.'), h('p', { class: 'fine' }, 'It uses YouTube\'s privacy-enhanced player. Ads that come with a video are part of YouTube\'s own player and are not changed by this app. You can switch this off in Settings, or just use "Open on YouTube".'),
         h('div', { class: 'btnrow' }, h('button', { class: 'btn primary', onclick: () => { setMode('always'); close(); res(true); } }, 'Always play here'), h('button', { class: 'btn', onclick: () => { close(); res(true); } }, 'Just this time'), h('button', { class: 'btn', onclick: () => { close(); res(false); } }, 'Not now'))))); });
   }
+  // On Android the app can keep a playing video going with the screen off (a small notification shows while it does)
+  const bg = on => { try { const b = window.AntiSocialBG; if (b) on ? b.start() : b.stop(); } catch { /* not on Android */ } };
   function card(v) {
     const box = h('div', { class: 'yt', 'data-id': v.id }); let loaded = false;
     const open = h('a', { class: 'yt-open', href: v.url, target: '_blank', rel: 'noopener noreferrer' }, 'Open on YouTube');
@@ -35,9 +37,10 @@ const embedUrl = (v, std) => `https://www.youtube${std ? '' : '-nocookie'}.com/e
       if (mode() === 'ask' && !(await consent())) return;
       if (playing && playing !== box) playing.__stop(); playing = box;
       const frame = h('iframe', { src: embedUrl(v, std), title: 'YouTube video', allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen', allowfullscreen: 'true', referrerpolicy: 'strict-origin-when-cross-origin', loading: 'eager' });
-      box.replaceChildren(h('div', { class: 'yt-player' + (v.short ? ' short' : '') }, frame), h('div', { class: 'yt-bar' }, h('button', { class: 'btn', type: 'button', onclick: ev => { ev.stopPropagation(); box.__stop(); } }, 'Close video'), h('span', { class: 'yt-help' }, std ? 'Not playing? ' : 'Not playing? ', std ? null : h('button', { class: 'yt-link', type: 'button', onclick: ev => { ev.stopPropagation(); loaded = false; play(null, true); } }, 'Try the standard player'), std ? null : ' or ', open))); loaded = true;
+      box.replaceChildren(h('div', { class: 'yt-player' + (v.short ? ' short' : '') }, frame), h('div', { class: 'yt-bar' }, h('button', { class: 'btn', type: 'button', onclick: ev => { ev.stopPropagation(); box.__stop(); } }, 'Close video'), h('span', { class: 'yt-help' }, std ? 'Not playing? ' : 'Not playing? ', std ? null : h('button', { class: 'yt-link', type: 'button', onclick: ev => { ev.stopPropagation(); loaded = false; play(null, true); } }, 'Try the standard player'), std ? null : ' or ', open))); loaded = true; bg(true);
+      const watch = setInterval(() => { if (!box.isConnected || !loaded) { clearInterval(watch); if (loaded && playing === box) box.__stop(); else if (playing === null) bg(false); } }, 2500);
     }
-    box.__stop = () => { if (!loaded) return; loaded = false; if (playing === box) playing = null; placeholder(mode() === 'always'); };
+    box.__stop = () => { if (!loaded) return; loaded = false; if (playing === box) { playing = null; bg(false); } placeholder(mode() === 'always'); };
     placeholder(mode() === 'always'); box.addEventListener('click', e => e.stopPropagation()); return box;
   }
   const cards = text => { const vs = links(text); return vs.length ? h('div', { class: 'yt-list' }, vs.map(card)) : null; };

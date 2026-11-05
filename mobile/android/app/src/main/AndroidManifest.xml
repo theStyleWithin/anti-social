@@ -25,6 +25,8 @@
 
         </activity>
 
+        <service android:name=".BackgroundPlay" android:exported="false" android:foregroundServiceType="mediaPlayback" />
+
         <receiver android:name="androidx.profileinstaller.ProfileInstallReceiver" tools:node="remove" />
 
         <provider
@@ -44,6 +46,12 @@
     <!-- The microphone is used only by the Sound Meter, to measure loudness. Nothing is recorded or sent anywhere; Android asks you the first time. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!-- Lets a video you are watching keep playing when the screen turns off (a quiet "video playing" notification shows while it does). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Pulled in by a library we do not need; strip it so the app asks for nothing. -->
     <uses-permission android:name="android.permission.DUMP" tools:node="remove" />
