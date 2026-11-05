@@ -56,6 +56,8 @@ const ICONS = {
   map: '<path d="M9 4 3 6.5v13L9 17l6 3 6-2.5v-13L15 7zM9 4v13M15 7v13"/>',
   terminal: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12 15h5"/>',
   code: '<path d="M8 8l-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/>',
+  apple: '<path d="M12 7c-1.5-2-5-2-6.5 1C4 11 5 16 7.5 19c1.2 1.5 2.6 1.8 4.5.8 1.9 1 3.3.7 4.5-.8 2.5-3 3.5-8 2-11-1.5-3-5-3-6.5-1z"/><path d="M12 7c0-2 1-3.5 3-4"/>',
+  dumbbell: '<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/>',
   speak: '<path d="M4 4h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-3 3v-3H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M9 18h6l3 3v-3h2a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-3"/>',
   lamp: '<path d="M9 2h6l1.5 5h-9zM7.5 7L6 20h12L16.5 7M8 20v2h8v-2"/><circle cx="11" cy="13" r="1.6"/><circle cx="13.5" cy="10" r="1"/>',
   flame: '<path d="M12 3c.5 3.5 5 5.5 5 10.5a5 5 0 0 1-10 0c0-2 1-3.5 2.5-4.5.3 1.7 1 2.5 2 2.5C11 9 11 6 12 3z"/>',
@@ -1636,7 +1638,7 @@ async function render(keepScroll = false) {
     if (all.bad) console.warn(`${all.bad} post(s) could not be decrypted`);
     // Your likes, reposts and follows of generated accounts live beside your posts but are not posts.
     const posts = all.filter(p => !p.kind);                 // real posts only; everything else is a record of some other kind
-    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], srv: [], bot: [], aimsg: [], aimode: [], aikey: [], dexmark: [], pkbank: [], pkm: [], agame: [], ach: [], rakey: [], clockcfg: [], sound: [], budget: [], shotgame: [], shot: [], termstate: [], cbinder: [], ccard: [], ebook: [], lang: [] };
+    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], srv: [], bot: [], aimsg: [], aimode: [], aikey: [], dexmark: [], pkbank: [], pkm: [], agame: [], ach: [], rakey: [], clockcfg: [], sound: [], budget: [], shotgame: [], shot: [], termstate: [], cbinder: [], ccard: [], ebook: [], lang: [], calday: [], calprof: [] };
     for (const p of all) if (apps[p.kind]) apps[p.kind].push(p);
     castMap = new Map(all.filter(p => p.kind === 'cast').map(p => [p.ref, p]));
     const reactions = new Map(all.filter(p => p.kind === 'ghost').map(p => [p.target, p]));
