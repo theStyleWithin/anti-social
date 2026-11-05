@@ -70,7 +70,7 @@ is a flat, unblinking **0**.
 
 ## Version history
 
-- **Next (not released yet):** Language Lab (offline lessons in six languages with spaced repetition); Calorie Counter (diary, built-in foods, goals); Push-Up Counter (count reps with your nose on the screen, optional voice check); Music Player (your own music offline, ten-band equalizer, bass, reverb, visualizers, lyrics, queue, themes)
+- **Next (not released yet):** YouTube links in posts play in the timeline (asks first); Language Lab (offline lessons in six languages with spaced repetition); Calorie Counter (diary, built-in foods, goals); Push-Up Counter (count reps with your nose on the screen, optional voice check); Music Player (your own music offline, ten-band equalizer, bass, reverb, visualizers, lyrics, queue, themes)
 - **v0.24.2:** a polite tip note at the very bottom of Settings
 - **v0.24.1:** drag an app card to the far left or right of the Apps page to pin it beside the timeline (desktop app)
 - **v0.24.0:** desktop app: drag either wall of the timeline to make it wider or narrower, and pin a built-in app of your choice into the empty space on each side (both optional, in Settings, Desktop layout)

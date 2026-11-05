@@ -637,7 +637,7 @@ function postEl(p, acct, ctx, { detail = false } = {}) {
       p.reposted && h('div', { class: 'replying' }, W('youReposted')),
       parent && h('div', { class: 'replying' }, W('replyingSelf')),
       gParent && h('div', { class: 'replying' }, W('replyingTo') + ' @' + gParent),
-      p.text && h('div', { class: 'text' }, richText(p.text)),
+      p.text && h('div', { class: 'text' }, richText(p.text)), p.text && YT.cards(p.text),
       mediaGrid(p.images),
       h('div', { class: 'muted', style: 'margin-top:12px' }, `${when} · `, h('b', { style: 'color:var(--fg)' }, '0'), ' Views'),
       h('div', { class: 'stats' },
@@ -655,7 +655,7 @@ function postEl(p, acct, ctx, { detail = false } = {}) {
       rd ? h('div', { class: 'head' }, h('b', { class: 'rd-comm' }, TemplateCore.COMMUNITY), ' · Posted by ', h('span', { class: 'name' }, 'u/' + acct.handle), h('span', { class: 'time' }, stamp(p.createdAt))) : h('div', { class: 'head' }, name, handle, h('span', { class: 'time' }, stamp(p.createdAt))),
       parent && h('div', { class: 'replying' }, W('replyingTo') + ' @' + acct.handle),
       gParent && h('div', { class: 'replying' }, W('replyingTo') + ' @' + gParent),
-      p.text && h('div', { class: 'text' }, richText(p.text)),
+      p.text && h('div', { class: 'text' }, richText(p.text)), p.text && YT.cards(p.text),
       mediaGrid(p.images),
       p.liked && tplId() === 'chat' && h('div', { class: 'reactions' }, h('button', { class: 'reaction on', 'aria-label': 'Remove your reaction', onclick: e => { e.stopPropagation(); patch({ liked: false }); } }, '\u2764\ufe0f 1')),
       actions));
@@ -739,7 +739,7 @@ function ghostPostEl(g, acct, ctx, { detail = false } = {}) {
       rdd ? gVote() : null,
       rdd ? h('div', { class: 'head rd-meta' }, h('b', { class: 'rd-comm' }, TemplateCore.COMMUNITY), ' · Posted by ', h('a', { class: 'name', href: '#/u/' + who.id }, 'u/' + who.handle), h('span', { class: 'time' }, stamp(g.ts))) : h('div', { style: 'display:flex;gap:12px;align-items:center' }, h('a', { href: '#/u/' + who.id }, ghostAvatar(who)),
         h('div', {}, h('div', {}, name), h('div', {}, handle))),
-      h('div', { class: 'text' }, richText(g.text)),
+      h('div', { class: 'text' }, richText(g.text)), YT.cards(g.text),
       g.image && mediaGrid([g.image]),
       h('div', { class: 'muted', style: 'margin-top:12px' }, `${when} · `, h('b', { style: 'color:var(--fg)' }, fmt(g.views)), ' Views'),
       h('div', { class: 'stats' },
@@ -753,7 +753,7 @@ function ghostPostEl(g, acct, ctx, { detail = false } = {}) {
     rd ? gVote() : h('a', { href: '#/u/' + who.id, 'aria-label': who.name }, ghostAvatar(who)),
     h('div', { class: 'content' },
       rd ? h('div', { class: 'head' }, h('b', { class: 'rd-comm' }, TemplateCore.COMMUNITY), ' · Posted by ', h('a', { class: 'name', href: '#/u/' + who.id }, 'u/' + who.handle), h('span', { class: 'time' }, stamp(g.ts))) : h('div', { class: 'head' }, name, handle, h('span', { class: 'time' }, stamp(g.ts))),
-      h('div', { class: 'text' }, richText(g.text)),
+      h('div', { class: 'text' }, richText(g.text)), YT.cards(g.text),
       g.image && mediaGrid([g.image]),
       actions));
 }
@@ -1275,6 +1275,7 @@ function settingsView(acct, ctxBg, ctx) {
       h('div', { class: 'btnrow' }, themeBtn('auto', 'Auto'), themeBtn('light', 'Light'), themeBtn('dark', 'Dark'))),
     templateSection(),
     Desk.settingsSection(acct),
+    YT.settingsSection(),
     h('section', {}, h('h3', {}, 'Color themes'), h('p', {}, 'The text color is picked for you so it always stays readable.'),
       h('div', { class: 'skins' }, ThemeCore.PRESETS.map(p => swatch(p.id, p.name, p.bg, p.accent)), swatch('custom', 'Custom', custom.bg, custom.accent))),
     h('section', {}, h('h3', {}, 'Make your own'), h('p', {}, 'Choose two colors. Everything else follows.'),

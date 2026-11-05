@@ -163,6 +163,8 @@ app.whenReady().then(() => {
   const { session } = require('electron');
   session.defaultSession.setPermissionRequestHandler((wc, permission, cb, details) => cb(permission === 'media' && (details.mediaTypes || []).every(t => t === 'audio') && String(details.requestingUrl || '').startsWith('file://')));
   session.defaultSession.setPermissionCheckHandler((wc, permission) => permission === 'media');
+  // YouTube's player wants to know which site is embedding it. A page opened from a file has none, so the embed is told it is Anti-Social.
+  session.defaultSession.webRequest.onBeforeSendHeaders({ urls: ['https://www.youtube-nocookie.com/*'] }, (details, cb) => { const h = { ...details.requestHeaders }; if (!h.Referer) h.Referer = 'https://anti-social.app/'; cb({ requestHeaders: h }); });
   Menu.setApplicationMenu(null);
   createWindow();
   app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });
