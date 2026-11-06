@@ -1636,4 +1636,3 @@ body.pu-lock { overflow: hidden; }
   html:not([data-tpl]) .desk.side-off .side-tab { display: flex; position: absolute; top: 10px; right: 12px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--muted); align-items: center; justify-content: center; cursor: pointer; z-index: 7; }
   html:not([data-tpl]) .desk.side-off .side-tab:hover { background: var(--hover); color: var(--fg); } .side-tab svg { width: 18px; height: 18px; }
 }
-.mp-other { display: flex; align-items: center; gap: 10px; cursor: default; } .mp-other .btn { flex: none; }

@@ -25,11 +25,7 @@ function mpLoad(acct, ctx) {
   const L = MP.prefs.last; if (L && L.queue && L.queue.every(id => mpTrack(id)) && L.queue.length) { MP.queue = L.queue; MP.pos = L.pos; MP.order = MP.queue.map((_, i) => i); mpLoadTrack(mpTrack(L.id), false, L.t); }
 }
 /* ----- playing ----- */
-// One column at a time is "the player" (now playing, controls, equalizer, visualizer). Any other Music Player column is a menu: you can browse and start songs from it.
-const mpLive = () => !!(MP.owner && MP.owner.isConnected);
-function mpClaim() { if (!mpLive()) MP.owner = MP.touched && MP.touched.isConnected ? MP.touched : null; }
 async function mpLoadTrack(t, play, at = 0) {
-  if (play) mpClaim();
   if (!t) return; const my = ++MP.seq; MP.cur = t; MP.lyrics = null; mpEmit();
   let blob = null, lrcText = null;
   if (t.src) { try { const bytes = await window.AntiSocialFS.read(t.src.fid, t.src.rel); if (my !== MP.seq) return; blob = new Blob([bytes], { type: mpMime(t.src.rel) }); mpApplyTags(t, bytes); if (t.src.lrc) { try { lrcText = new TextDecoder().decode(await window.AntiSocialFS.read(t.src.fid, t.src.lrc)); } catch { /* no lyrics */ } } } catch (e) { toast('"' + t.title + '" could not be opened from its folder. Is the folder still there? ' + (e && e.message ? e.message : '')); return; } }
@@ -142,10 +138,6 @@ function musicView(acct, ctx, back) {
   mpLoad(acct, ctx); const P = MP.prefs, T = P.theme;
   const root = h('div', { class: 'mp' }), bg = h('div', { class: 'mp-bg' }), page = h('div', { class: 'mp-page' }), mini = h('div', { class: 'mp-miniwrap' }); root.append(bg, page, mini);
   let stack = [{ v: 'home' }], raf = 0;
-  const touch = () => { MP.touched = root; }; root.addEventListener('pointerdown', touch, true); root.addEventListener('keydown', touch, true);
-  // am I the column that shows the player? With nobody playing yet, every column may; once a song plays the column you used first keeps it
-  const owns = () => { if (MP.owner === root && root.isConnected) return true; if (!mpLive()) { if (MP.cur) MP.owner = root; return !MP.cur || MP.owner === root; } return false; };
-  const takeOver = () => { MP.owner = root; mpEmit(); };
   const cur = () => stack[stack.length - 1], go = v => { stack.push(v); paint(); }, pop = () => { if (stack.length > 1) stack.pop(); paint(); };
   const applyTheme = () => { root.style.setProperty('--mp-accent', T.accent); root.style.setProperty('--mp-scale', String(T.scale)); root.classList.toggle('outline', !!T.outline);
     const art = mpCoverUrl(MP.cur); let img = ''; if (T.bg === 'art' && art) img = art; else if (T.bg === 'image' && T.bgImage) img = T.bgImage; bg.style.backgroundImage = img ? `url("${img}")` : ''; bg.style.filter = img ? `blur(${T.blur}px) brightness(${1 - T.dim / 100})` : ''; bg.classList.toggle('on', !!img); root.classList.toggle('has-bg', !!img); };
@@ -336,10 +328,6 @@ function musicView(acct, ctx, back) {
   /* ----- the small player along the bottom ----- */
   function miniBar() {
     mini.replaceChildren(); if (!MP.cur || cur().v === 'now' || cur().v === 'fx' || cur().v === 'viz') return; const t = MP.cur;
-    if (!owns()) {   // a menu column: say where the music is, and offer to bring the player here
-      const note = h('div', { class: 'mp-mini mp-other', role: 'status' }, thumb(t), h('div', { class: 'mp-row-t' }, h('b', {}, t.title), h('small', {}, 'Playing in another column')), h('button', { class: 'btn', type: 'button', onclick: takeOver }, 'Move the player here'));
-      mini.append(note); const onC = () => { if (!note.isConnected) { MP.listeners.delete(onC); return; } if (MP.cur !== t || owns()) { MP.listeners.delete(onC); miniBar(); } }; MP.listeners.add(onC); return;
-    }
     const prog = h('i', { style: 'width:0%' }), play = h('button', { class: 'mp-ico', type: 'button', 'aria-label': 'Play or pause', onclick: e => { e.stopPropagation(); mpToggle(); } });
     const upd = () => play.replaceChildren(icon(MP.audio.paused ? 'play' : 'pause')); upd();
     const bar = h('div', { class: 'mp-mini', role: 'button', tabindex: '0', 'aria-label': 'Open the player', onclick: () => go({ v: 'now' }), onkeydown: e => { if (e.key === 'Enter') go({ v: 'now' }); } }, h('div', { class: 'mp-prog' }, prog), thumb(t), h('div', { class: 'mp-row-t' }, h('b', {}, t.title), h('small', {}, 'Swipe to change the song')), play, icoBtn('next', 'Next', e => { e.stopPropagation(); mpStep(1); }), icoBtn('queue', 'Playing queue', e => { e.stopPropagation(); go({ v: 'queue' }); }));
@@ -349,12 +337,11 @@ function musicView(acct, ctx, back) {
   }
   function paint() {
     cancelAnimationFrame(raf); const v = cur(); applyTheme(); let el;
-    if ((v.v === 'now' || v.v === 'fx' || v.v === 'viz') && !owns()) { page.replaceChildren(h('div', {}, h('div', { class: 'mp-top' }, icoBtn('back', 'Back', pop), h('h2', {}, 'Player')), h('div', { class: 'mp-pad' }, h('p', {}, 'The player is open in another Music Player column, so this one is a menu: browse your music here and start songs, and they play there.'), h('div', { class: 'btnrow' }, h('button', { class: 'btn primary', type: 'button', onclick: takeOver }, 'Move the player here'), h('button', { class: 'btn', type: 'button', onclick: pop }, 'Back'))))); miniBar(); root.dataset.view = v.v; return; }
     switch (v.v) { case 'list': el = list(v.by, v.label, v.focus); break; case 'group': el = group(v.g); break; case 'playlist': el = playlist(v); break; case 'now': el = now(); break; case 'queue': el = queue(); break; case 'fx': el = fx(); break; case 'viz': el = viz(); break; case 'settings': el = settings(); break; default: el = home(); }
     page.replaceChildren(el); miniBar(); root.dataset.view = v.v;
   }
   // when something changes under the lists (a song was added or removed elsewhere), keep the page in step
-  let shownCur = MP.cur; const themeSync = () => { if (!root.isConnected) { MP.listeners.delete(themeSync); return; } applyTheme(); const st = page.querySelector('.mp-status'); if (st) { if (MP.status) st.textContent = MP.status; else st.remove(); } else if (MP.status && cur().v === 'home') { const hd = page.querySelector('.mp-head'); if (hd) hd.after(h('p', { class: 'mp-status', role: 'status' }, MP.status)); } if (MP.cur !== shownCur) { shownCur = MP.cur; if (cur().v !== 'now') miniBar(); } const own = owns(); if (own !== wasOwner) { wasOwner = own; if (cur().v === 'now' || cur().v === 'fx' || cur().v === 'viz') paint(); else miniBar(); } }; let wasOwner = true; MP.listeners.add(themeSync);
+  let shownCur = MP.cur; const themeSync = () => { if (!root.isConnected) { MP.listeners.delete(themeSync); return; } applyTheme(); const st = page.querySelector('.mp-status'); if (st) { if (MP.status) st.textContent = MP.status; else st.remove(); } else if (MP.status && cur().v === 'home') { const hd = page.querySelector('.mp-head'); if (hd) hd.after(h('p', { class: 'mp-status', role: 'status' }, MP.status)); } if (MP.cur !== shownCur) { shownCur = MP.cur; if (cur().v !== 'now') miniBar(); } }; MP.listeners.add(themeSync);
   paint();
   setTimeout(() => { if (!root.isConnected) return; if (!MP.autoRan && P.autoscan && P.folders.length && mpCanFolders()) { MP.autoRan = true; mpScanAll().then(() => { if (root.isConnected) paint(); }); } else if (mpCanFolders()) mpEnrich(); }, 0);
   return [back(appName(acct, 'music')), root];
