@@ -37,13 +37,18 @@ const Viewer = (() => {
   const isOpen = () => !!open;
   // Ambient sound made from nothing but filtered noise and short tones, so there are no audio files to ship. It stays quiet until the first tap
   // (browsers insist on that), remembers on/off and volume on this device, and shuts itself down when you leave the app.
+  // When the same app is open in several columns, every column draws it, but only one of them makes the sound: the one you last switched sound on in.
+  const voices = {};
   function ambience(key, alive) {
-    const pinned = !!window.__inPane; if (pinned) key += '.pinned';   // an app pinned beside the timeline starts quiet; it has its own sound setting
+    const base = key, pinned = !!window.__inPane; if (pinned) key += '.pinned';   // an app pinned beside the timeline starts quiet; it has its own sound setting
+    const reg = voices[base] || (voices[base] = { list: [], owner: null });
     let st = { on: !pinned, vol: 0.5 };
     try { const v = JSON.parse(localStorage.getItem(key) || 'null'); if (v && typeof v === 'object') st = { on: v.on !== false, vol: Math.min(1, Math.max(0, +v.vol || 0.5)) }; } catch { /* default */ }
     let ctx = null, master = null, brown = null, white = null, timer = 0, dead = false; const hooks = [];
     const save = () => { try { localStorage.setItem(key, JSON.stringify(st)); } catch { /* not remembered */ } };
-    const level = () => (st.on ? st.vol * st.vol : 0);
+    const level = () => (st.on && reg.owner === api ? st.vol * st.vol : 0);
+    const refresh = () => { if (master && ctx) master.gain.setTargetAtTime(level(), ctx.currentTime, 0.1); };
+    const refreshAll = () => reg.list.forEach(x => x.refresh());
     const make = () => {
       if (ctx || dead) return ctx;
       try { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ctx = new C(); } catch { return null; }
@@ -53,11 +58,17 @@ const Viewer = (() => {
       timer = setInterval(() => { if (!alive()) stop(); else if (ctx && ctx.state === 'suspended' && st.on) ctx.resume().catch(() => {}); }, 1000);
       return ctx;
     };
-    const stop = () => { dead = true; clearInterval(timer); hooks.forEach(h => clearInterval(h)); try { ctx && ctx.close(); } catch { /* fine */ } ctx = null; };
+    const stop = () => {
+      dead = true; clearInterval(timer); hooks.forEach(h => clearInterval(h)); try { ctx && ctx.close(); } catch { /* fine */ } ctx = null;
+      reg.list = reg.list.filter(x => x !== api); if (reg.owner === api) { reg.owner = reg.list.find(x => x.on) || null; refreshAll(); }   // the sound moves to another column that wants it
+    };
     const resumeOnTap = () => { const go = () => { if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {}); document.removeEventListener('pointerdown', go, true); }; document.addEventListener('pointerdown', go, true); };
-    return {
-      get on() { return st.on; }, get vol() { return st.vol; },
-      set(on, vol) { if (on !== undefined) st.on = !!on; if (vol !== undefined) st.vol = Math.min(1, Math.max(0, vol)); save(); if (master) master.gain.setTargetAtTime(level(), ctx.currentTime, 0.1); if (st.on && ctx && ctx.state === 'suspended') ctx.resume().catch(() => {}); },
+    const api = {
+      get on() { return st.on; }, get vol() { return st.vol; }, get muted() { return st.on && reg.owner !== api; }, refresh,
+      set(on, vol) {
+        if (on !== undefined) { st.on = !!on; if (st.on) reg.owner = api; else if (reg.owner === api) reg.owner = reg.list.find(x => x !== api && x.on) || null; }
+        if (vol !== undefined) st.vol = Math.min(1, Math.max(0, vol)); save(); refreshAll(); if (st.on && ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+      },
       // a steady bed of sound: type 'brown' (deep rumble) or 'white' (hiss), through a filter. Returns { gain, filter } so the app can move them.
       loop(type, filterType, freq, q, gain) {
         if (!make()) return null; const src = ctx.createBufferSource(); src.buffer = type === 'brown' ? brown : white; src.loop = true; src.loopStart = Math.random() * 2;
@@ -66,12 +77,14 @@ const Viewer = (() => {
       },
       // a short burst of noise (a crackle, a splash)
       burst(freq, q, dur, vol, type = 'bandpass') {
+        if (reg.owner && reg.owner !== api) return reg.owner.burst(freq, q, dur, vol, type);
         if (!ctx || ctx.state !== 'running' || !st.on) return; const len = Math.max(64, Math.floor(ctx.sampleRate * dur)), buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
         for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
         const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(); f.type = type; f.frequency.value = freq; f.Q.value = q; g.gain.value = vol; src.buffer = buf; src.connect(f); f.connect(g); g.connect(master); src.start();
       },
       // a short tone that slides from one pitch to another (a bubble, a thump)
       blip(f0, f1, dur, vol, wave = 'sine') {
+        if (reg.owner && reg.owner !== api) return reg.owner.blip(f0, f1, dur, vol, wave);
         if (!ctx || ctx.state !== 'running' || !st.on) return; const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime; o.type = wave; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
         g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), t + Math.min(0.02, dur / 3)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.05);
       },
@@ -79,6 +92,8 @@ const Viewer = (() => {
       every(lo, hi, fn) { const tick = () => { if (dead) return; fn(); hooks.push(setTimeout(tick, (lo + Math.random() * (hi - lo)) * 1000)); }; hooks.push(setTimeout(tick, lo * 1000)); },
       get ctx() { return ctx; }, stop,
     };
+    reg.list.push(api); if (st.on && !(reg.owner && reg.list.includes(reg.owner))) reg.owner = api;
+    return api;
   }
   return { ambience, reduced, hexRgb, mixRgb, clock, run, pointer, fullscreen, isOpen };
 })();

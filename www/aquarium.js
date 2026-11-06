@@ -93,7 +93,7 @@ function aquariumView(acct, ctx, back) {
       const chk = (label, key, extra) => h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: aqCfg[key], onchange: e => { aqCfg[key] = e.target.checked; aqStoreCfg(); if (extra) extra(); } }), ' ' + label);
       const vol = h('input', { type: 'range', min: 0, max: 1, step: 0.05, value: String(aqAmb.vol), 'aria-label': 'Volume', oninput: e => aqAmb.set(undefined, Number(e.target.value)) });
       body.replaceChildren(h('div', { class: 'mx-opts' }, chk('Night mode', 'night'), chk('Decorations (plants, rocks, treasure chest, air stone)', 'decor'), chk('Always show name tags', 'tags'), chk('Automatic feeder (a pinch of flakes every 90 seconds while this is open)', 'auto'),
-        h('div', { class: 'vw-snd' }, h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: aqAmb.on, onchange: e => aqAmb.set(e.target.checked) }), ' Ambient sound'), vol), h('div', { class: 'btnrow' }, empty)));
+        h('div', { class: 'vw-snd' }, h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: aqAmb.on, onchange: e => aqAmb.set(e.target.checked) }), aqAmb.muted ? ' Ambient sound (playing in another column)' : ' Ambient sound'), vol), h('div', { class: 'btnrow' }, empty)));
     }
   }
   aqUi = { say: m => { status.textContent = m; }, refresh };

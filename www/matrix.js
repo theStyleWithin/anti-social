@@ -1,13 +1,13 @@
 'use strict';
 /* Matrix Viewer: falling digits, just to look at. Nothing to do, nothing to save. Settings are remembered on this device. */
 const MX = MatrixCore;
-let mxCfg = null, mxPaused = false, mxFull = null, mxRaf = 0, mxRunning = 0;
+let mxCfg = null, mxPaused = false, mxFull = null;
 const mxLoad = () => { try { return MX.normCfg(JSON.parse(localStorage.getItem('as.matrix') || 'null')); } catch { return MX.normCfg(null); } };
 const mxStore = () => { try { localStorage.setItem('as.matrix', JSON.stringify(mxCfg)); } catch { /* not remembered */ } };
 
 // runs the rain on a canvas until the canvas leaves the page; returns controls
 function mxPlay(canvas, getCfg, isPaused) {
-  let cols = [], last = 0, w = 0, h = 0, grid = [0, 0], cellW = 0, cellH = 0, dpr = 1, gen = ++mxRunning;
+  let cols = [], last = 0, w = 0, h = 0, grid = [0, 0], cellW = 0, cellH = 0, dpr = 1, raf = 0;   // every canvas has its own loop, so the rain can run in several columns at once
   const fit = () => {
     const cfg = getCfg(); dpr = Math.min(2, window.devicePixelRatio || 1);
     w = Math.max(1, canvas.clientWidth); h = Math.max(1, canvas.clientHeight);
@@ -35,12 +35,12 @@ function mxPlay(canvas, getCfg, isPaused) {
     g.globalAlpha = 1; g.shadowBlur = 0;
   };
   const frame = t => {
-    if (gen !== mxRunning || !canvas.isConnected) { mxRaf = 0; return; }
+    if (!canvas.isConnected) { raf = 0; return; }
     const dt = Math.min(0.1, last ? (t - last) / 1000 : 0.016); last = t;
     fit(); if (!isPaused()) MX.step(cols, dt, getCfg()); draw();
-    mxRaf = requestAnimationFrame(frame);
+    raf = requestAnimationFrame(frame);
   };
-  cancelAnimationFrame(mxRaf); mxRaf = requestAnimationFrame(frame);
+  raf = requestAnimationFrame(frame);
   return { reset: () => { cols = []; grid = [0, 0]; } };
 }
 
@@ -48,9 +48,10 @@ function matrixView(acct, ctx, back) {
   if (!mxCfg) { mxCfg = mxLoad(); mxPaused = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
   const canvas = h('canvas', { class: 'mx-canvas', role: 'img', 'aria-label': 'Falling green digits, a decoration' });
   const stage = h('div', { class: 'mx-stage' }, canvas);
-  const ctl = mxPlay(canvas, () => mxCfg, () => mxPaused);
+  let paused = mxPaused;   // each column pauses on its own
+  const ctl = mxPlay(canvas, () => mxCfg, () => paused);
   const set = (k, v, redo) => { mxCfg = MX.normCfg({ ...mxCfg, [k]: v }); mxStore(); if (redo) ctl.reset(); };
-  const pause = h('button', { class: 'btn primary', 'aria-pressed': String(mxPaused), onclick: e => { mxPaused = !mxPaused; e.currentTarget.textContent = mxPaused ? 'Play' : 'Pause'; e.currentTarget.setAttribute('aria-pressed', String(mxPaused)); } }, mxPaused ? 'Play' : 'Pause');
+  const pause = h('button', { class: 'btn primary', 'aria-pressed': String(paused), onclick: e => { paused = !paused; e.currentTarget.textContent = paused ? 'Play' : 'Pause'; e.currentTarget.setAttribute('aria-pressed', String(paused)); } }, paused ? 'Play' : 'Pause');
   const range = (label, key, min, max, step, redo) => { const out = h('output', {}, String(mxCfg[key])); const inp = h('input', { type: 'range', min, max, step, value: String(mxCfg[key]), 'aria-label': label, oninput: e => { set(key, Number(e.target.value), redo); out.textContent = e.target.value; } }); return h('label', { class: 'mx-range' }, h('span', {}, label), inp, out); };
   const chars = h('select', { 'aria-label': 'Characters', onchange: e => set('chars', e.target.value, true) }, Object.entries(MX.CHARSETS).map(([id, [name]]) => h('option', { value: id }, name))); chars.value = mxCfg.chars;
   const swatches = h('div', { class: 'ck-themes', role: 'radiogroup', 'aria-label': 'Colour' }, MX.PALETTES.map(([id, name, hex]) => { const b = h('button', { class: 'ck-swatch' + (mxCfg.color === id ? ' on' : ''), type: 'button', role: 'radio', 'aria-checked': String(mxCfg.color === id), 'aria-label': name, title: name, style: `background:${hex}`, onclick: () => { set('color', id); swatches.querySelectorAll('.ck-swatch').forEach(x => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-checked', String(on)); }); } }); return b; }));
