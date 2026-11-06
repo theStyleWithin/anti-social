@@ -50,7 +50,7 @@ const Desk = (() => {
   const choices = acct => { const hid = hiddenApps(acct); return APP_LIST.filter(([id]) => !hid.has(id)).map(([id]) => [id, appName(acct, id)]); };
   const valid = (acct, id) => !!id && choices(acct).some(c => c[0] === id);
   function setApp(side, id) {
-    const other = side === 'left' ? 'right' : 'left'; L[side] = id || ''; args[side] = ''; if (id && L[other] === id) { L[other] = ''; args[other] = ''; }   // the same app is never open twice
+    L[side] = id || ''; args[side] = '';   // no rules: the same app may be pinned on both sides, and dropping it again on a side that already has it simply keeps it there
     save(); apply(); render(true);
   }
   function navigate(side, path) {
