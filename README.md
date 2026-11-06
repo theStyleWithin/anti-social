@@ -6,7 +6,7 @@
 
 ## Status: fully featured and complete
 
-Anti-Social v0.27.2 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.27.3 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (drag-to-reorder, themes, the Bible, Travel Log, Cookbook and the v0.12.0 account features are automated-test verified, awaiting a hand test; the Android file saver in v0.12.0 is new native code and has not yet been run on a real phone); plus automated tests):
 - **Newer apps (v0.20.0 to v0.26.0):** Language Lab, Calorie Counter, Push-Up Counter, Music Player, the viewers, YouTube playback, the desktop layout and Updates are checked by automated tests; the Fireplace, Aquarium, Music Player and YouTube embeds have been tried on a real phone. The console versions, background video playback, the Updates installer and the Music Player folder picker have **not yet been hand tested on real hardware**.
@@ -93,6 +93,7 @@ A new piece earns its place by being something you would use inside the shell, n
 
 ## Version history
 
+- **v0.27.3:** desktop app, same app in several columns: the Matrix Viewer now runs in all of them (before, only the last one moved); every Music Player column shows the playing song and its controls on one shared player; Fireplace and Aquarium draw in every column with the sound coming from only one
 - **v0.27.2:** desktop app: the same app can be pinned on both sides of the timeline, no rules
 - **v0.27.1:** desktop app: the right column (search, trends, who to follow) can be hidden by dragging its left edge to the right, and brought back from the top right of the timeline or in Settings (optional, and separate from pinned apps); the Wii U build retries when the devkitPro download server refuses
 - **v0.27.0:** the Switch and Wii U versions get the desktop layout (app rail, open app, side panels) at a native 1280x720, plus Diary, Calendar, Groceries, Chores and Settings with colour themes; the 3DS is unchanged
