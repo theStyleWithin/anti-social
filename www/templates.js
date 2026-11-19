@@ -23,7 +23,7 @@ function drawer(side) { document.querySelector('.shell')?.classList.toggle(side 
 const closeDrawers = () => document.querySelector('.shell')?.classList.remove('left-open', 'right-open');
 
 function shellChat(acct, route, main, ctx, chId) {
-  const title = TP.serverTitle(acct, ctx.apps.srv[0] && ctx.apps.srv[0].name);
+  const title = TP.serverTitle(acct, ctx.apps.srv[0] && ctx.apps.srv[0].name), bannerCss = DecoCore.bannerCss(Deco.server(ctx));
   const rename = () => serverNameEditor(acct, ctx);
   const chans = [...ctx.apps.chan].sort((a, b) => a.createdAt - b.createdAt);
   const home = route === 'home', dm = route === 'dm', dmId = dm ? location.hash.split('/')[2] : '';
@@ -48,7 +48,7 @@ function shellChat(acct, route, main, ctx, chId) {
     h('a', { class: 'ub', href: '#/settings', 'aria-label': W('navSettings'), title: W('navSettings'), onclick: closeDrawers }, icon('settings')));
   const left = h('div', { class: 'chat-left' }, rail,
     h('aside', { class: 'chan-col', 'aria-label': 'Channels' },
-      h('button', { class: 'server-head', type: 'button', 'aria-haspopup': 'menu', title: 'Right-click to rename', oncontextmenu: e => { e.preventDefault(); rename(); }, onclick: e => serverMenu(e.currentTarget, acct, ctx) }, h('b', {}, title), icon('chevron')),
+      h('button', { class: 'server-head' + (bannerCss ? ' has-banner' : ''), style: bannerCss ? `background:${bannerCss}` : null, type: 'button', 'aria-haspopup': 'menu', title: 'Right-click to rename', oncontextmenu: e => { e.preventDefault(); rename(); }, onclick: e => serverMenu(e.currentTarget, acct, ctx) }, h('b', {}, title), icon('chevron')),
       h('div', { class: 'chan-scroll' },
         h('div', { class: 'chan-cat' }, h('span', {}, 'Text channels'), h('button', { type: 'button', 'aria-label': 'Create channel', title: 'Create channel', onclick: () => channelEditor(acct, ctx, null) }, icon('plus'))),
         chanRow(null), chans.map(chanRow),
@@ -70,7 +70,7 @@ function serverMenu(anchor, acct, ctx) {
   const esc = e => { if (e.key === 'Escape') close(); };
   const row = (label, ic, fn) => h('button', { class: 'pop-row', role: 'menuitem', onclick: () => { close(); fn(); } }, h('span', { class: 'pop-plus' }, icon(ic)), h('b', {}, label));
   const pop = h('div', { class: 'popover server-menu', role: 'menu', 'aria-label': 'Server' },
-    row('Rename server', 'notes', () => serverNameEditor(acct, ctx)), row('Create channel', 'plus', () => channelEditor(acct, ctx, null)), row(W('navProfile'), 'user', () => go('/profile')), row(W('navSettings'), 'settings', () => go('/settings')));
+    row('Rename server', 'notes', () => serverNameEditor(acct, ctx)), row('Server tag and banner', 'tag', () => Deco.serverProfileModal(acct, ctx)), row('Create channel', 'plus', () => channelEditor(acct, ctx, null)), row(W('navProfile'), 'user', () => go('/profile')), row(W('navSettings'), 'settings', () => go('/settings')));
   document.body.append(pop);
   const r = anchor.getBoundingClientRect();
   pop.style.left = Math.max(8, Math.min(r.left + 8, innerWidth - pop.offsetWidth - 8)) + 'px'; pop.style.top = (r.bottom + 4) + 'px';
@@ -80,16 +80,17 @@ function serverMenu(anchor, acct, ctx) {
 // The member list: you, plus (in Populated mode) generated people. Nobody on it is real.
 function memberPanel(acct, ctx) {
   const rows = [];
-  const row = (who, opts = {}) => h('a', { class: 'member' + (opts.online === false ? ' off' : ''), href: who.id ? '#/u/' + who.id : '#/profile', onclick: closeDrawers },
+  const me = Deco.mine(ctx), srv = Deco.server(ctx);
+  const row = (who, opts = {}) => h('a', { class: 'member' + (opts.online === false ? ' off' : '') + (Deco.plated(opts.plate) ? ' plated' : ''), href: who.id ? '#/u/' + who.id : '#/profile', onclick: closeDrawers, ...Deco.plateAttrs(opts.plate, me.animate) },
     h('span', { class: 'av-wrap' }, who.id ? ghostAvatar(who, 'sm') : avatar(acct, 'sm'), h('i', { class: 'dot ' + (opts.online === false ? 'offline' : 'online') })),
-    h('span', { class: 'names' }, h('b', { class: opts.role ? 'role-' + opts.role.toLowerCase() : '' }, who.name, opts.crown ? h('span', { class: 'crown', title: 'Server owner' }, icon('crown')) : null), who.activity ? h('small', {}, who.activity) : null));
-  rows.push(h('div', { class: 'member-cat' }, 'Owner — 1'), row(acct, { crown: true, role: 'Admin' }), aiMemberRows(acct, ctx));
+    h('span', { class: 'names' }, h('b', { class: opts.role ? 'role-' + opts.role.toLowerCase() : '' }, h('span', { class: 'nm' }, who.name), Deco.tagEl(opts.tag), opts.crown ? h('span', { class: 'crown', title: 'Server owner' }, icon('crown')) : null), who.activity ? h('small', {}, who.activity) : null));
+  rows.push(h('div', { class: 'member-cat' }, 'Owner — 1'), row(acct, { crown: true, role: 'Admin', plate: me.plate, tag: srv }), aiMemberRows(acct, ctx));
   let note;
   if (populated()) {
     const list = Ghost.members(worldSeed(), 80, { ...poolOpts(), now: Date.now() });
     const groups = TP.memberGroups(list);
     for (const g of groups) {
-      rows.push(h('div', { class: 'member-cat' }, `${g.name} — ${g.list.length}`), g.list.map(m => row(m, { role: g.name === 'Admin' || g.name === 'Moderator' ? g.name : '', online: m.online })));
+      rows.push(h('div', { class: 'member-cat' }, `${g.name} — ${g.list.length}`), g.list.map(m => row(m, { role: g.name === 'Admin' || g.name === 'Moderator' ? g.name : '', online: m.online, plate: DecoCore.ghostPlate(m.id), tag: DecoCore.ghostTag(m.id) })));
     }
     note = list.length ? `Showing ${list.length} members. They are generated, and none of them are real.` : 'Nobody has joined yet.';
   } else note = 'It is just you. Turn on Populated mode in Settings to fill the member list with people who are not real.';
@@ -230,12 +231,12 @@ function serverNameEditor(acct, ctx) {
     h('div', { class: 'mp' },
       h('p', { class: 'fine', style: 'padding:0 0 10px' }, `The server has its own name, separate from your account. Leave it empty to use the default, "${TP.serverName(acct)}".`),
       h('div', { class: 'server-edit' }, preview, h('label', { class: 'field', style: 'flex:1;margin:0' }, h('span', {}, 'Server name'), name)),
-      h('div', { class: 'btnrow', style: 'margin-top:12px' }, save, rec && h('button', { class: 'btn', onclick: async () => { await appDelete(rec.id); close(); toast('Back to the default name.'); render(true); } }, 'Use the default name')))));
+      h('div', { class: 'btnrow', style: 'margin-top:12px' }, save, rec && h('button', { class: 'btn', onclick: async () => { await Deco.clearName(acct, ctx); close(); toast('Back to the default name.'); render(true); } }, 'Use the default name')))));
   const submit = async () => {
     const n = TP.cleanServerName(name.value);
     save.disabled = true;
-    if (!n) { if (rec) await appDelete(rec.id); close(); render(true); return; }
-    if (!(await appSave(acct, { id: rec ? rec.id : 'srv' + acct.id, accountId: acct.id, kind: 'srv', name: n, updatedAt: Date.now() }))) { save.disabled = false; return; }
+    if (!n) { if (rec) await Deco.clearName(acct, ctx); close(); render(true); return; }
+    if (!(await appSave(acct, { ...(rec || {}), id: rec ? rec.id : 'srv' + acct.id, accountId: acct.id, kind: 'srv', name: n, updatedAt: Date.now() }))) { save.disabled = false; return; }
     close(); toast(`Your server is now called ${n}.`); render(true);
   };
   save.addEventListener('click', submit);

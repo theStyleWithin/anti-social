@@ -624,7 +624,7 @@ function postEl(p, acct, ctx, { detail = false } = {}) {
     h('span', { class: 'act views', title: 'Views', 'aria-label': '0 views' }, icon('chart'), '0'),
     act('trash', 0, W('actDelete'), remove, 'del'));
 
-  const name = h('span', { class: 'name' }, acct.name);
+  const name = h('span', { class: 'name' }, acct.name, tplId() === 'chat' ? Deco.tagEl(Deco.server(ctx)) : null);
   const handle = h('span', { class: 'handle' }, '@' + acct.handle);
 
   if (detail) {
@@ -931,7 +931,7 @@ function profileView(acct, ctx) {
       h('div', { class: 'top' },
         h('button', { class: 'avbtn', 'aria-label': 'Change avatar image', onclick: () => setProfileImage(acct.id, 'avatarImg', 256, 256) }, avatar(acct, 'lg'), h('span', { class: 'cam' }, icon('camera'))),
         h('button', { class: 'btn', onclick: () => editProfile(acct) }, W('editProfile'))),
-      h('h2', {}, acct.name),
+      h('h2', {}, acct.name, tplId() === 'chat' ? Deco.tagEl(Deco.server(ctx)) : null),
       h('div', { class: 'muted' }, '@' + acct.handle),
       h('div', { class: 'bio' }, acct.bio || 'No bio. No audience either.'),
       h('div', { class: 'meta' }, 'Joined ' + joined + ' · Location: your device'),
@@ -1276,6 +1276,7 @@ function settingsView(acct, ctxBg, ctx) {
     templateSection(),
     Desk.settingsSection(acct),
     YT.settingsSection(),
+    tplId() === 'chat' ? Deco.settingsSection(acct, ctx) : null,
     Upd.settingsSection(),
     h('section', {}, h('h3', {}, 'Color themes'), h('p', {}, 'The text color is picked for you so it always stays readable.'),
       h('div', { class: 'skins' }, ThemeCore.PRESETS.map(p => swatch(p.id, p.name, p.bg, p.accent)), swatch('custom', 'Custom', custom.bg, custom.accent))),
@@ -1657,7 +1658,7 @@ async function render(keepScroll = false) {
     if (all.bad) console.warn(`${all.bad} post(s) could not be decrypted`);
     // Your likes, reposts and follows of generated accounts live beside your posts but are not posts.
     const posts = all.filter(p => !p.kind);                 // real posts only; everything else is a record of some other kind
-    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], srv: [], bot: [], aimsg: [], aimode: [], aikey: [], dexmark: [], pkbank: [], pkm: [], agame: [], ach: [], rakey: [], clockcfg: [], sound: [], budget: [], shotgame: [], shot: [], termstate: [], cbinder: [], ccard: [], ebook: [], lang: [], calday: [], calprof: [], pushup: [], mlib: [], mprefs: [] };
+    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], srv: [], deco: [], bot: [], aimsg: [], aimode: [], aikey: [], dexmark: [], pkbank: [], pkm: [], agame: [], ach: [], rakey: [], clockcfg: [], sound: [], budget: [], shotgame: [], shot: [], termstate: [], cbinder: [], ccard: [], ebook: [], lang: [], calday: [], calprof: [], pushup: [], mlib: [], mprefs: [] };
     for (const p of all) if (apps[p.kind]) apps[p.kind].push(p);
     castMap = new Map(all.filter(p => p.kind === 'cast').map(p => [p.ref, p]));
     const reactions = new Map(all.filter(p => p.kind === 'ghost').map(p => [p.target, p]));

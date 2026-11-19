@@ -1636,3 +1636,52 @@ body.pu-lock { overflow: hidden; }
   html:not([data-tpl]) .desk.side-off .side-tab { display: flex; position: absolute; top: 10px; right: 12px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--muted); align-items: center; justify-content: center; cursor: pointer; z-index: 7; }
   html:not([data-tpl]) .desk.side-off .side-tab:hover { background: var(--hover); color: var(--fg); } .side-tab svg { width: 18px; height: 18px; }
 }
+
+/* ---------- profile decorations (Chat Rooms): nameplates, the server tag and the server banner. All drawn with CSS and tiny inline SVG. ---------- */
+.srv-tag { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; padding: 0 6px; height: 17px; border-radius: 5px; font-size: 11px; font-weight: 800; letter-spacing: .03em; line-height: 1; color: #fff; background: var(--tag, #5865f2); vertical-align: middle; text-shadow: none; }
+.srv-tag i { font-style: normal; font-size: 10px; }
+.server-head.has-banner { height: 96px; align-items: flex-end; padding: 0 16px 10px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.75); border-bottom: 0; position: relative; }
+.server-head.has-banner::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.55), transparent 60%); pointer-events: none; }
+.server-head.has-banner > * { position: relative; }
+.plate-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; margin: 10px 0 12px; }
+.plate-pick { width: 100%; border: 2px solid transparent; background: var(--hover); color: var(--fg); font: inherit; text-align: left; cursor: pointer; min-height: 48px; }
+.plate-pick.on { border-color: var(--accent); }
+.plate-pick small { white-space: normal; }
+.member.plated { position: relative; isolation: isolate; overflow: hidden; border-radius: 8px; color: rgba(255,255,255,.82); margin: 2px 0; }
+.member.plated:hover { color: #fff; background: none; }
+.member.plated .names b { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.65); }
+.member.plated .names small { color: rgba(255,255,255,.78); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.member.plated::before, .member.plated::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.member.plated:hover::before { filter: brightness(1.12); }
+@keyframes pl-slide { to { background-position: 300% 0, 0 0; } }
+@keyframes pl-rise { to { background-position: 0 -80px, 0 -40px, 0 0; } }
+@keyframes pl-pan { to { background-position: 160px 0, 0 0; } }
+@keyframes pl-twinkle { 50% { opacity: .55; } }
+@keyframes pl-hue { to { filter: hue-rotate(360deg); } }
+@keyframes pl-scan { to { background-position: 0 40px, 0 0; } }
+@keyframes pl-pulse { 50% { opacity: .35; } }
+[data-plate="embers"]::before { background: radial-gradient(circle at 18% 80%, rgba(255,220,120,.95) 0 1.4px, transparent 2px) 0 0 / 52px 52px, radial-gradient(circle at 70% 60%, rgba(255,150,60,.9) 0 1.2px, transparent 2px) 0 0 / 38px 38px, linear-gradient(90deg, #1f0807, #7a1d0a 52%, #e8741a); animation: pl-rise 6s linear infinite; }
+[data-plate="aurora"]::before { background: linear-gradient(110deg, #04252a, #0b6e5f 25%, #3b2a86 50%, #0b6e5f 75%, #04252a) 0 0 / 300% 100%, #04252a; animation: pl-slide 9s linear infinite; }
+[data-plate="tide"]::before { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='40'%3E%3Cpath d='M0 22 Q20 8 40 22 T80 22 V40 H0Z' fill='%23ffffff' fill-opacity='.14'/%3E%3Cpath d='M0 30 Q20 18 40 30 T80 30 V40 H0Z' fill='%23ffffff' fill-opacity='.12'/%3E%3C/svg%3E") 0 0 / 80px 40px repeat-x, linear-gradient(180deg, #0c4a6e, #0e7490); animation: pl-pan 7s linear infinite; }
+[data-plate="sakura"]::before { background: radial-gradient(ellipse 4px 2.5px at 20% 30%, #fff 0 60%, transparent 62%) 0 0 / 60px 36px, radial-gradient(ellipse 3px 2px at 65% 70%, #ffe4ec 0 60%, transparent 62%) 0 0 / 44px 30px, linear-gradient(100deg, #5b1536, #c2417a 60%, #f9a8c9); animation: pl-rise 11s linear infinite; }
+[data-plate="circuit"]::before { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='40'%3E%3Cpath d='M0 10 H18 L26 18 H44 M30 40 V26 L38 18 M44 18 L52 10 H60' fill='none' stroke='%232dd4bf' stroke-opacity='.55' stroke-width='1.2'/%3E%3Ccircle cx='18' cy='10' r='2' fill='%232dd4bf'/%3E%3Ccircle cx='44' cy='18' r='2' fill='%2367e8f9'/%3E%3C/svg%3E") 0 0 / 60px 40px, linear-gradient(90deg, #04201f, #0b3b3a); }
+[data-plate="circuit"]::after { background: linear-gradient(90deg, transparent, rgba(45,212,191,.25), transparent); animation: pl-pulse 2.4s ease-in-out infinite; }
+[data-plate="starfield"]::before { background: radial-gradient(circle at 12% 30%, #fff 0 1px, transparent 1.6px) 0 0 / 70px 40px, radial-gradient(circle at 60% 70%, #cfe 0 1px, transparent 1.6px) 0 0 / 50px 36px, linear-gradient(90deg, #070b1f, #1b1b4d 70%, #2f2a6b); }
+[data-plate="starfield"]::after { background: radial-gradient(circle at 80% 25%, #fff 0 1.4px, transparent 2px) 0 0 / 90px 44px; animation: pl-twinkle 2.2s ease-in-out infinite; }
+[data-plate="parchment"] { color: #3a2a14 !important; }
+[data-plate="parchment"]::before { background: linear-gradient(90deg, #f1e2bd, #e6cf9b 60%, #d9bc80); box-shadow: inset 0 0 0 1px rgba(90,60,20,.55), inset 0 0 14px rgba(120,80,20,.35); }
+.member.plated[data-plate="parchment"] .names b { color: #2d1f0c; text-shadow: none; } .member.plated[data-plate="parchment"] .names small { color: #5a4220; text-shadow: none; }
+[data-plate="neon"]::before { background: repeating-linear-gradient(0deg, rgba(255,0,200,.55) 0 1px, transparent 1px 10px) 0 0 / 100% 40px, repeating-linear-gradient(90deg, rgba(0,230,255,.4) 0 1px, transparent 1px 22px), linear-gradient(180deg, #14002a, #2a0a4a); animation: pl-scan 2.5s linear infinite; }
+[data-plate="slime"]::before { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='70' height='40'%3E%3Cpath d='M0 0 H70 V8 Q64 8 62 16 Q60 24 56 16 Q54 8 46 8 Q40 8 38 20 Q36 30 31 20 Q28 8 20 8 Q12 8 10 14 Q8 22 4 14 Q2 8 0 8Z' fill='%2384cc16' fill-opacity='.75'/%3E%3C/svg%3E") 0 0 / 70px 40px repeat-x, linear-gradient(180deg, #14532d, #166534); animation: pl-pan 12s linear infinite; }
+[data-plate="prism"]::before { background: linear-gradient(100deg, #ef4444, #f59e0b, #22c55e, #06b6d4, #6366f1, #d946ef); animation: pl-hue 8s linear infinite; }
+[data-plate="prism"] { text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+[data-anim="off"]::before, [data-anim="off"]::after { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { [data-plate]::before, [data-plate]::after { animation: none !important; } }
+.srv-prev { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-bottom: 12px; background: var(--card); }
+.srv-prev-banner { height: 78px; display: flex; align-items: flex-end; padding: 8px 12px; background: linear-gradient(135deg, #374151, #1f2937); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+.srv-prev-me { padding: 10px 12px; } .srv-prev-me small { display: block; color: var(--muted); }
+.deco-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; align-items: center; }
+.deco-row .ck-swatch[aria-pressed="true"], .bn-pick[aria-pressed="true"], .deco-row .glyph[aria-pressed="true"] { outline: 2px solid var(--fg); outline-offset: 2px; }
+.deco-row .glyph { min-width: 40px; padding: 4px 10px; }
+.bn-pick { width: 70px; height: 40px; border-radius: 8px; border: 1px solid var(--line); cursor: pointer; color: var(--muted); font: inherit; font-size: 12px; background-color: var(--hover); }
+.member .names { min-width: 0; flex: 1; } .member .names b { min-width: 0; } .member .names .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; } .member .srv-tag, .member .crown { flex: none; }
