@@ -144,7 +144,8 @@ async function importAccountFiles(files) {
         await savePost(stub, { ...p, accountId: id }); saved.push(p.id);
         if (++n % 25 === 0) go_.textContent = `Importing ${n} of ${d.posts.length}...`;
       }
-      const base = { id, handle: hd, createdAt: d.account.createdAt };
+      const dec = d.posts.find(p => p.kind === 'deco');
+      const base = { id, handle: hd, createdAt: d.account.createdAt, ...(dec && DecoCore.plateOk(dec.plate) ? { plate: dec.plate } : {}) };
       const profile = { name: d.account.name, bio: d.account.bio, color: d.account.color || colorFor(hd), avatarImg: d.account.avatarImg, bannerImg: d.account.bannerImg };
       await db.put('accounts', pass
         ? { ...base, ...(d.account.guest ? { guest: true } : {}), vault: meta, profile: await seal(key, profile, 'profile:' + id) }

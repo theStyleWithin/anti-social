@@ -6,7 +6,10 @@ const Deco = (() => {
   const D = DecoCore;
   let active = { id: '', p: D.normProfile(null) };
   // called on every render: which account is "me", and how is it dressed (the avatar() helper reads this)
-  const setActive = (acct, ctx) => { active = { id: acct.id, p: D.normProfile((ctx.apps.deco || [])[0]) }; const calm = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); document.documentElement.dataset.decoAnim = active.p.animate && !calm ? 'on' : 'off'; };
+  // the nameplate is also kept on the account's plain record, so the account list can show it for every account, even one that is locked
+  const planted = new Map();
+  const rememberPlate = (id, plate) => { if (planted.get(id) === plate) return; planted.set(id, plate); db.get('accounts', id).then(raw => { if (raw && (raw.plate || 'none') !== plate) { const { plate: _p, ...rest } = raw; return db.put('accounts', plate === 'none' ? rest : { ...rest, plate }); } }).catch(() => {}); };
+  const setActive = (acct, ctx) => { active = { id: acct.id, p: D.normProfile((ctx.apps.deco || [])[0]) }; rememberPlate(acct.id, active.p.plate); const calm = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); document.documentElement.dataset.decoAnim = active.p.animate && !calm ? 'on' : 'off'; };
   const wreathOf = a => (a && a.id && a.id === active.id && tplId() === 'chat' ? active.p.wreath : '');
   // the pictures behind the decorations are drawn (and animated) in decocore.js and handed to the page as CSS, once: a moving set and a still set
   (function injectArt() {
@@ -21,7 +24,7 @@ const Deco = (() => {
   })();
   const mine = ctx => D.normProfile((ctx.apps.deco || [])[0]);
   const server = ctx => D.normServer((ctx.apps.srv || [])[0]);
-  async function saveProfile(acct, ctx, patch) { const r = (ctx.apps.deco || [])[0], v = { ...D.normProfile(r), ...patch }; return appSave(acct, { id: r ? r.id : 'deco' + acct.id, accountId: acct.id, kind: 'deco', plate: v.plate, bg: v.bg, wreath: v.wreath, animate: v.animate, updatedAt: Date.now() }); }
+  async function saveProfile(acct, ctx, patch) { const r = (ctx.apps.deco || [])[0], v = { ...D.normProfile(r), ...patch }; if ('plate' in patch) rememberPlate(acct.id, v.plate); return appSave(acct, { id: r ? r.id : 'deco' + acct.id, accountId: acct.id, kind: 'deco', plate: v.plate, bg: v.bg, wreath: v.wreath, animate: v.animate, updatedAt: Date.now() }); }
   async function saveServer(acct, ctx, patch) {
     const r = (ctx.apps.srv || [])[0], v = { ...D.normServer(r), ...patch };
     return appSave(acct, { id: r ? r.id : 'srv' + acct.id, accountId: acct.id, kind: 'srv', name: r ? r.name || '' : '', tag: v.tag, tagColor: v.tagColor, tagGlyph: v.tagGlyph, bannerPreset: v.bannerPreset, bannerImg: v.bannerImg, updatedAt: Date.now() });

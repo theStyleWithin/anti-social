@@ -1798,3 +1798,11 @@ body.pu-lock { overflow: hidden; }
 .dc-none { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 12px 0 4px; } .dc-none .plate-pick { grid-column: span 1; }
 .dc-series { margin: 22px 0 6px; padding-top: 12px; border-top: 1px solid var(--line); } .dc-series > h4 { margin: 0 0 8px; font-size: 18px; } .dc-series > h4 small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; margin-top: 2px; }
 .dc-group h5 { margin: 14px 0 2px; font-size: 14px; color: var(--accent); } .dc-kind h6 { margin: 10px 0 2px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+
+/* the account list: a profile row wears its nameplate (Chat Rooms look) */
+.pop-row.plated { position: relative; isolation: isolate; overflow: hidden; border-radius: 8px; margin: 2px 6px; width: calc(100% - 12px); color: rgba(255,255,255,.85); }
+.pop-row.plated:hover { background: none; color: #fff; }
+.pop-row.plated::before, .pop-row.plated::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit; }
+.pop-row.plated .who b, .pop-row.plated .pop-mark { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.65); } .pop-row.plated .who .muted { color: rgba(255,255,255,.8); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.pop-row.plated[data-plate="bubbletea"], .pop-row.plated[data-plate="parchment"] { color: #3a2250; } .pop-row.plated[data-plate="bubbletea"] .who b, .pop-row.plated[data-plate="parchment"] .who b, .pop-row.plated[data-plate="bubbletea"] .pop-mark, .pop-row.plated[data-plate="parchment"] .pop-mark { color: #2d1f0c; text-shadow: none; } .pop-row.plated[data-plate="bubbletea"] .who .muted, .pop-row.plated[data-plate="parchment"] .who .muted { color: #5a4220; text-shadow: none; }
+.acct-ctx { min-width: 220px; padding: 6px 0; } .acct-ctx .pop-row:disabled { opacity: .5; cursor: not-allowed; } .acct-ctx .pop-row .who .muted { font-size: 12px; }

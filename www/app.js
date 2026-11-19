@@ -28,6 +28,7 @@ const ICONS = {
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   settings: '<path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
   reply: '<path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.2A8 8 0 1 1 21 12z"/>',
+  eyeoff: '<path d="M3 3l18 18"/><path d="M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 8.5 4 9.5 6a14.5 14.5 0 0 1-2.8 3.5M6.6 7.7A14.7 14.7 0 0 0 2.5 12c1 2 4.5 6 9.5 6 1.4 0 2.6-.3 3.7-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
   repost: '<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>',
   heart: '<path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/>',
   trash: '<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>',
@@ -1368,16 +1369,18 @@ function extraAccountToast(n) {
 }
 
 /* ---------- accounts: switch and add ---------- */
-function switchAccount(raw) {
+let afterLogin = null;                           // where to land once a locked account has been opened (for example its profile)
+function switchAccount(raw, to) {
   lockVault();
   if (raw.vault || raw.hash) {
     session = null; ls('as.session', null);
-    authMode = { mode: 'unlock', account: raw };
+    authMode = { mode: 'unlock', account: raw }; afterLogin = to || null;
+    go('/');
   } else {
     session = raw.id; ls('as.session', raw.id);
     authMode = { mode: 'pick' };
+    go(to || '/');
   }
-  go('/');
 }
 
 async function addAccount(acct) {
@@ -1391,18 +1394,39 @@ async function addAccount(acct) {
 
 async function openAccountMenu(anchor, acct) {
   document.querySelector('.popover')?.remove();
-  const accounts = AcctCore.listed((await db.all('accounts')).sort((a, b) => a.createdAt - b.createdAt));
+  const everyone = (await db.all('accounts')).sort((a, b) => a.createdAt - b.createdAt);
+  const accounts = AcctCore.listed(everyone);
   if (!accounts.some(a => a.id === acct.id)) accounts.push(acct);
   const close = () => { pop.remove(); document.removeEventListener('mousedown', outside, true); document.removeEventListener('keydown', esc, true); };
-  const outside = e => { if (!pop.contains(e.target) && !anchor.contains(e.target)) close(); };
-  const esc = e => { if (e.key === 'Escape') close(); };
+  const outside = e => { if (!pop.contains(e.target) && !anchor.contains(e.target) && !e.target.closest('.acct-ctx')) close(); };
+  const esc = e => { if (e.key === 'Escape' && !document.querySelector('.acct-ctx')) close(); };
   const row = a => {
     const current = a.id === acct.id;
     const view = current ? acct : a;
-    return h('button', { class: 'pop-row', role: 'menuitem', onclick: () => { close(); if (current) go('/profile'); else switchAccount(a); } },
+    const plated = tplId() === 'chat' && DecoCore.plateOk(a.plate);          // the nameplate you chose, drawn behind the row (Chat Rooms look)
+    const el = h('button', { class: 'pop-row' + (plated ? ' plated' : ''), role: 'menuitem', ...(plated ? { 'data-plate': a.plate } : {}), 'aria-haspopup': 'menu', title: 'Right-click for more', onclick: () => { if (el.dataset.held) { delete el.dataset.held; return; } close(); if (current) go('/profile'); else switchAccount(a); },
+      oncontextmenu: e => { e.preventDefault(); rowMenu(e.clientX, e.clientY, a, current); } },
       avatar(view, 'sm'),
       h('div', { class: 'who' }, h('b', {}, view.name || '@' + view.handle), h('div', { class: 'muted' }, view.name ? '@' + view.handle : 'Locked')),
       h('span', { class: 'pop-mark' }, current ? icon('check') : (a.vault || a.hash) ? icon('lock') : null));
+    let timer = 0;                                                            // a long press does the same as a right click on a touch screen
+    el.addEventListener('pointerdown', e => { if (e.pointerType !== 'touch') return; timer = setTimeout(() => { el.dataset.held = '1'; rowMenu(e.clientX, e.clientY, a, current); }, 550); });
+    for (const ev of ['pointerup', 'pointercancel', 'pointermove', 'pointerleave']) el.addEventListener(ev, () => clearTimeout(timer));
+    return el;
+  };
+  // right click on a profile: see it, or hide it. A profile locked with a passcode cannot be hidden from here.
+  const rowMenu = (x, y, a, current) => {
+    document.querySelector('.acct-ctx')?.remove();
+    const locked = !!(a.vault || a.hash), canHide = !locked && AcctCore.canHide(everyone, a);
+    const stop = () => { ctx.remove(); document.removeEventListener('mousedown', away, true); document.removeEventListener('keydown', key, true); };
+    const away = e => { if (!ctx.contains(e.target)) stop(); }, key = e => { if (e.key === 'Escape') { e.stopPropagation(); stop(); } };
+    const item = (label, ic, fn, off, why) => h('button', { class: 'pop-row', role: 'menuitem', disabled: !!off, title: off ? why : '', onclick: () => { stop(); fn(); } }, h('span', { class: 'pop-plus' }, icon(ic)), h('div', { class: 'who' }, h('b', {}, label), off && why ? h('div', { class: 'muted' }, why) : null));
+    const ctx = h('div', { class: 'popover acct-ctx', role: 'menu', 'aria-label': '@' + a.handle },
+      item('See profile', 'user', () => { close(); current ? go('/profile') : switchAccount(a, '/profile'); }),
+      item('Hide', 'eyeoff', async () => { if (current) { close(); await hideAccount(acct); return; } const raw = await db.get('accounts', a.id); await db.put('accounts', { ...raw, hidden: true }); toast(`@${a.handle} is hidden. Unhide it in Settings, under Hidden accounts.`); close(); openAccountMenu(anchor, acct); }, !canHide, locked ? 'Locked accounts can\'t be hidden' : 'Keep at least one account showing'));
+    document.body.append(ctx);
+    ctx.style.left = Math.max(8, Math.min(x, innerWidth - ctx.offsetWidth - 8)) + 'px'; ctx.style.top = Math.max(8, Math.min(y, innerHeight - ctx.offsetHeight - 8)) + 'px';
+    document.addEventListener('mousedown', away, true); document.addEventListener('keydown', key, true);
   };
   const pop = h('div', { class: 'popover', role: 'menu', 'aria-label': 'Accounts' },
     h('div', { class: 'pop-head' }, plural(accounts.length, 'account') + ' on this device'),
@@ -1499,7 +1523,7 @@ async function authView() {
     top,
     h('div', { class: 'logo' }, icon('logo')), h('h1', {}, 'Anti-Social'),
     h('p', { class: 'tag' }, 'Social media with nobody on it.'), body));
-  const loginAs = a => { session = a.id; ls('as.session', a.id); authMode = { mode: 'pick' }; go('/'); };
+  const loginAs = a => { session = a.id; ls('as.session', a.id); authMode = { mode: 'pick' }; const to = afterLogin || '/'; afterLogin = null; go(to); };
 
   if (authMode.mode === 'unlock') {
     const a = authMode.account;
