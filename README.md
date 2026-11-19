@@ -6,7 +6,7 @@
 
 ## Status: fully featured and complete
 
-Anti-Social v0.27.3 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.28.0 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (drag-to-reorder, themes, the Bible, Travel Log, Cookbook and the v0.12.0 account features are automated-test verified, awaiting a hand test; the Android file saver in v0.12.0 is new native code and has not yet been run on a real phone); plus automated tests):
 - **Newer apps (v0.20.0 to v0.26.0):** Language Lab, Calorie Counter, Push-Up Counter, Music Player, the viewers, YouTube playback, the desktop layout and Updates are checked by automated tests; the Fireplace, Aquarium, Music Player and YouTube embeds have been tried on a real phone. The console versions, background video playback, the Updates installer and the Music Player folder picker have **not yet been hand tested on real hardware**.
@@ -84,6 +84,11 @@ A new piece earns its place by being something you would use inside the shell, n
 - **YouTube links play in the timeline:** a post with a YouTube link shows a card; tap it and the video plays right there (it asks first, and you can set it to never, ask, or always). On Android a playing video keeps going with the screen off
 - **Desktop layout (desktop app):** drag either wall of the timeline to make it wider or narrower, and pin a built-in app into the empty space on each side (in Settings, or by dragging an app card to the far left or right of the Apps page)
 - **Updates:** Settings, Updates checks this project's GitHub releases when you ask (or once a day if you turn that on) and, on Android and the desktop apps, downloads the new version, verifies it and opens its installer. No launcher needed
+- **Chat Rooms extras (Chat Rooms look only):**
+  - **Forum channels:** make a channel a Forum. Posts have a title, a message, pictures and tags; browse them as cards or a list, filter by tag, search, pin posts, read the guidelines, and reply in a thread that opens beside the list. Each forum has its own guidelines, up to 20 tags, an optional "require a tag" rule, a default reaction and a Get Started checklist
+  - **Custom emoji, stickers and a soundboard:** upload your own (up to 50 emoji, 30 stickers, 24 sounds of up to 8 seconds), use emoji by typing `:name:`, send stickers and sounds as messages, and play sounds from the soundboard. An emoji button beside the message box has them all. Everything stays on your device
+  - **Profile decorations:** nameplates behind your row in the member list, animated profile backgrounds, avatar wreaths, and a server tag and banner, filed by collection (Classic, Kawaii Boba Tea, Lunar New Year, Anime) with filters. All the art is original, drawn in the app with small animations and a still version for reduced motion
+  - **Profile status and Board:** a status bubble with an emoji that can clear itself, and a Board of widgets you fill in yourself (Favorite Game, Games I Like, Games in Rotation, Want to Play), with suggestions only from the games already in your own Achievements and Screenshots apps. No widget connects to any online game or account
 - **Templates:** Anti-Social (original), Chat Rooms (a server with channels), Classic Blue (an early-2010s social network) and Communities (a Reddit-style community page: orange header, vote arrows with scores, "Posted by u/you", comments, an About panel and rules). A template changes only how things look and what they are called, never your data.
 - **Multiple accounts:** click your account at the bottom left on desktop, or your avatar at the top left on a phone, to switch or add one, with a joke about it
 - The Apps menu is made of clear glass bubbles
@@ -93,6 +98,7 @@ A new piece earns its place by being something you would use inside the shell, n
 
 ## Version history
 
+- **v0.28.0:** Chat Rooms gets forum channels, custom emoji, stickers and a soundboard, a profile status and Board of widgets, and profile decorations (nameplates, animated backgrounds, avatar wreaths, server tag and banner) in five themes: Kawaii Boba Tea, Lunar New Year and three Anime sets, all filed by collection. A page-sized Music Player style no longer leaks into dialogs
 - **v0.27.3:** desktop app, same app in several columns: the Matrix Viewer now runs in all of them (before, only the last one moved); every Music Player column shows the playing song and its controls on one shared player; Fireplace and Aquarium draw in every column with the sound coming from only one
 - **v0.27.2:** desktop app: the same app can be pinned on both sides of the timeline, no rules
 - **v0.27.1:** desktop app: the right column (search, trends, who to follow) can be hidden by dragging its left edge to the right, and brought back from the top right of the timeline or in Settings (optional, and separate from pinned apps); the Wii U build retries when the devkitPro download server refuses
@@ -215,6 +221,8 @@ be a crime, and so can lying to officers about what a PIN does. This is a privac
 **Apps.** Everything in Apps is saved like your posts, so with a passcode it is encrypted too: notes, diary entries, events, receipts, household items and their photos, grocery lists, chores and their history. Household photos are stored as separate records tied to their item by a random token. The token shows that some records belong together, nothing about what they are. Apps use only your own device and count toward your storage limit. The Banking app is a notebook and connects to nothing. Songs you copy into the Music Player are kept in the app's own storage and are not encrypted by the vault; songs played from a folder stay in that folder and are only read when played.
 
 **Characters.** Your characters and your edits to generated people are saved like your posts, so with a passcode they are encrypted too: names, bios, pictures and the fact that they exist. Characters are private to the account that made them. Images you add count toward your storage limit. There is no way to share a character with anyone else; they are included only in your own data export. A custom character never carries the "procedurally generated" label, so it can never pass as a generated stranger.
+
+**Chat Rooms extras.** Forum posts and replies, your status and Board, your decorations and your emoji, stickers and sounds are saved like your posts, so with a passcode they are encrypted too. Nothing in them is sent anywhere.
 
 **Storage and your posting limit.** Settings, General, Storage shows how much space Anti-Social is using and lets you set your own limit in MB or GB. New posts pause when you reach it, or sooner if your device is nearly full, and you can raise it or delete posts to carry on. Pictures are shrunk before saving and anything over 40 MB is refused. The meter is approximate. Data stays in each app's own private storage on the device; choosing a different drive is not supported.
 
