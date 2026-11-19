@@ -32,24 +32,41 @@ const Deco = (() => {
   const plateAttrs = (id, animate) => (id && id !== 'none' ? { 'data-plate': id, 'data-anim': animate === false ? 'off' : 'on' } : {});
   const plated = id => !!id && id !== 'none';
 
-  /* ----- Settings: themes, nameplates, backgrounds and wreaths ----- */
+  /* ----- Settings: themes, nameplates, backgrounds and wreaths, filed by collection ----- */
+  let view = (() => { try { const v = JSON.parse(localStorage.getItem('as.deco.view') || 'null'); if (v && typeof v === 'object') return { series: String(v.series || 'all'), kind: String(v.kind || 'all') }; } catch { /* default */ } return { series: 'all', kind: 'all' }; })();
+  const setView = p => { view = { ...view, ...p }; try { localStorage.setItem('as.deco.view', JSON.stringify(view)); } catch { /* not remembered */ } render(true); };
   function settingsSection(acct, ctx) {
     const cur = mine(ctx), srv = server(ctx), set = async patch => { if (await saveProfile(acct, ctx, patch)) render(true); };
+    const byId = list => Object.fromEntries(list.map(x => [x.id, x])), PL = byId(D.PLATES), BG = byId(D.BACKGROUNDS), WR = byId(D.WREATHS);
     const wreathAvatar = id => { const a = avatar(acct, 'lg'); if (id && id !== 'none') a.dataset.wreath = id; else delete a.dataset.wreath; return a; };
     const theme = t => h('button', { class: 'theme-card' + (cur.plate === t.plate && cur.bg === t.bg && cur.wreath === t.wreath ? ' on' : ''), type: 'button', onclick: () => set({ plate: t.plate, bg: t.bg, wreath: t.wreath }) },
       h('span', { class: 'theme-av' }, wreathAvatar(t.wreath)), h('span', {}, h('b', {}, t.name), h('small', {}, t.blurb)));
     const plate = p => h('button', { class: 'member plate-pick' + (D.plateOk(p.id) ? ' plated' : '') + (cur.plate === p.id ? ' on' : ''), type: 'button', 'aria-pressed': String(cur.plate === p.id), ...plateAttrs(p.id, cur.animate), onclick: () => set({ plate: p.id }) },
-      h('span', { class: 'av-wrap' }, avatar(acct, 'sm'), h('i', { class: 'dot online' })), h('span', { class: 'names' }, h('b', {}, h('span', { class: 'nm' }, acct.name), tagEl(srv)), h('small', {}, p.name + ' \u00b7 ' + p.blurb)));
+      h('span', { class: 'av-wrap' }, avatar(acct, 'sm'), h('i', { class: 'dot online' })), h('span', { class: 'names' }, h('b', {}, h('span', { class: 'nm' }, acct.name), tagEl(srv)), h('small', {}, p.name + ' · ' + p.blurb)));
     const bgPick = b => h('button', { class: 'bg-pick' + ((cur.bg || 'none') === b.id ? ' on' : ''), type: 'button', 'aria-pressed': String((cur.bg || 'none') === b.id), onclick: () => set({ bg: b.id === 'none' ? '' : b.id }) },
       b.id === 'none' ? h('span', { class: 'bg-prev none' }, 'None') : h('span', { class: 'banner bg-prev', 'data-bg': b.id }, h('span', { class: 'bimg' })), h('b', {}, b.name), h('small', {}, b.blurb));
     const wrPick = w => h('button', { class: 'wr-pick' + ((cur.wreath || 'none') === w.id ? ' on' : ''), type: 'button', 'aria-pressed': String((cur.wreath || 'none') === w.id), onclick: () => set({ wreath: w.id === 'none' ? '' : w.id }) },
       h('span', { class: 'wr-av' }, wreathAvatar(w.id)), h('b', {}, w.name), h('small', {}, w.blurb));
+    const KINDS = [['plate', 'Nameplates', 'plate-grid', plate, PL], ['bg', 'Profile backgrounds', 'bg-grid', bgPick, BG], ['wreath', 'Avatar wreaths', 'wr-grid', wrPick, WR]];
+    const want = k => view.kind === 'all' || view.kind === k;
+    const chip = (label, on, fn) => h('button', { class: 'fp-chip' + (on ? ' on' : ''), type: 'button', 'aria-pressed': String(on), onclick: fn }, label);
+    const wearing = [cur.plate !== 'none' ? 'Nameplate: ' + (PL[cur.plate] || {}).name : '', cur.bg ? 'Background: ' + (BG[cur.bg] || {}).name : '', cur.wreath ? 'Wreath: ' + (WR[cur.wreath] || {}).name : ''].filter(Boolean);
+    // one collection: its themes, then its groups, each with the kinds you asked to see
+    const seriesBlock = se => {
+      const themes = D.THEMES.filter(t => D.seriesOfTheme(t.id) === se.id);
+      const kinds = g => KINDS.filter(([k]) => want(k) && (g[k] || []).length).map(([k, label, cls, build, map]) => h('div', { class: 'dc-kind' }, h('h6', {}, label), h('div', { class: cls, role: 'group', 'aria-label': label }, g[k].map(id => build(map[id])))));
+      const body = se.groups.map(g => { const ks = kinds(g); return ks.length ? h('div', { class: 'dc-group' }, g.name ? h('h5', {}, g.name) : null, ks) : null; }).filter(Boolean);
+      if (!body.length && !(view.kind === 'all' && themes.length)) return null;
+      return h('section', { class: 'dc-series', 'aria-label': se.name }, h('h4', {}, se.name, h('small', {}, se.blurb)), view.kind === 'all' && themes.length ? h('div', { class: 'theme-grid' }, themes.map(theme)) : null, body);
+    };
+    const shown = D.SERIES.filter(se => view.series === 'all' || view.series === se.id).map(seriesBlock).filter(Boolean);
     return h('section', {}, h('h3', {}, 'Profile decorations'),
-      h('p', {}, 'Dress up your profile. Nobody else will see any of it, but you will, and so will anyone you show your phone to.'),
-      h('h4', {}, 'Themes'), h('div', { class: 'theme-grid' }, D.THEMES.map(theme)),
-      h('h4', {}, 'Nameplate (your row in the member list)'), h('div', { class: 'plate-grid', role: 'group', 'aria-label': 'Nameplates' }, D.PLATES.map(plate)),
-      h('h4', {}, 'Profile background (animated, on your profile page)'), h('div', { class: 'bg-grid', role: 'group', 'aria-label': 'Profile backgrounds' }, D.BACKGROUNDS.map(bgPick)),
-      h('h4', {}, 'Avatar wreath (a frame around your picture)'), h('div', { class: 'wr-grid', role: 'group', 'aria-label': 'Avatar wreaths' }, D.WREATHS.map(wrPick)),
+      h('p', {}, 'Dress up your profile. Nobody else will see any of it, but you will, and so will anyone you show your phone to. Everything is filed by collection and kind, so pick a filter to narrow the list.'),
+      h('div', { class: 'dc-wear' }, h('span', {}, wearing.length ? 'Wearing: ' + wearing.join(' · ') : 'Wearing: nothing yet'), wearing.length ? h('button', { class: 'btn', type: 'button', onclick: () => set({ plate: 'none', bg: '', wreath: '' }) }, 'Take it all off') : null),
+      h('div', { class: 'dc-filters', role: 'group', 'aria-label': 'Collection' }, chip('All collections', view.series === 'all', () => setView({ series: 'all' })), D.SERIES.map(se => chip(se.name, view.series === se.id, () => setView({ series: se.id })))),
+      h('div', { class: 'dc-filters', role: 'group', 'aria-label': 'Kind' }, chip('Everything', view.kind === 'all', () => setView({ kind: 'all' })), KINDS.map(([k, label]) => chip(label, view.kind === k, () => setView({ kind: k })))),
+      h('div', { class: 'dc-none', role: 'group', 'aria-label': 'Take one off' }, want('plate') ? plate(PL.none) : null, want('bg') ? bgPick(BG.none) : null, want('wreath') ? wrPick(WR.none) : null),
+      shown.length ? shown : h('p', { class: 'fine' }, 'Nothing in that collection for that kind.'),
       h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: cur.animate, onchange: e => set({ animate: e.target.checked }) }), ' ', h('span', {}, 'Animate decorations', h('small', { class: 'muted', style: 'display:block' }, 'Things move a little. Turned off automatically if your device asks for less motion.'))),
       h('div', { class: 'btnrow' }, h('button', { class: 'btn', type: 'button', onclick: () => serverProfileModal(acct, ctx) }, 'Server tag and banner')));
   }

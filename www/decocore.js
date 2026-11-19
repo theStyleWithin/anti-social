@@ -22,6 +22,8 @@ const DecoCore = (() => {
     { id: 'goldwaves', name: 'Gold Waves', blurb: 'Rolling gold waves on deep red.', anim: true },
     { id: 'sparkleanime', name: 'Sparkle Streak', blurb: 'A violet glow with a shooting star.', anim: true },
     { id: 'mangapanel', name: 'Manga Panel', blurb: 'Halftone dots, speed lines and a POW.', anim: true },
+    { id: 'heartneon', name: 'Heart Neon', blurb: 'Glowing outline hearts on deep magenta.', anim: true },
+    { id: 'angrybar', name: 'Angry Row', blurb: 'A trembling red row with a popping vein.', anim: true },
   ];
   const TAG_COLORS = [['#5865f2', 'Blurple'], ['#23a55a', 'Green'], ['#f0b232', 'Gold'], ['#f23f43', 'Red'], ['#eb459e', 'Pink'], ['#06b6d4', 'Cyan'], ['#f97316', 'Orange'], ['#7c3aed', 'Violet']];
   const TAG_GLYPHS = [['', 'None'], ['★', 'Star'], ['⚡', 'Bolt'], ['♥', 'Heart'], ['☠', 'Skull'], ['❀', 'Flower'], ['♦', 'Diamond'], ['♛', 'Crown']];
@@ -46,6 +48,9 @@ const DecoCore = (() => {
     { id: 'boba', name: 'Bubble Tea Bliss', blurb: 'Pink milk tea, pearls bobbing, sparkles.', anim: true },
     { id: 'lantern', name: 'Lantern Festival Night', blurb: 'Swaying lanterns, fireworks and golden petals.', anim: true },
     { id: 'animenight', name: 'Anime Night', blurb: 'Starry violet sky, shooting stars and drifting blossoms.', anim: true },
+    { id: 'neonhearts', name: 'Neon Hearts', blurb: 'Glowing pixel hearts in pink and cyan.', anim: true },
+    { id: 'cometnight', name: 'Comet Night', blurb: 'A blue night with a comet sweeping past.', anim: true },
+    { id: 'goldendust', name: 'Golden Dust', blurb: 'Warm light with drifting golden sparks.', anim: true },
   ];
   const WREATHS = [
     { id: 'none', name: 'None', blurb: 'Just your picture.' },
@@ -71,12 +76,22 @@ const DecoCore = (() => {
     { id: 'nervous', name: 'Nervous', blurb: 'Sweat drops and a confused question mark.', anim: true },
     { id: 'ghost', name: 'Little Ghost', blurb: 'A shy ghost floating beside you.', anim: true },
     { id: 'sunburst', name: 'Sunburst', blurb: 'Golden rays pulsing outward.', anim: true },
+    { id: 'heartbloom', name: 'Heartbloom', blurb: 'Hearts and blossoms in full bloom.', anim: true },
+    { id: 'starryeyed', name: 'Starry Eyed', blurb: 'Big gold stars and shining rays.', anim: true },
+    { id: 'shocked', name: 'Shocked', blurb: 'Jumpy shock lines and a gasp bubble.', anim: true },
+    { id: 'inlove', name: 'In Love', blurb: 'Heart eyes and hearts floating up.', anim: true },
+    { id: 'kienergy', name: 'Ki Energy', blurb: 'Blue lightning around a fiery swirl.', anim: true },
+    { id: 'intears', name: 'In Tears', blurb: 'Big shiny teardrops.', anim: true },
+    { id: 'dismay', name: 'Dismay', blurb: 'A gloomy blue ring with trickling drops.', anim: true },
+    { id: 'catears', name: 'Cat Ears', blurb: 'White kitty ears and whiskers.', anim: true },
   ];
   // a theme sets a nameplate, a background and a wreath together
   const THEMES = [
     { id: 'boba', name: 'Kawaii Boba Tea', blurb: 'Pink milk tea, pearls and sparkles.', plate: 'bubbletea', bg: 'boba', wreath: 'bobacup' },
     { id: 'lunar', name: 'Lunar New Year', blurb: 'Red lanterns, gold waves and fireworks.', plate: 'lanternglow', bg: 'lantern', wreath: 'redlantern' },
     { id: 'anime', name: 'Anime', blurb: 'Sparkles, shooting stars and magical ribbons.', plate: 'sparkleanime', bg: 'animenight', wreath: 'magicgirl' },
+    { id: 'animehearts', name: 'Anime Hearts', blurb: 'Neon hearts, blossoms and a lot of feelings.', plate: 'heartneon', bg: 'neonhearts', wreath: 'heartbloom' },
+    { id: 'animecosmos', name: 'Anime Cosmos', blurb: 'A comet, crackling ki and a night sky.', plate: 'angrybar', bg: 'cometnight', wreath: 'kienergy' },
   ];
 
   /* ---- the art: drawn here as SVG (with its own tiny animations) and handed to the page as CSS (see deco.js). Everything is original.
@@ -318,8 +333,92 @@ const DecoCore = (() => {
       + `<g>${move('translate', '0 0;-30 0', 1.2)}${[6, 14, 24, 33, 40].map((y, i) => `<path d="M${120 + i * 7} ${y}H${230 - i * 6}" stroke="${INK}" stroke-opacity=".5" stroke-width="${i % 2 ? 1 : 1.8}"/>`).join('')}</g>`
       + `<g transform="translate(206 22)"><g>${move('scale', '.9;1.12;.9', .9)}${move('rotate', '-4;4;-4', .9)}<path d="M0 -20L5 -9 16 -14 11 -4 24 0 11 4 16 14 5 9 0 20-5 9-16 14-11 4-24 0-11-4-16-14-5-9Z" fill="#ffe14d" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><path d="M-9 -3L-3 -5 0 2 4 -5 9 -3 4 5H-4Z" fill="#e5322d"/></g></g>`
       + `<rect x="1" y="1" width="238" height="42" fill="none" stroke="${INK}" stroke-width="2"/>`);
+
+    /* ===== more Anime: feelings, energy and moods ===== */
+    const heartOutline = (x, y, sz, c, o = {}) => `<g transform="translate(${x} ${y})"><g>${o.pulse ? move('scale', '1;1.15;1', o.pulse, o.begin || 0) : ''}${anim('opacity', '1;.55;1', o.pulse || 2, o.begin || 0)}<path d="M0 ${f1(sz * .9)}C${f1(-sz * 1.5)} ${f1(-sz * .1)} ${f1(-sz * .6)} ${f1(-sz * 1.1)} 0 ${f1(-sz * .35)}C${f1(sz * .6)} ${f1(-sz * 1.1)} ${f1(sz * 1.5)} ${f1(-sz * .1)} 0 ${f1(sz * .9)}Z" fill="${o.fill || 'none'}" stroke="${c}" stroke-width="${o.w || 2.4}" stroke-linejoin="round"/></g></g>`;
+    const floatUp = (x, y, dist, dur, begin, inner) => `<g transform="translate(${x} ${y})"><g>${move('translate', `0 0;${f1(dist * .12)} ${-dist}`, dur, begin)}${anim('opacity', '0;1;1;0', dur, begin, 'keyTimes="0;.15;.7;1"')}${inner}</g></g>`;
+    const drop = (x, y, sz, c = '#6bb6ff') => `<path d="M${x} ${y - sz}Q${x + sz * .9} ${y + sz * .2} ${x} ${y + sz * .8}Q${x - sz * .9} ${y + sz * .2} ${x} ${y - sz}Z" fill="${c}" stroke="#2f7fd6" stroke-width="1.2"/><ellipse cx="${f1(x - sz * .25)}" cy="${f1(y + sz * .1)}" rx="${f1(sz * .16)}" ry="${f1(sz * .3)}" fill="#fff" fill-opacity=".7"/>`;
+    wreath.heartbloom = svg(144, 144,
+      `<circle cx="72" cy="72" r="54" fill="none" stroke="#ffd6e8" stroke-opacity=".28" stroke-width="5"/>`
+      + [[26, 108, 11, 2.2, 0], [44, 124, 8, 2.6, .5], [14, 90, 7, 2.4, 1.1], [58, 134, 5, 2, .8], [28, 128, 5, 2.8, 1.5]].map(p => `<g>${move('translate', '0 0;0 -3;0 0', p[3] + 1, p[4])}${heart(p[0], p[1], p[2], p[2] > 8 ? '#ff4f9a' : '#ff8fc0')}</g>`).join('')
+      + flower(112, 30, 13, '#ffd6e8', '#ff7eb6', { spin: 18 }) + flower(128, 52, 9, '#fff', '#ffd75e', { spin: 14, begin: 3 }) + flower(98, 16, 7, '#ffb3d1', '#ff7eb6', { spin: 12, begin: 6 }) + flower(126, 112, 8, '#ffd6e8', '#ff7eb6', { pulse: 2.6 })
+      + sparkleBig(120, 74, 7, '#fff', { dur: 2 }) + sparkleBig(18, 70, 6, '#ffe58a', { dur: 2.4, begin: .7 }) + star(70, 8, 3, '#fff', { tw: 2.2 }));
+    wreath.starryeyed = svg(144, 144,
+      `<g transform="translate(72 72)"><g>${move('scale', '.95;1.08;.95', 1.8)}` + Array.from({ length: 32 }, (_, i) => { const a = i * 360 / 32 * Math.PI / 180, r1 = 54, r2 = i % 2 ? 62 : 70; return `<path d="M${f1(Math.sin(a) * r1)} ${f1(-Math.cos(a) * r1)}L${f1(Math.sin(a) * r2)} ${f1(-Math.cos(a) * r2)}" stroke="#e9a21d" stroke-width="${i % 2 ? 1.4 : 2.2}" stroke-linecap="round" stroke-opacity=".85"/>`; }).join('') + `</g></g>`
+      + sparkleBig(30, 28, 15, '#ffd23a', { dur: 1.8 }) + sparkleBig(116, 60, 13, '#ffd23a', { dur: 2.1, begin: .5 }) + sparkleBig(24, 112, 11, '#ffe58a', { dur: 2.4, begin: 1 }) + sparkleBig(120, 116, 8, '#fff', { dur: 2, begin: .3 }) + sparkleBig(96, 14, 7, '#fff', { dur: 2.3, begin: .9 }));
+    wreath.shocked = svg(144, 144,
+      `<g>${move('translate', '0 0;0 -2.4;0 0', .5)}` + [[42, 10, -34], [58, 4, -14], [86, 4, 14], [102, 10, 34]].map(p => `<g transform="translate(${p[0]} ${p[1]}) rotate(${p[2]})"><path d="M0 0L5 14" stroke="#ff2e93" stroke-width="5" stroke-linecap="round"/></g>`).join('') + `</g>`
+      + bubbleMark(24, 118, 13, `<path d="M-5 -6L5 -6M0 -6V3" stroke="${INK}" stroke-width="2.6" stroke-linecap="round" fill="none"/><circle cy="7" r="1.8" fill="${INK}"/>`, .9, 0)
+      + star(124, 32, 3.4, '#ff9ccb', { tw: 1.4 }) + star(126, 110, 3, '#fff', { tw: 1.8, begin: .5 }));
+    wreath.inlove = svg(144, 144,
+      `<g transform="translate(26 22)"><g>${bob(3, 2.4)}<circle r="17" fill="#fff" stroke="${INK}" stroke-width="1.8"/>${heart(-7, -3, 5.5, '#ff2e63')}${heart(7, -3, 5.5, '#ff2e63')}<path d="M-6 7Q0 13 6 7Q0 9 -6 7Z" fill="#ff2e63" stroke="#c4123b" stroke-width="1.2" stroke-linejoin="round"/><ellipse cx="-12" cy="5" rx="3" ry="1.8" fill="#ff9fb8" fill-opacity=".8"/><ellipse cx="12" cy="5" rx="3" ry="1.8" fill="#ff9fb8" fill-opacity=".8"/></g></g>`
+      + floatUp(112, 100, 52, 3.2, 0, heart(0, 0, 8, '#ff2e63')) + floatUp(126, 88, 46, 3.6, 1.2, heart(0, 0, 5, '#ff7eb6')) + floatUp(24, 112, 50, 3.4, .6, heart(0, 0, 7, '#ff8fc0')) + floatUp(44, 130, 44, 3, 1.8, heart(0, 0, 5, '#ffb3d6'))
+      + star(122, 22, 3.4, '#fff', { tw: 2 }));
+    const zag = (pts, c, w, begin) => `<path d="M${pts.map(p => p.join(' ')).join('L')}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${anim('stroke-opacity', '1;.1;1;.1;1', .9, begin)}</path>`;
+    wreath.kienergy = svg(144, 144,
+      `<circle cx="72" cy="72" r="56" fill="none" stroke="#38bdf8" stroke-opacity=".25" stroke-width="8">${anim('stroke-opacity', '.1;.4;.1', 1.4)}</circle><g transform="translate(72 72)"><g>${move('rotate', '0;360', 3.2)}<path d="M0 -58A58 58 0 0 1 58 0" fill="none" stroke="url(#ki)" stroke-width="9" stroke-linecap="round"/><path d="M0 58A58 58 0 0 1 -58 0" fill="none" stroke="url(#ki)" stroke-width="7" stroke-linecap="round"/></g></g>`
+      + zag([[20, 58], [28, 50], [24, 42], [34, 34], [30, 26]], '#7de3ff', 3, 0) + zag([[120, 40], [112, 48], [118, 56], [108, 62]], '#bff3ff', 2.6, .3) + zag([[26, 104], [34, 112], [30, 120], [40, 126]], '#7de3ff', 2.6, .6) + zag([[116, 100], [108, 108], [114, 116], [104, 124]], '#bff3ff', 3, .9) + zag([[60, 14], [66, 8], [74, 14], [82, 6]], '#fff', 2.4, .5)
+      + sparkleBig(124, 22, 8, '#fff', { dur: 1.6 }) + star(14, 122, 3, '#7de3ff', { tw: 1.4 }),
+      `<linearGradient id="ki" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffcf4a" stop-opacity="0"/><stop offset=".5" stop-color="#ff9a2e"/><stop offset="1" stop-color="#fff0a8"/></linearGradient>`);
+    const bigDrop = (x, y, r, begin) => `<g transform="translate(${x} ${y})"><g>${move('scale', '1;1.08;1', 2.6, begin)}<circle r="${r}" fill="#9fd4ff" fill-opacity=".55" stroke="#5aa8ff" stroke-width="1.6"/><ellipse cx="${f1(-r * .3)}" cy="${f1(-r * .35)}" rx="${f1(r * .38)}" ry="${f1(r * .2)}" fill="#fff" fill-opacity=".85" transform="rotate(-30 ${f1(-r * .3)} ${f1(-r * .35)})"/></g></g>`;
+    wreath.intears = svg(144, 144,
+      `<circle cx="72" cy="72" r="54" fill="none" stroke="#9fd4ff" stroke-opacity=".3" stroke-width="5"/>`
+      + bigDrop(26, 24, 10, 0) + bigDrop(46, 14, 7, .8) + bigDrop(114, 20, 8, 1.5) + bigDrop(128, 38, 6, .4) + bigDrop(18, 46, 6, 2) + bigDrop(100, 8, 5, 1.1)
+      + floatUp(30, 40, -34, 2.4, 0, drop(0, 0, 5)) + floatUp(118, 42, -36, 2.8, 1, drop(0, 0, 5)) + star(70, 134, 3, '#fff', { tw: 2.2 }));
+    wreath.dismay = svg(144, 144,
+      `<circle cx="72" cy="72" r="56" fill="none" stroke="url(#gl)" stroke-width="12"/><circle cx="72" cy="72" r="50.8" fill="none" stroke="#a6d0f0" stroke-opacity=".35" stroke-width="1.4"/>`
+      + [[22, 70, 0], [124, 74, 1.1], [34, 100, .6], [112, 104, 1.7], [18, 92, 2.1]].map(p => `<g transform="translate(${p[0]} ${p[1]})"><g>${move('translate', '0 0;0 24', 2.4, p[2])}${anim('opacity', '1;1;0', 2.4, p[2])}${drop(0, 0, 4.4, '#7cc4ff')}</g></g>`).join('')
+      + `<path d="M24 40Q36 28 52 24M120 40Q108 28 92 24" fill="none" stroke="#7fb4e0" stroke-opacity=".5" stroke-width="2.4" stroke-linecap="round">${anim('stroke-opacity', '.2;.6;.2', 3)}</path>`,
+      `<linearGradient id="gl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16324f"/><stop offset="1" stop-color="#2e6a9a"/></linearGradient>`);
+    wreath.catears = svg(144, 144,
+      `<g transform="translate(38 34)"><g>${move('rotate', '0;0;-7;0;0', 4.6, 0, 'keyTimes="0;.7;.76;.84;1"')}<g transform="translate(-38 -34)"><path d="M20 52L20 12 58 30Z" fill="#fff" stroke="#d6cfe6" stroke-width="2" stroke-linejoin="round"/><path d="M26 42L26 22 46 31Z" fill="#ffb3cd"/></g></g></g><g transform="translate(106 34)"><g>${move('rotate', '0;0;7;0;0', 5.2, 1.4, 'keyTimes="0;.7;.76;.84;1"')}<g transform="translate(-106 -34)"><path d="M124 52L124 12 86 30Z" fill="#fff" stroke="#d6cfe6" stroke-width="2" stroke-linejoin="round"/><path d="M118 42L118 22 98 31Z" fill="#ffb3cd"/></g></g></g>`
+      + `<circle cx="72" cy="72" r="54" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="5"/>`
+      + [-1, 1].map(sd => [[0, -8], [6, 0], [0, 8]].map((p, i) => `<path d="M${72 + sd * 58} ${72 + i * 8 - 6}L${72 + sd * (70 + i * 1)} ${72 + (i - 1) * 9 - 4}" stroke="#3a3350" stroke-width="2" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" values="0 ${72 + sd * 58} ${72 + i * 8 - 6};${sd * 4} ${72 + sd * 58} ${72 + i * 8 - 6};0 ${72 + sd * 58} ${72 + i * 8 - 6}" dur="2.4s" repeatCount="indefinite"/></path>`.replace(/<animateTransform[^>]*\/>/, an ? '$&' : '')).join('')).join('')
+      + star(18, 24, 3, '#fff', { tw: 2.6 }) + star(126, 24, 3, '#ffd6e8', { tw: 3, begin: .9 }));
+
+    bg.neonhearts = svg(1200, 200,
+      `<rect width="1200" height="200" fill="url(#nh)"/>` + Array.from({ length: 16 }, (_, i) => `<circle cx="${(i * 163) % 1200}" cy="${30 + (i * 59) % 150}" r="${14 + (i % 4) * 8}" fill="${i % 2 ? '#ff4fd8' : '#4fd8ff'}" fill-opacity=".1">${anim('fill-opacity', '.05;.18;.05', 3 + (i % 3), i * .4)}</circle>`).join('')
+      + [[110, 100, 34, '#ff4fd8', 2.2, 0], [330, 70, 26, '#4fd8ff', 2.6, .6], [560, 110, 40, '#ff4fd8', 2.4, 1.2], [790, 80, 30, '#4fd8ff', 2.8, .3], [1000, 108, 38, '#ff4fd8', 2.3, .9], [1150, 60, 22, '#fff', 2.5, 1.5]].map(p => heartOutline(p[0], p[1], p[2], p[3], { pulse: p[4], begin: p[5], w: 3 })).join('')
+      + `<g>${move('translate', '-300 0;1500 0', 7)}<rect x="0" y="0" width="60" height="200" fill="url(#sc)" transform="skewX(-18)"/></g>`
+      + Array.from({ length: 26 }, (_, i) => star((i * 79) % 1200 + 8, (i * 41) % 190 + 6, 2 + (i % 3), i % 2 ? '#fff' : '#ffd1f4', { tw: 1.6 + (i % 4) * .4, begin: i * .21 })).join('')
+      + sparkleBig(240, 140, 12, '#fff', { dur: 2.2 }) + sparkleBig(900, 150, 14, '#fff', { dur: 2.6, begin: .8 }),
+      `<linearGradient id="nh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b0764"/><stop offset=".5" stop-color="#a21caf"/><stop offset="1" stop-color="#4c1d95"/></linearGradient><linearGradient id="sc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`);
+    bg.cometnight = svg(1200, 200,
+      `<rect width="1200" height="200" fill="url(#cn)"/>` + Array.from({ length: 50 }, (_, i) => star((i * 211) % 1200 + 4, (i * 67) % 140 + 4, 1.4 + (i % 3) * .8, '#fff', { tw: 1.8 + (i % 5) * .5, begin: i * .19 })).join('')
+      + [[0, 14, 5.5, 0, 1], [0, 54, 7.5, 2.8, .8], [0, 98, 6.5, 5, .7]].map(p => `<g transform="translate(0 ${p[1]}) rotate(-20)"><g>${move('translate', '1400 -420;-500 420', p[2], p[3])}<path d="M0 0L420 -10" stroke="url(#ct)" stroke-width="${f1(7 * p[4])}" stroke-linecap="round"/><path d="M0 0L300 -6" stroke="#fff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/><circle r="${f1(9 * p[4])}" fill="#fff"/><circle r="${f1(16 * p[4])}" fill="#bfe6ff" fill-opacity=".4"/></g></g>`).join('')
+      + `<g>${move('translate', '0 0;-120 0', 40)}<path d="M-120 200V150Q-60 120 0 150T120 140T240 150T360 138T480 152T600 140T720 150T840 136T960 150T1080 140T1200 150T1320 138V200Z" fill="#0b1633" fill-opacity=".85"/></g><g>${move('translate', '-120 0;0 0', 55)}<path d="M-120 200V170Q-40 150 40 172T200 164T360 174T520 162T680 172T840 160T1000 172T1160 164T1320 170V200Z" fill="#070d22"/></g>`
+      + sparkleBig(1080, 50, 12, '#cfeaff', { dur: 2.4 }) + sparkleBig(180, 90, 9, '#fff', { dur: 2 }),
+      `<linearGradient id="cn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050a24"/><stop offset=".6" stop-color="#14296b"/><stop offset="1" stop-color="#2d5fa8"/></linearGradient><linearGradient id="ct" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#7ccaff" stop-opacity=".7"/><stop offset="1" stop-color="#3b82f6" stop-opacity="0"/></linearGradient>`);
+    bg.goldendust = svg(1200, 200,
+      `<rect width="1200" height="200" fill="url(#gd)"/><g>${anim('opacity', '.55;.95;.55', 4)}<path d="M600 -10L470 200H730Z" fill="url(#beam)" fill-opacity=".5"/><path d="M360 -10L250 200H430Z" fill="url(#beam)" fill-opacity=".3"/><path d="M860 -10L800 200H1000Z" fill="url(#beam)" fill-opacity=".3"/></g>`
+      + Array.from({ length: 60 }, (_, i) => { const x = (i * 97) % 1200, y = 40 + (i * 53) % 160, r = 1 + (i % 4) * .7; return `<circle cx="${x}" cy="${y}" r="${r}" fill="${i % 3 ? '#ffd76a' : '#fff4c2'}"><animate attributeName="cy" values="${y};${y - 30 - (i % 5) * 8}" dur="${5 + (i % 5)}s" begin="${-(i * .6)}s" repeatCount="indefinite"/>${anim('opacity', '0;1;0', 5 + (i % 5), i * .6)}</circle>`.replace(/<animate attributeName="cy"[^>]*\/>/, an ? '$&' : ''); }).join('')
+      + sparkleBig(180, 60, 10, '#fff3b0', { dur: 2.2 }) + sparkleBig(1020, 90, 13, '#fff3b0', { dur: 2.6, begin: .9 }) + sparkleBig(620, 30, 9, '#fff', { dur: 2, begin: .4 }),
+      `<linearGradient id="gd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a1c05"/><stop offset=".6" stop-color="#a8560e"/><stop offset="1" stop-color="#f0a030"/></linearGradient><linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset="1" stop-color="#ffe9a8" stop-opacity="0"/></linearGradient>`);
+    plate.heartneon = svg(240, 44,
+      `<rect width="240" height="44" fill="url(#hn)"/>` + [[24, 22, 12, '#ff4fd8', 2, 0], [74, 14, 8, '#4fd8ff', 2.4, .5], [118, 28, 14, '#ff4fd8', 2.2, 1], [168, 14, 9, '#fff', 2.6, .3], [214, 26, 12, '#4fd8ff', 2.3, .8]].map(p => heartOutline(p[0], p[1], p[2], p[3], { pulse: p[4], begin: p[5], w: 2.2 })).join('')
+      + star(46, 32, 3, '#fff', { tw: 2 }) + star(96, 8, 3, '#ffd1f4', { tw: 2.4, begin: .6 }) + star(190, 36, 3.4, '#fff', { tw: 2.2, begin: 1.1 }) + `<g>${move('translate', '-80 0;320 0', 5)}<rect x="0" width="30" height="44" fill="#fff" fill-opacity=".14" transform="skewX(-18)"/></g>`,
+      `<linearGradient id="hn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b0764"/><stop offset=".5" stop-color="#a21caf"/><stop offset="1" stop-color="#4c1d95"/></linearGradient>`);
+    plate.angrybar = svg(240, 44,
+      `<g>${move('translate', '0 0;1 .6;-1 -.6;0 0', .3)}<rect width="240" height="44" fill="url(#ab)"/><rect x="40" y="16" width="130" height="12" rx="6" fill="#fff" fill-opacity=".1"/><circle cx="20" cy="22" r="11" fill="#fff" fill-opacity=".14"/></g>`
+      + `<g transform="translate(208 22)"><g>${move('scale', '1;1.3;1', .6)}${move('rotate', '-8;8;-8', .45)}${[0, 90, 180, 270].map(a => `<path transform="rotate(${a})" d="M4 -4Q4 -15 15 -15Q15 -4 4 -4Z" fill="#ff3b30" stroke="${INK}" stroke-width="1.4" stroke-linejoin="round"/>`).join('')}</g></g>`
+      + `<g transform="translate(176 12)"><g>${bob(2, 1.6)}<circle r="7" fill="#fff" stroke="${INK}" stroke-width="1.4"/><rect x="-1.2" y="-4" width="2.4" height="5.4" rx="1" fill="${INK}"/><circle cy="3.8" r="1.3" fill="${INK}"/></g></g>`
+      + `<g stroke="#ff5a4a" stroke-width="2.4" stroke-linecap="round"><path d="M4 8V36">${anim('stroke-opacity', '1;.2;1', .8)}</path><path d="M10 12V32">${anim('stroke-opacity', '.2;1;.2', .8)}</path></g>`,
+      `<linearGradient id="ab" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b0a0a"/><stop offset=".7" stop-color="#8e1414"/><stop offset="1" stop-color="#c81e1e"/></linearGradient>`);
     return { wreath, bg, plate };
   }
+  // the collections the decorations are filed under, so you can find one without scrolling through everything
+  const SERIES = [
+    { id: 'classic', name: 'Classic', blurb: 'Plain, handsome nameplates.', groups: [{ plate: ['embers', 'aurora', 'tide', 'sakura', 'circuit', 'starfield', 'parchment', 'neon', 'slime', 'prism'] }] },
+    { id: 'boba', name: 'Kawaii Boba Tea', blurb: 'Pink milk tea, pearls and sparkles.', groups: [{ plate: ['bubbletea', 'hexcandy'], bg: ['boba'], wreath: ['bobacup', 'sprout', 'catphones', 'pearlring'] }] },
+    { id: 'lunar', name: 'Lunar New Year', blurb: 'Red lanterns, gold waves, koi and fireworks.', groups: [{ plate: ['lanternglow', 'goldwaves'], bg: ['lantern'], wreath: ['redlantern', 'lotus', 'koi', 'firecrackers', 'envelopes', 'dragon'] }] },
+    { id: 'anime', name: 'Anime', blurb: 'Manga moods, magical girls and sparkles.', groups: [
+      { name: 'Sparkle & hearts', plate: ['sparkleanime', 'heartneon'], bg: ['animenight', 'neonhearts'], wreath: ['magicgirl', 'starryeyed', 'heartbloom', 'inlove'] },
+      { name: 'Feelings', plate: ['mangapanel', 'angrybar'], wreath: ['angry', 'shy', 'shocked', 'nervous', 'intears', 'dismay', 'ghost'] },
+      { name: 'Power & energy', bg: ['cometnight', 'goldendust'], wreath: ['energy', 'kienergy', 'rumbling', 'sunburst'] },
+      { name: 'Style & snacks', wreath: ['sushi', 'ramen', 'scholar', 'catonesie', 'catears'] },
+    ] },
+  ];
+  const seriesOfTheme = id => ({ boba: 'boba', lunar: 'lunar', anime: 'anime', animehearts: 'anime', animecosmos: 'anime' }[id] || '');
   const has = (list, id) => list.some(x => x.id === id);
   const plate = id => PLATES.find(p => p.id === id) || PLATES[0];
   const plateOk = id => !!id && id !== 'none' && has(PLATES, id);
@@ -338,6 +437,6 @@ const DecoCore = (() => {
   const ghostPlate = id => { const n = hash('plate' + id); return n % 100 < 28 ? PLATES[1 + (n >>> 8) % (PLATES.length - 1)].id : 'none'; };
   const ghostTag = id => { const n = hash('tag' + id); if (n % 100 >= 22) return null; const words = ['MOON', 'FOX', 'KOI', 'ZEN', 'ASH', 'OWL', 'IVY', 'NOVA', 'RAIN', 'JAZZ']; return { tag: words[(n >>> 8) % words.length], tagColor: TAG_COLORS[(n >>> 12) % TAG_COLORS.length][0], tagGlyph: TAG_GLYPHS[(n >>> 16) % TAG_GLYPHS.length][0] }; };
   const ghostWreath = id => { const n = hash('wreath' + id); return n % 100 < 16 ? WREATHS[1 + (n >>> 8) % (WREATHS.length - 1)].id : ''; };
-  return { buildArt, plateOk, uri, BACKGROUNDS, WREATHS, THEMES, ghostWreath, PLATES, TAG_COLORS, TAG_GLYPHS, BANNERS, plate, banner, cleanTag, tagOk, normProfile, normServer, bannerCss, ghostPlate, ghostTag };
+  return { SERIES, seriesOfTheme, buildArt, plateOk, uri, BACKGROUNDS, WREATHS, THEMES, ghostWreath, PLATES, TAG_COLORS, TAG_GLYPHS, BANNERS, plate, banner, cleanTag, tagOk, normProfile, normServer, bannerCss, ghostPlate, ghostTag };
 })();
 if (typeof module !== 'undefined') module.exports = DecoCore;

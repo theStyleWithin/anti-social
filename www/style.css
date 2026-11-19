@@ -1793,3 +1793,8 @@ body.pu-lock { overflow: hidden; }
 /* the Music Player's root class is also called .mp; keep its page-sized rules out of dialogs that use .mp for their padding */
 .modal .mp { margin: 0; min-height: 0; overflow: visible; font-size: inherit; isolation: auto; padding: 12px 16px 16px; }
 .modal .field textarea, .forum-set textarea { border-radius: 8px; padding: 10px 12px; }
+.dc-wear { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 8px 12px; margin: 8px 0 10px; border-radius: 10px; background: var(--hover); font-size: 14px; } .dc-wear span { flex: 1; min-width: 0; }
+.dc-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+.dc-none { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 12px 0 4px; } .dc-none .plate-pick { grid-column: span 1; }
+.dc-series { margin: 22px 0 6px; padding-top: 12px; border-top: 1px solid var(--line); } .dc-series > h4 { margin: 0 0 8px; font-size: 18px; } .dc-series > h4 small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; margin-top: 2px; }
+.dc-group h5 { margin: 14px 0 2px; font-size: 14px; color: var(--accent); } .dc-kind h6 { margin: 10px 0 2px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
