@@ -63,7 +63,7 @@ const Forum = (() => {
         replies.map(r => postEl(r, acct, ctx))),
       h('div', { class: 'ft-bar' }, h('button', { class: 'btn ft-react' + (fp.reacted ? ' on' : ''), type: 'button', 'aria-pressed': String(!!fp.reacted), onclick: () => patch({ reacted: !fp.reacted }) }, emoji, fp.reacted ? ' 1' : ' React to Post'),
         h('span', { class: 'pw-spacer' }), h('button', { class: 'btn ft-follow' + (fp.following === false ? '' : ' on'), type: 'button', 'aria-pressed': String(fp.following !== false), onclick: () => patch({ following: fp.following === false }) }, fp.following === false ? 'Follow' : '✓ Following')),
-      composer(acct, { placeholder: `Send a message in "${F.excerpt(fp.title, 40)}"`, parentId: fp.id, channel: ch.id, enterSends: true, label: W('send'), onDone: () => render(true) }));
+      composer(acct, { placeholder: `Send a message in "${F.excerpt(fp.title, 40)}"`, parentId: fp.id, channel: ch.id, enterSends: true, extraTools: ta => Chatx.composerTools(acct, ctx, { ta, channel: ch.id, parentId: fp.id }), label: W('send'), onDone: () => render(true) }));
   }
 
   /* ----- the whole forum channel ----- */

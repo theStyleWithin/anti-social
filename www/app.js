@@ -513,7 +513,8 @@ function avatar(a, size = '') {
 }
 
 function richText(text) {
-  return text.split(/(#\w+|@\w+|https?:\/\/[^\s]+)/g).map(part => {
+  return text.split(/(#\w+|@\w+|https?:\/\/[^\s]+|:[A-Za-z0-9_]{2,32}:)/g).map(part => {
+    const emo = Chatx.token(part); if (emo) return emo;                  // :name: becomes your custom emoji (Chat Rooms look only)
     if (/^https?:\/\//.test(part)) return h('a', { href: part, target: '_blank', rel: 'noopener noreferrer' }, part);
     if (/^[#@]\w+/.test(part)) return h('span', { class: 'tag' }, part);
     return part;
@@ -534,7 +535,7 @@ function topbar(title, { back = false, sub = '', action = null } = {}) {
     action && h('div', { class: 'tbact' }, action));
 }
 
-function composer(acct, { placeholder, parentId = null, onDone, autofocus = false, label = W('send'), channel = null, enterSends = false, heading = '', mentionBots = null, onSent = null, customSave = null }) {
+function composer(acct, { placeholder, parentId = null, onDone, autofocus = false, label = W('send'), channel = null, enterSends = false, heading = '', mentionBots = null, onSent = null, customSave = null, extraTools = null }) {
   let images = [];
   const ta = h('textarea', { placeholder, rows: 1, 'aria-label': placeholder });
   const previews = h('div', { class: 'previews' });
@@ -589,7 +590,7 @@ function composer(acct, { placeholder, parentId = null, onDone, autofocus = fals
     h('div', { class: 'body' }, heading ? h('div', { class: 'comp-head' }, heading) : null, ta, previews,
       h('div', { class: 'row' },
         h('button', { class: 'tool', 'aria-label': 'Add image', onclick: () => images.length < 4 && file.click() }, icon('image')),
-        file, h('span', { style: 'margin-left:auto' }), submit)));
+        file, ...(extraTools ? extraTools(ta) : []), h('span', { style: 'margin-left:auto' }), submit)));
   if (mentionBots) el.querySelector('.body').append(attachMentions(ta, mentionBots));
   if (autofocus) setTimeout(() => ta.focus(), 0);
   return el;
@@ -639,7 +640,7 @@ function postEl(p, acct, ctx, { detail = false } = {}) {
       parent && h('div', { class: 'replying' }, W('replyingSelf')),
       gParent && h('div', { class: 'replying' }, W('replyingTo') + ' @' + gParent),
       p.text && h('div', { class: 'text' }, richText(p.text)), p.text && YT.cards(p.text),
-      mediaGrid(p.images),
+      mediaGrid(p.images), Chatx.extras(p),
       h('div', { class: 'muted', style: 'margin-top:12px' }, `${when} · `, h('b', { style: 'color:var(--fg)' }, '0'), ' Views'),
       h('div', { class: 'stats' },
         h('span', {}, h('b', {}, replies), ' ' + W('statReplies')),
@@ -657,7 +658,7 @@ function postEl(p, acct, ctx, { detail = false } = {}) {
       parent && h('div', { class: 'replying' }, W('replyingTo') + ' @' + acct.handle),
       gParent && h('div', { class: 'replying' }, W('replyingTo') + ' @' + gParent),
       p.text && h('div', { class: 'text' }, richText(p.text)), p.text && YT.cards(p.text),
-      mediaGrid(p.images),
+      mediaGrid(p.images), Chatx.extras(p),
       p.liked && tplId() === 'chat' && h('div', { class: 'reactions' }, h('button', { class: 'reaction on', 'aria-label': 'Remove your reaction', onclick: e => { e.stopPropagation(); patch({ liked: false }); } }, '\u2764\ufe0f 1')),
       actions));
 }
@@ -1661,13 +1662,13 @@ async function render(keepScroll = false) {
     if (all.bad) console.warn(`${all.bad} post(s) could not be decrypted`);
     // Your likes, reposts and follows of generated accounts live beside your posts but are not posts.
     const posts = all.filter(p => !p.kind);                 // real posts only; everything else is a record of some other kind
-    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], fpost: [], srv: [], deco: [], pprof: [], bot: [], aimsg: [], aimode: [], aikey: [], dexmark: [], pkbank: [], pkm: [], agame: [], ach: [], rakey: [], clockcfg: [], sound: [], budget: [], shotgame: [], shot: [], termstate: [], cbinder: [], ccard: [], ebook: [], lang: [], calday: [], calprof: [], pushup: [], mlib: [], mprefs: [] };
+    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], fpost: [], cemoji: [], csticker: [], csound: [], srv: [], deco: [], pprof: [], bot: [], aimsg: [], aimode: [], aikey: [], dexmark: [], pkbank: [], pkm: [], agame: [], ach: [], rakey: [], clockcfg: [], sound: [], budget: [], shotgame: [], shot: [], termstate: [], cbinder: [], ccard: [], ebook: [], lang: [], calday: [], calprof: [], pushup: [], mlib: [], mprefs: [] };
     for (const p of all) if (apps[p.kind]) apps[p.kind].push(p);
     castMap = new Map(all.filter(p => p.kind === 'cast').map(p => [p.ref, p]));
     const reactions = new Map(all.filter(p => p.kind === 'ghost').map(p => [p.target, p]));
     const ctx = { posts, apps, reactions, following: [...reactions.values()].filter(x => x.followed).length, byId: new Map(posts.map(p => [p.id, p])), replyCount: new Map() };
     for (const p of posts) if (p.parentId) ctx.replyCount.set(p.parentId, (ctx.replyCount.get(p.parentId) || 0) + 1);
-    Deco.setActive(acct, ctx);
+    Deco.setActive(acct, ctx); Chatx.setActive(ctx);
 
     const [, r = '', arg, arg2] = location.hash.split('/');
     const route = { notifications: 'notifications', explore: 'explore', profile: 'profile', settings: 'settings', post: 'post', u: 'u', apps: 'apps', channel: 'home', dm: 'dm', bot: 'bot' }[r] || 'home';

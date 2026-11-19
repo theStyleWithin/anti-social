@@ -1765,3 +1765,31 @@ body.pu-lock { overflow: hidden; }
 .forum-menu .pop-head { padding: 8px 16px 2px; font-size: 12px; text-transform: uppercase; color: var(--muted); } .forum-menu .pop-plus { width: 18px; } .forum-menu { min-width: 200px; }
 .forum-set h4 { margin: 16px 0 4px; } .forum-set textarea { width: 100%; resize: vertical; } .fp-addtag { display: flex; gap: 8px; } .fp-addtag input { flex: 1; } .fp-reactprev { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; } .fp-reactprev .big { font-size: 28px; }
 .emoji-grid button.on { background: var(--hover); outline: 2px solid var(--accent); }
+
+/* ---------- custom emoji, stickers and the soundboard (Chat Rooms) ---------- */
+.cemoji { width: 22px; height: 22px; vertical-align: -5px; object-fit: contain; } .text:has(> .cemoji:only-child) .cemoji { width: 48px; height: 48px; }
+.cx-sticker { display: block; max-width: 180px; max-height: 180px; margin-top: 4px; object-fit: contain; }
+.cx-sound { display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; padding: 6px 12px 6px 6px; border-radius: 999px; border: 1px solid var(--line); background: var(--hover); color: var(--fg); font: inherit; cursor: pointer; } .cx-sound.playing { border-color: var(--accent); }
+.cx-play { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; } .cx-play svg { width: 14px; height: 14px; }
+.cx-face { font-size: 18px; line-height: 1; }
+.cx-picker { min-width: 0; width: 340px; max-height: 420px; display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+.cx-tabs { display: flex; gap: 4px; padding: 8px 8px 0; border-bottom: 1px solid var(--line); } .cx-tabs.big { padding: 0 16px; } .cx-tab { padding: 8px 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted); font: inherit; font-weight: 600; cursor: pointer; } .cx-tab.on { color: var(--fg); border-bottom-color: var(--accent); }
+.cx-body { flex: 1; overflow-y: auto; padding: 8px 10px; } .cx-body h5 { margin: 6px 4px; font-size: 11px; text-transform: uppercase; color: var(--muted); letter-spacing: .04em; }
+.cx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); gap: 4px; } .cx-grid.st { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.cx-cell { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; aspect-ratio: 1; border: 0; border-radius: 8px; background: none; font-size: 22px; cursor: pointer; color: var(--fg); } .cx-cell:hover { background: var(--hover); } .cx-cell.st img { width: 100%; max-height: 70px; object-fit: contain; } .cx-cell.st small { font-size: 11px; color: var(--muted); } .cx-eimg { width: 28px; height: 28px; object-fit: contain; }
+.cx-none { text-align: center; padding: 12px; color: var(--muted); }
+.cx-sounds { display: flex; flex-direction: column; gap: 4px; } .cx-srow, .cx-item { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; } .cx-srow:hover, .cx-item:hover { background: var(--hover); } .cx-srow.playing, .cx-item.playing { outline: 2px solid var(--accent); }
+.cx-splay { width: 30px; height: 30px; border-radius: 50%; border: 0; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; flex: none; } .cx-splay svg { width: 14px; height: 14px; } .cx-sname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cx-foot { display: flex; justify-content: flex-end; padding: 8px; border-top: 1px solid var(--line); }
+.cx-modal .cx-manage { min-height: 260px; position: relative; } .cx-manage.drag { outline: 2px dashed var(--accent); outline-offset: 4px; }
+.cx-drop { margin-bottom: 14px; } .cx-drop p { margin: 6px 0; }
+.cx-list { display: flex; flex-direction: column; gap: 2px; } .cx-item input[type=text], .cx-item input:not([type]) { flex: 1; min-width: 0; } .cx-item input[type=range] { flex: 0 0 110px; } .cx-big { width: 40px; height: 40px; object-fit: contain; } .cx-colon { color: var(--muted); }
+.cx-empty { text-align: center; padding: 28px 10px; } .cx-empty b { color: var(--muted); font-size: 20px; }
+.cx-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; } .cx-slot { position: relative; aspect-ratio: .85; border-radius: 10px; background: var(--hover); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 8px; } .cx-slot.empty { border: 1px dashed var(--line); background: none; justify-content: center; color: var(--muted); } .cx-slot img { width: 100%; flex: 1; min-height: 0; object-fit: contain; } .cx-slot input { width: 100%; font-size: 12px; text-align: center; } .cx-slot .pw-ico { position: absolute; top: 2px; right: 2px; } .cx-slot.empty svg { width: 28px; height: 28px; }
+.cx-prev { height: 120px; border-radius: 10px; background: var(--hover); display: flex; align-items: center; justify-content: center; color: var(--muted); margin-bottom: 8px; } .cx-prev img { max-width: 100%; max-height: 100%; }
+.cx-file { display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 12px; border-radius: 8px; background: var(--input, var(--card)); } .cx-fname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); } .cx-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.cx-pad { padding: 14px 18px 18px; }
+.cx-item input:not([type=range]), .cx-slot input, .cx-two input, .cx-pad input[type=text], .cx-modal input:not([type]) { background: var(--input, var(--bg)); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font: inherit; }
+/* the Music Player's root class is also called .mp; keep its page-sized rules out of dialogs that use .mp for their padding */
+.modal .mp { margin: 0; min-height: 0; overflow: visible; font-size: inherit; isolation: auto; padding: 12px 16px 16px; }
+.modal .field textarea, .forum-set textarea { border-radius: 8px; padding: 10px 12px; }

@@ -70,7 +70,7 @@ function serverMenu(anchor, acct, ctx) {
   const esc = e => { if (e.key === 'Escape') close(); };
   const row = (label, ic, fn) => h('button', { class: 'pop-row', role: 'menuitem', onclick: () => { close(); fn(); } }, h('span', { class: 'pop-plus' }, icon(ic)), h('b', {}, label));
   const pop = h('div', { class: 'popover server-menu', role: 'menu', 'aria-label': 'Server' },
-    row('Rename server', 'notes', () => serverNameEditor(acct, ctx)), row('Server tag and banner', 'tag', () => Deco.serverProfileModal(acct, ctx)), row('Create channel', 'plus', () => channelEditor(acct, ctx, null)), row(W('navProfile'), 'user', () => go('/profile')), row(W('navSettings'), 'settings', () => go('/settings')));
+    row('Rename server', 'notes', () => serverNameEditor(acct, ctx)), row('Server tag and banner', 'tag', () => Deco.serverProfileModal(acct, ctx)), row('Emoji, stickers and sounds', 'sparkle', () => Chatx.manage(acct, ctx)), row('Create channel', 'plus', () => channelEditor(acct, ctx, null)), row(W('navProfile'), 'user', () => go('/profile')), row(W('navSettings'), 'settings', () => go('/settings')));
   document.body.append(pop);
   const r = anchor.getBoundingClientRect();
   pop.style.left = Math.max(8, Math.min(r.left + 8, innerWidth - pop.offsetWidth - 8)) + 'px'; pop.style.top = (r.bottom + 4) + 'px';
@@ -129,7 +129,7 @@ function chatHome(acct, ctx, chId, postId) {
     items.map(x => x.el()), aiRun && aiRun.channel === cid ? aiTypingRow() : null, aiNoticeRow(cid));
   const vaultNote = !acct.vault && !ls('as.hidenote.' + acct.id) && h('div', { class: 'vault-note' }, h('span', {}, "Your messages aren't encrypted. That's fine for a local app, or you can lock them with a passcode."),
     h('div', { class: 'btnrow' }, h('button', { class: 'btn primary', onclick: () => passcodeModal(acct) }, 'Set up vault'), h('button', { class: 'btn', onclick: () => { ls('as.hidenote.' + acct.id, '1'); render(true); } }, 'No thanks')));
-  return [head, vaultNote, list, composer(acct, { placeholder: `Message #${name}`, channel: ch ? ch.id : null, enterSends: true, label: W('send'), mentionBots: () => aiBots(ctx), onSent: t => aiAfterUser(acct, cid, t), onDone: () => render(true) })];
+  return [head, vaultNote, list, composer(acct, { placeholder: `Message #${name}`, channel: ch ? ch.id : null, enterSends: true, extraTools: ta => Chatx.composerTools(acct, ctx, { ta, channel: ch ? ch.id : null }), label: W('send'), mentionBots: () => aiBots(ctx), onSent: t => aiAfterUser(acct, cid, t), onDone: () => render(true) })];
 }
 
 // Create, rename or delete a channel. Deleting a channel deletes the messages you wrote in it.
