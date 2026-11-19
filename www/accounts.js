@@ -240,7 +240,8 @@ function accountListSection(acct) {
     const list = all.sort((a, b) => a.createdAt - b.createdAt), hid = AX.hidden(list).filter(a => a.id !== acct.id);
     box.replaceChildren(
       acct.hidden ? h('section', {}, h('h3', {}, 'This account is hidden'), h('p', {}, 'It is not in the account list. Unhide it to put it back.'), h('button', { class: 'btn', onclick: () => unhideAccount(all.find(a => a.id === acct.id), () => render(true)) }, 'Unhide this account'))
-        : AX.canHide(list, acct) ? h('section', {}, h('h3', {}, 'Hide this account'), h('p', {}, 'Keep it off the account list on this device. It is still here, and you can unhide it below, from any other account.'), h('button', { class: 'btn', onclick: () => hideAccount(acct) }, 'Hide this account')) : null,
+        : AX.canHide(list, acct) ? h('section', {}, h('h3', {}, 'Hide this account'), h('p', {}, 'Keep it off the account list on this device. It is still here, and you can unhide it below, from any other account.'), h('button', { class: 'btn', onclick: () => hideAccount(acct) }, 'Hide this account'))
+        : AX.isLocked(all.find(a => a.id === acct.id)) ? h('section', {}, h('h3', {}, 'Hide this account'), h('p', { class: 'fine' }, 'A profile locked with a passcode cannot be hidden.')) : null,
       hid.length ? h('section', {}, h('h3', {}, 'Hidden accounts'), h('p', {}, 'These are not shown when you pick or switch accounts.'),
         h('div', { class: 'hidden-list' }, hid.map(a => h('div', { class: 'hidden-row' }, avatar(a, 'sm'), h('div', { class: 'who' }, h('b', {}, '@' + a.handle), (a.vault || a.hash) ? h('div', { class: 'muted' }, 'Passcode needed to unhide') : null), h('button', { class: 'btn', onclick: () => unhideAccount(a, () => render(true)) }, 'Unhide'))))) : null);
   }).catch(() => {});

@@ -90,11 +90,12 @@ const AcctCore = (() => {
   // ---- hidden accounts: a hidden one is left out of the account list. You need at least one other visible account.
   const visible = list => list.filter(a => !a.hidden);
   const hidden = list => list.filter(a => a.hidden);
-  const canHide = (list, a) => !!a && !a.hidden && visible(list).filter(x => x.id !== a.id).length >= 1;
+  const isLocked = a => !!(a && (a.vault || a.hash));
+  const canHide = (list, a) => { const raw = (a && list.find(x => x.id === a.id)) || a; return !!raw && !raw.hidden && !isLocked(raw) && visible(list).filter(x => x.id !== raw.id).length >= 1; };       // a profile locked with a passcode is never hidden
   // What the sign-in screen shows: visible accounts, or everything if every account is hidden (so you are never locked out).
   const listed = list => visible(list).length ? visible(list) : list;
   const flagsOf = raw => ({ ...(raw && raw.hidden ? { hidden: true } : {}), ...(raw && raw.guest ? { guest: true } : {}) });
 
-  return { FORMAT, LOOK_KEYS, LOOK_PREFIXES, DEVICE_ONLY, isLookKey, isAccountPref, accountPrefsIn, validHandle, validId, fileName, buildExport, parseExport, remapPrefs, guestHandle, isGuest, visible, hidden, canHide, listed, flagsOf };
+  return { isLocked, FORMAT, LOOK_KEYS, LOOK_PREFIXES, DEVICE_ONLY, isLookKey, isAccountPref, accountPrefsIn, validHandle, validId, fileName, buildExport, parseExport, remapPrefs, guestHandle, isGuest, visible, hidden, canHide, listed, flagsOf };
 })();
 if (typeof module !== 'undefined') module.exports = AcctCore;
