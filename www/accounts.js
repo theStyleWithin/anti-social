@@ -61,8 +61,7 @@ function ejectAccount(acct) {
   const first = () => body.replaceChildren(
     h('p', { style: 'margin-top:0' }, `Eject takes @${acct.handle} off this device. First it saves everything (posts, photos, notes, apps and settings) to a file.`),
     h('p', {}, 'This is not a delete. Import the file on the create-account screen, on this device or another, and the account comes back. Without the file, it cannot.'),
-    h('p', {}, 'Your own files are never touched. The music folders you pointed Anti-Social at, and the notes, books and pictures you imported from your device, stay exactly where they are, so you can keep using them in any other app.'),
-    h('p', { class: 'fine', style: 'padding:0 0 10px' }, 'Songs you copied into the Music Player are not in the file (they can be very large). They stay in this app\'s storage on this device, so they are still there if you import the account back here. Your look and settings come with the account.'),
+    h('p', { class: 'fine', style: 'padding:0 0 10px' }, 'Your own files, like your music folders, are never touched.'),
     acct.vault ? h('p', { class: 'fine', style: 'padding:0 0 10px' }, 'The file is NOT encrypted, so keep it somewhere safe. When you import it you can set a passcode again. Your duress PIN is not saved.') : null,
     h('div', { class: 'btnrow' }, h('button', { class: 'btn primary', onclick: e => run(e.currentTarget) }, 'Save my data'), h('button', { class: 'btn', onclick: () => close() }, 'Cancel')));
   const run = async btn => {
@@ -73,24 +72,23 @@ function ejectAccount(acct) {
     if (!AX.parseExport(f.text).ok) { toast('The file did not check out, so nothing was changed.'); first(); return; }
     const r = await saveFile(f.name, 'application/json', f.text);
     if (!r.ok) { toast(`Could not save the file, so nothing was removed: ${r.where}`); first(); return; }
-    second(f, r, await mpCopies(acct));
+    second(f, r);
   };
-  const second = (f, r, copies) => {
-    const wipe = h('input', { type: 'checkbox', id: 'eject-wipe-songs' }), sure = h('input', { type: 'checkbox', id: 'eject-ok' }), go_ = h('button', { class: 'btn danger', disabled: true }, 'Remove account from this device');
+  const second = (f, r) => {
+    const sure = h('input', { type: 'checkbox', id: 'eject-ok' }), go_ = h('button', { class: 'btn danger', disabled: true }, 'Remove account from this device');
     sure.addEventListener('change', () => { go_.disabled = !sure.checked; });
     go_.addEventListener('click', async () => {
       go_.disabled = true; go_.textContent = 'Removing...';
+      mpShutdown();                                          // no music save may land after the account is gone
       for (const p of await db.postsOf(acct.id)) await db.del('posts', p.id);
       await db.del('accounts', acct.id);
       for (const k of accountPrefKeys(acct.id)) ls(k, null);
-      if (copies && copies.count && wipe.checked) await mpPurgeCopies(acct.id);          // only if you asked: they are copies the app made, not your files
       postCache.clear(); close(); toast(`@${acct.handle} was ejected. Import ${f.name} to bring it back.`);
       logout();
     });
     body.replaceChildren(
       h('p', { style: 'margin-top:0' }, h('b', {}, f.name), ` (${sizeLabel(f.bytes)}) ${r.sure ? 'was saved to' : 'should now be in'} ${r.where}.`),
       !r.sure ? h('p', { class: 'fine', style: 'padding:0 0 10px' }, 'Your browser or system did the download, so look in the Downloads folder to be sure it is there before you go on.') : null,
-      copies && copies.count ? h('label', { class: 'check' }, wipe, ' ', h('span', {}, `Also delete the ${plural(copies.count, 'song')} copied into the Music Player (${sizeLabel(copies.bytes)})`, h('small', { class: 'muted', style: 'display:block' }, 'Leave this off to keep them on this device. Your original music files are never touched either way.'))) : null,
       h('label', { class: 'check' }, sure, ' I have the file and I know where it is.'),
       h('div', { class: 'btnrow', style: 'margin-top:12px' }, go_, h('button', { class: 'btn', onclick: () => saveFile(f.name, 'application/json', f.text).then(x => toast(x.ok ? 'Saved again.' : x.where)) }, 'Save again'), h('button', { class: 'btn', onclick: () => close() }, 'Keep the account')));
   };

@@ -159,7 +159,7 @@ Anti-Social only opens the files and folders you point it at, and only to do wha
 
 - **Music folders** are read in place. Nothing is copied, and the app never writes to the folder.
 - **Notes, books and pictures you import** are read once and kept as the app's own copies. The files you imported are left exactly as they were.
-- **Ejecting or deleting an account** only removes the account's data from this device. Your original files and folders are never touched, so you can keep using them in any other app. Songs the Music Player copied into its own storage stay on this device when you eject (they are still there if you import the account back), and the Eject screen has a box to delete those copies too, off by default. Deleting an account removes its copies.
+- **Ejecting an account** only removes the account's data from this device. Your original files and folders are never touched, so you can keep using them in any other app. Songs the Music Player copied into its own storage stay on this device too, so they are still there if you import the account back. Deleting an account removes its copies.
 
 ## About antivirus warnings
 
