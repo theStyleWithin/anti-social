@@ -1647,11 +1647,11 @@ body.pu-lock { overflow: hidden; }
 .plate-pick { width: 100%; border: 2px solid transparent; background: var(--hover); color: var(--fg); font: inherit; text-align: left; cursor: pointer; min-height: 48px; }
 .plate-pick.on { border-color: var(--accent); }
 .plate-pick small { white-space: normal; }
-.member.plated { position: relative; isolation: isolate; overflow: hidden; border-radius: 8px; color: rgba(255,255,255,.82); margin: 2px 0; }
+.member.plated { position: relative; isolation: isolate; border-radius: 8px; color: rgba(255,255,255,.82); margin: 2px 0; }
 .member.plated:hover { color: #fff; background: none; }
 .member.plated .names b { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.65); }
 .member.plated .names small { color: rgba(255,255,255,.78); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
-.member.plated::before, .member.plated::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.member.plated::before, .member.plated::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit; overflow: hidden; }
 .member.plated:hover::before { filter: brightness(1.12); }
 @keyframes pl-slide { to { background-position: 300% 0, 0 0; } }
 @keyframes pl-rise { to { background-position: 0 -80px, 0 -40px, 0 0; } }
@@ -1685,3 +1685,19 @@ body.pu-lock { overflow: hidden; }
 .deco-row .glyph { min-width: 40px; padding: 4px 10px; }
 .bn-pick { width: 70px; height: 40px; border-radius: 8px; border: 1px solid var(--line); cursor: pointer; color: var(--muted); font: inherit; font-size: 12px; background-color: var(--hover); }
 .member .names { min-width: 0; flex: 1; } .member .names b { min-width: 0; } .member .names .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; } .member .srv-tag, .member .crown { flex: none; }
+
+/* wreaths: a frame drawn around an avatar (the picture and its small animation are set from deco.js) */
+.avatar[data-wreath] { position: relative; overflow: visible; }
+.avatar[data-wreath]::after { content: ''; position: absolute; inset: -22%; background: no-repeat center / contain; pointer-events: none; z-index: 2; }
+.avatar.sm[data-wreath]::after, .avatar.xs[data-wreath]::after { inset: -20%; }
+[data-plate="bubbletea"] { color: #3a2250 !important; }
+.member.plated[data-plate="bubbletea"] .names b { color: #2f1946; text-shadow: none; } .member.plated[data-plate="bubbletea"] .names small { color: #5b3c78; text-shadow: none; }
+.theme-grid, .bg-grid, .wr-grid { display: grid; gap: 10px; margin: 8px 0 14px; }
+.theme-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); } .bg-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); } .wr-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.theme-card, .bg-pick, .wr-pick { display: flex; border: 2px solid transparent; border-radius: 12px; background: var(--hover); color: var(--fg); font: inherit; text-align: left; cursor: pointer; padding: 10px; gap: 12px; }
+.theme-card { align-items: center; } .bg-pick, .wr-pick { flex-direction: column; align-items: stretch; gap: 6px; } .wr-pick { align-items: center; text-align: center; }
+.theme-card.on, .bg-pick.on, .wr-pick.on { border-color: var(--accent); }
+.theme-card small, .bg-pick small, .wr-pick small { display: block; color: var(--muted); font-size: 12px; }
+.theme-av .avatar, .wr-av .avatar { margin: 14px; width: 56px; height: 56px; font-size: 22px; border: 0; } .wr-av .avatar { margin: 18px 18px 14px; }
+.banner.bg-prev { height: 76px; border-radius: 8px; cursor: inherit; pointer-events: none; } .bg-prev.none { height: 76px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--card); color: var(--muted); }
+.banner[data-bg] .bimg { background-position: center 62% !important; }

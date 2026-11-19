@@ -81,8 +81,8 @@ function serverMenu(anchor, acct, ctx) {
 function memberPanel(acct, ctx) {
   const rows = [];
   const me = Deco.mine(ctx), srv = Deco.server(ctx);
-  const row = (who, opts = {}) => h('a', { class: 'member' + (opts.online === false ? ' off' : '') + (Deco.plated(opts.plate) ? ' plated' : ''), href: who.id ? '#/u/' + who.id : '#/profile', onclick: closeDrawers, ...Deco.plateAttrs(opts.plate, me.animate) },
-    h('span', { class: 'av-wrap' }, who.id ? ghostAvatar(who, 'sm') : avatar(acct, 'sm'), h('i', { class: 'dot ' + (opts.online === false ? 'offline' : 'online') })),
+  const row = (who, opts = {}) => h('a', { class: 'member' + (opts.online === false ? ' off' : '') + (Deco.plated(opts.plate) ? ' plated' : ''), href: who.id && !opts.crown ? '#/u/' + who.id : '#/profile', onclick: closeDrawers, ...Deco.plateAttrs(opts.plate, me.animate) },
+    h('span', { class: 'av-wrap' }, who.id && !opts.crown ? ghostAvatar(who, 'sm') : avatar(acct, 'sm'), h('i', { class: 'dot ' + (opts.online === false ? 'offline' : 'online') })),
     h('span', { class: 'names' }, h('b', { class: opts.role ? 'role-' + opts.role.toLowerCase() : '' }, h('span', { class: 'nm' }, who.name), Deco.tagEl(opts.tag), opts.crown ? h('span', { class: 'crown', title: 'Server owner' }, icon('crown')) : null), who.activity ? h('small', {}, who.activity) : null));
   rows.push(h('div', { class: 'member-cat' }, 'Owner — 1'), row(acct, { crown: true, role: 'Admin', plate: me.plate, tag: srv }), aiMemberRows(acct, ctx));
   let note;

@@ -508,6 +508,7 @@ function avatar(a, size = '') {
   const e = h('div', { class: 'avatar ' + size }, a.avatarImg ? '' : (a.name || a.handle)[0].toUpperCase());
   e.style.background = a.color || colorFor(a.handle);
   paintImage(e, a.avatarImg);
+  const w = Deco.wreathOf(a); if (w) e.dataset.wreath = w;     // a wreath from Settings, Chat Rooms look only
   return e;
 }
 
@@ -715,7 +716,7 @@ async function setVote(acct, ctx, target, which) {
   try { await savePost(acct, { ...cur, liked: which === 'up' ? on : false, disliked: which === 'down' ? on : false }); } catch (e) { console.error(e); toast(isQuotaError(e) ? 'Out of space.' : 'That could not be saved.'); return; }
   render(true);
 }
-const ghostAvatar = (p, size = '') => avatar({ name: p.name, handle: p.handle, color: p.color, avatarImg: p.avatarImg }, size);
+const ghostAvatar = (p, size = '') => { const e = avatar({ name: p.name, handle: p.handle, color: p.color, avatarImg: p.avatarImg }, size); const w = tplId() === 'chat' && p.id ? DecoCore.ghostWreath(p.id) : ''; if (w) e.dataset.wreath = w; return e; };
 
 function ghostPostEl(g, acct, ctx, { detail = false } = {}) {
   const who = GW.person(g.seed, g.i);
@@ -924,8 +925,8 @@ function profileView(acct, ctx) {
     h('button', { role: 'tab', 'aria-selected': String(profileTab === k), class: profileTab === k ? 'active' : '', onclick: () => { profileTab = k; render(true); } }, label)));
   return [
     topbar(acct.name, { back: true, sub: plural(ctx.posts.length, 'post') }),
-    h('button', { class: 'banner', 'aria-label': 'Change banner image', onclick: () => setProfileImage(acct.id, 'bannerImg', 1500, 500) },
-      acct.bannerImg && (() => { const d = h('span', { class: 'bimg' }); paintImage(d, acct.bannerImg); return d; })(),
+    h('button', { class: 'banner', 'data-bg': tplId() === 'chat' && Deco.mine(ctx).bg ? Deco.mine(ctx).bg : null, 'aria-label': 'Change banner image', onclick: () => setProfileImage(acct.id, 'bannerImg', 1500, 500) },
+      (acct.bannerImg || (tplId() === 'chat' && Deco.mine(ctx).bg)) && (() => { const d = h('span', { class: 'bimg' }); paintImage(d, acct.bannerImg); return d; })(),
       h('span', { class: 'cam' }, icon('camera'))),
     h('div', { class: 'pinfo' },
       h('div', { class: 'top' },
@@ -1664,6 +1665,7 @@ async function render(keepScroll = false) {
     const reactions = new Map(all.filter(p => p.kind === 'ghost').map(p => [p.target, p]));
     const ctx = { posts, apps, reactions, following: [...reactions.values()].filter(x => x.followed).length, byId: new Map(posts.map(p => [p.id, p])), replyCount: new Map() };
     for (const p of posts) if (p.parentId) ctx.replyCount.set(p.parentId, (ctx.replyCount.get(p.parentId) || 0) + 1);
+    Deco.setActive(acct, ctx);
 
     const [, r = '', arg, arg2] = location.hash.split('/');
     const route = { notifications: 'notifications', explore: 'explore', profile: 'profile', settings: 'settings', post: 'post', u: 'u', apps: 'apps', channel: 'home', dm: 'dm', bot: 'bot' }[r] || 'home';

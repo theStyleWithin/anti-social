@@ -4,6 +4,21 @@
    Animated profile backgrounds and avatar wreaths come next and will live in the same record (see decocore.js). */
 const Deco = (() => {
   const D = DecoCore;
+  let active = { id: '', p: D.normProfile(null) };
+  // called on every render: which account is "me", and how is it dressed (the avatar() helper reads this)
+  const setActive = (acct, ctx) => { active = { id: acct.id, p: D.normProfile((ctx.apps.deco || [])[0]) }; const calm = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); document.documentElement.dataset.decoAnim = active.p.animate && !calm ? 'on' : 'off'; };
+  const wreathOf = a => (a && a.id && a.id === active.id && tplId() === 'chat' ? active.p.wreath : '');
+  // the pictures behind the decorations are drawn (and animated) in decocore.js and handed to the page as CSS, once: a moving set and a still set
+  (function injectArt() {
+    let css = '';
+    for (const an of [true, false]) {
+      const art = D.buildArt(an), p = an ? 'html:not([data-deco-anim="off"])' : 'html[data-deco-anim="off"]';
+      for (const id of Object.keys(art.wreath)) css += `${p} .avatar[data-wreath="${id}"]::after{background-image:${D.uri(art.wreath[id])}}\n`;
+      for (const id of Object.keys(art.plate)) css += `${p} [data-plate="${id}"]::before{background:${D.uri(art.plate[id])} center/cover no-repeat;animation:none}\n`;
+      for (const id of Object.keys(art.bg)) css += `${p} .banner[data-bg="${id}"] .bimg{background:${D.uri(art.bg[id])} center/cover no-repeat !important}\n`;
+    }
+    const el = document.createElement('style'); el.id = 'deco-art'; el.textContent = css; document.head.append(el);
+  })();
   const mine = ctx => D.normProfile((ctx.apps.deco || [])[0]);
   const server = ctx => D.normServer((ctx.apps.srv || [])[0]);
   async function saveProfile(acct, ctx, patch) { const r = (ctx.apps.deco || [])[0], v = { ...D.normProfile(r), ...patch }; return appSave(acct, { id: r ? r.id : 'deco' + acct.id, accountId: acct.id, kind: 'deco', plate: v.plate, bg: v.bg, wreath: v.wreath, animate: v.animate, updatedAt: Date.now() }); }
@@ -17,18 +32,26 @@ const Deco = (() => {
   const plateAttrs = (id, animate) => (id && id !== 'none' ? { 'data-plate': id, 'data-anim': animate === false ? 'off' : 'on' } : {});
   const plated = id => !!id && id !== 'none';
 
-  /* ----- Settings: nameplates ----- */
+  /* ----- Settings: themes, nameplates, backgrounds and wreaths ----- */
   function settingsSection(acct, ctx) {
-    const cur = mine(ctx), srv = server(ctx);
-    const pick = p => h('button', { class: 'member plate-pick' + (plated(p.id) ? ' plated' : '') + (cur.plate === p.id ? ' on' : ''), type: 'button', 'aria-pressed': String(cur.plate === p.id), ...plateAttrs(p.id, cur.animate),
-      onclick: async () => { if (await saveProfile(acct, ctx, { plate: p.id })) render(true); } },
-      h('span', { class: 'av-wrap' }, avatar(acct, 'sm'), h('i', { class: 'dot online' })), h('span', { class: 'names' }, h('b', {}, acct.name, tagEl(srv)), h('small', {}, p.name + ' · ' + p.blurb)));
+    const cur = mine(ctx), srv = server(ctx), set = async patch => { if (await saveProfile(acct, ctx, patch)) render(true); };
+    const wreathAvatar = id => { const a = avatar(acct, 'lg'); if (id && id !== 'none') a.dataset.wreath = id; else delete a.dataset.wreath; return a; };
+    const theme = t => h('button', { class: 'theme-card' + (cur.plate === t.plate && cur.bg === t.bg && cur.wreath === t.wreath ? ' on' : ''), type: 'button', onclick: () => set({ plate: t.plate, bg: t.bg, wreath: t.wreath }) },
+      h('span', { class: 'theme-av' }, wreathAvatar(t.wreath)), h('span', {}, h('b', {}, t.name), h('small', {}, t.blurb)));
+    const plate = p => h('button', { class: 'member plate-pick' + (D.plateOk(p.id) ? ' plated' : '') + (cur.plate === p.id ? ' on' : ''), type: 'button', 'aria-pressed': String(cur.plate === p.id), ...plateAttrs(p.id, cur.animate), onclick: () => set({ plate: p.id }) },
+      h('span', { class: 'av-wrap' }, avatar(acct, 'sm'), h('i', { class: 'dot online' })), h('span', { class: 'names' }, h('b', {}, h('span', { class: 'nm' }, acct.name), tagEl(srv)), h('small', {}, p.name + ' \u00b7 ' + p.blurb)));
+    const bgPick = b => h('button', { class: 'bg-pick' + ((cur.bg || 'none') === b.id ? ' on' : ''), type: 'button', 'aria-pressed': String((cur.bg || 'none') === b.id), onclick: () => set({ bg: b.id === 'none' ? '' : b.id }) },
+      b.id === 'none' ? h('span', { class: 'bg-prev none' }, 'None') : h('span', { class: 'banner bg-prev', 'data-bg': b.id }, h('span', { class: 'bimg' })), h('b', {}, b.name), h('small', {}, b.blurb));
+    const wrPick = w => h('button', { class: 'wr-pick' + ((cur.wreath || 'none') === w.id ? ' on' : ''), type: 'button', 'aria-pressed': String((cur.wreath || 'none') === w.id), onclick: () => set({ wreath: w.id === 'none' ? '' : w.id }) },
+      h('span', { class: 'wr-av' }, wreathAvatar(w.id)), h('b', {}, w.name), h('small', {}, w.blurb));
     return h('section', {}, h('h3', {}, 'Profile decorations'),
-      h('p', {}, 'Dress up your row in the member list with a nameplate. Nobody else will see it, but you will.'),
-      h('div', { class: 'plate-grid', role: 'group', 'aria-label': 'Nameplates' }, D.PLATES.map(pick)),
-      h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: cur.animate, onchange: async e => { if (await saveProfile(acct, ctx, { animate: e.target.checked })) render(true); } }), ' ', h('span', {}, 'Animate decorations', h('small', { class: 'muted', style: 'display:block' }, 'Nameplates move a little. Turned off automatically if your device asks for less motion.'))),
-      h('div', { class: 'btnrow' }, h('button', { class: 'btn', type: 'button', onclick: () => serverProfileModal(acct, ctx) }, 'Server tag and banner')),
-      h('p', { class: 'fine' }, 'Animated profile backgrounds and avatar wreaths are planned next.'));
+      h('p', {}, 'Dress up your profile. Nobody else will see any of it, but you will, and so will anyone you show your phone to.'),
+      h('h4', {}, 'Themes'), h('div', { class: 'theme-grid' }, D.THEMES.map(theme)),
+      h('h4', {}, 'Nameplate (your row in the member list)'), h('div', { class: 'plate-grid', role: 'group', 'aria-label': 'Nameplates' }, D.PLATES.map(plate)),
+      h('h4', {}, 'Profile background (animated, on your profile page)'), h('div', { class: 'bg-grid', role: 'group', 'aria-label': 'Profile backgrounds' }, D.BACKGROUNDS.map(bgPick)),
+      h('h4', {}, 'Avatar wreath (a frame around your picture)'), h('div', { class: 'wr-grid', role: 'group', 'aria-label': 'Avatar wreaths' }, D.WREATHS.map(wrPick)),
+      h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: cur.animate, onchange: e => set({ animate: e.target.checked }) }), ' ', h('span', {}, 'Animate decorations', h('small', { class: 'muted', style: 'display:block' }, 'Things move a little. Turned off automatically if your device asks for less motion.'))),
+      h('div', { class: 'btnrow' }, h('button', { class: 'btn', type: 'button', onclick: () => serverProfileModal(acct, ctx) }, 'Server tag and banner')));
   }
 
   /* ----- the server tag and banner ----- */
@@ -58,6 +81,6 @@ const Deco = (() => {
         h('div', { class: 'btnrow' }, save, h('button', { class: 'btn', type: 'button', onclick: () => close() }, 'Cancel')))));
     paint();
   }
-  return { mine, server, tagEl, plateAttrs, plated, settingsSection, serverProfileModal, clearName, saveServer };
+  return { setActive, wreathOf, mine, server, tagEl, plateAttrs, plated, settingsSection, serverProfileModal, clearName, saveServer };
 })();
 if (typeof module !== 'undefined') module.exports = Deco;
