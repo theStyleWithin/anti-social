@@ -24,7 +24,7 @@ contextBridge.exposeInMainWorld('AntiSocialAI', {
 contextBridge.exposeInMainWorld('AntiSocialFS', {
   kind: 'desktop',
   detect: () => ipcRenderer.invoke('fs:detect'),
-  pick: title => ipcRenderer.invoke('fs:pick', String(title || '')),
+  pick: (title, o) => ipcRenderer.invoke('fs:pick', String(title || ''), { readOnly: !!(o && o.readOnly) }),
   list: (id, rel) => ipcRenderer.invoke('fs:list', String(id), String(rel || '')),
   read: (id, rel) => ipcRenderer.invoke('fs:read', String(id), String(rel)),
   readRange: (id, rel, off, len) => ipcRenderer.invoke('fs:readRange', String(id), String(rel), Number(off), Number(len)),

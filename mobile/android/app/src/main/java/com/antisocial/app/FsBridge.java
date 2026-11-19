@@ -29,6 +29,7 @@ public class FsBridge {
     private final WebView web;
     private final ExecutorService pool = Executors.newSingleThreadExecutor();
     private String pendingPick;
+    private boolean pendingReadOnly;
 
     FsBridge(MainActivity activity, WebView web) {
         this.activity = activity;
@@ -49,6 +50,17 @@ public class FsBridge {
     public void pick(String rid) {
         activity.runOnUiThread(() -> {
             pendingPick = rid;
+            pendingReadOnly = false;
+            activity.pickFolder();
+        });
+    }
+
+    /** Same picker, but the app keeps only permission to read: it cannot change, add or delete anything in the folder (used for music). */
+    @JavascriptInterface
+    public void pickReadOnly(String rid) {
+        activity.runOnUiThread(() -> {
+            pendingPick = rid;
+            pendingReadOnly = true;
             activity.pickFolder();
         });
     }
@@ -56,12 +68,13 @@ public class FsBridge {
     /** Called by the activity with the chosen folder, or null if the picker was closed. */
     void picked(Uri uri) {
         final String rid = pendingPick;
+        final boolean readOnly = pendingReadOnly;
         pendingPick = null;
         if (rid == null) return;
         if (uri == null) { done(rid, true, "null"); return; }
         pool.execute(() -> {
             try {
-                activity.getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                activity.getContentResolver().takePersistableUriPermission(uri, readOnly ? Intent.FLAG_GRANT_READ_URI_PERMISSION : Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                 DocumentFile d = DocumentFile.fromTreeUri(activity, uri);
                 JSONObject o = new JSONObject();
                 o.put("id", uri.toString()).put("label", d != null && d.getName() != null ? d.getName() : "Folder");

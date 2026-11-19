@@ -56,9 +56,14 @@ ipcMain.handle('ai:generate', guard(async (e, req) => {
 const folders = new Map();           // id -> absolute folder
 const MAX_FILE = 64 * 1024 * 1024;
 const savedFile = () => path.join(app.getPath('userData'), 'folders.json');
-const addFolder = (dir, keep) => { const id = crypto.randomBytes(8).toString('hex'); folders.set(id, fs.realpathSync(dir)); if (keep) { try { const all = JSON.parse(fs.readFileSync(savedFile(), 'utf8') || '{}'); all[id] = folders.get(id); fs.writeFileSync(savedFile(), JSON.stringify(all)); } catch { try { fs.writeFileSync(savedFile(), JSON.stringify({ [id]: folders.get(id) })); } catch { /* not remembered */ } } } return id; };
+const readOnly = new Set();          // ids of folders opened read-only (your music): the app can look but never change anything in them
+const addFolder = (dir, keep, ro) => {
+  const id = crypto.randomBytes(8).toString('hex'); folders.set(id, fs.realpathSync(dir)); if (ro) readOnly.add(id);
+  if (keep) { let all = {}; try { all = JSON.parse(fs.readFileSync(savedFile(), 'utf8') || '{}'); } catch { /* none yet */ } all[id] = folders.get(id); all._ro = [...readOnly]; try { fs.writeFileSync(savedFile(), JSON.stringify(all)); } catch { /* not remembered */ } }
+  return id;
+};
 // folders the person picked earlier are open again, by the same ids, if they still exist
-try { for (const [id, dir] of Object.entries(JSON.parse(fs.readFileSync(savedFile(), 'utf8') || '{}'))) if (/^[0-9a-f]{16}$/.test(id) && fs.existsSync(dir)) folders.set(id, fs.realpathSync(dir)); } catch { /* none yet */ }
+try { const saved = JSON.parse(fs.readFileSync(savedFile(), 'utf8') || '{}'); for (const [id, dir] of Object.entries(saved)) if (/^[0-9a-f]{16}$/.test(id) && fs.existsSync(dir)) folders.set(id, fs.realpathSync(dir)); for (const id of Array.isArray(saved._ro) ? saved._ro : []) if (folders.has(id)) readOnly.add(id); } catch { /* none yet */ }
 function inside(id, rel, mustExist) {
   const root = folders.get(id);
   if (!root) throw new Error('That folder is not open any more. Choose it again.');
@@ -101,10 +106,11 @@ ipcMain.handle('upd:download', guard(async (_e, url, name, sha256) => {
 }));
 
 ipcMain.handle('fs:detect', guard(async () => cardCandidates().map(dir => ({ id: addFolder(dir), label: dir }))));
-ipcMain.handle('fs:pick', guard(async (e, title) => {
-  const r = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender), { title: String(title || 'Choose a folder').slice(0, 100), properties: ['openDirectory', 'createDirectory'] });
+ipcMain.handle('fs:pick', guard(async (e, title, opts) => {
+  const ro = !!(opts && opts.readOnly);
+  const r = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender), { title: String(title || 'Choose a folder').slice(0, 100), properties: ro ? ['openDirectory'] : ['openDirectory', 'createDirectory'] });
   if (r.canceled || !r.filePaths[0]) return null;
-  return { id: addFolder(r.filePaths[0], true), label: r.filePaths[0] };
+  return { id: addFolder(r.filePaths[0], true, ro), label: r.filePaths[0] };
 }));
 ipcMain.handle('fs:list', guard(async (_e, id, rel) => {
   const dir = inside(id, rel || '.', true), out = [];
@@ -124,6 +130,7 @@ ipcMain.handle('fs:readRange', guard(async (_e, id, rel, off, len) => {
   const fd = fs.openSync(full, 'r'); try { const buf = Buffer.alloc(Math.min(len, Math.max(0, st.size - off))); const n = fs.readSync(fd, buf, 0, buf.length, off); return new Uint8Array(buf.subarray(0, n)); } finally { fs.closeSync(fd); }
 }));
 ipcMain.handle('fs:write', guard(async (_e, id, rel, bytes) => {
+  if (readOnly.has(id)) throw new Error('That folder is read-only: Anti-Social never changes your own files.');
   const full = inside(id, rel, false);
   if (!(bytes instanceof Uint8Array) || bytes.length > MAX_FILE) throw new Error('That file is too big to write.');
   fs.mkdirSync(path.dirname(full), { recursive: true }); fs.writeFileSync(full, bytes);

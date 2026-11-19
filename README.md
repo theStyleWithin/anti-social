@@ -157,7 +157,7 @@ If your account has a vault passcode, you can also lock the API key with it: it 
 
 Anti-Social only opens the files and folders you point it at, and only to do what you asked: play your music, read a book, turn a note file into a note. It never changes, moves or deletes them, and nothing about them is sent anywhere.
 
-- **Music folders** are read in place. Nothing is copied, and the app never writes to the folder.
+- **Music folders** are read in place. Nothing is copied, and the app asks the system for read-only access to the folder (the folder picker on Android and the desktop apps, and the browser's read mode), so it is not even able to change, add or delete anything there.
 - **Notes, books and pictures you import** are read once and kept as the app's own copies. The files you imported are left exactly as they were.
 - **Ejecting an account** only removes the account's data from this device. Your original files and folders are never touched, so you can keep using them in any other app. Songs the Music Player copied into its own storage stay on this device too, so they are still there if you import the account back. Deleting an account removes its copies.
 

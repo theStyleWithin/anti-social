@@ -100,7 +100,7 @@ async function mpScanFolder(f) {
   f.last = Date.now(); f.count = found.length; mpSaveLibSoon(); mpSavePrefsSoon(); MP.status = ''; mpEmit(); return { found: found.length, added, removed };
 }
 async function mpAddFolder() {
-  const r = await window.AntiSocialFS.pick('Choose your music folder'); if (!r) return null;
+  const r = await window.AntiSocialFS.pick('Choose your music folder', { readOnly: true }); if (!r) return null;
   const P = MP.prefs; let f = P.folders.find(x => x.id === r.id); if (!f) { f = { id: r.id, label: r.label || 'Music' }; P.folders.push(f); mpSavePrefsSoon(); } return f;
 }
 async function mpScanAll() { for (const f of MP.prefs.folders) { try { await mpScanFolder(f); } catch (e) { MP.status = ''; toast('Could not read the folder "' + f.label + '". Choose it again from Settings. ' + (e && e.message ? e.message : '')); } } mpEnrich(); }
