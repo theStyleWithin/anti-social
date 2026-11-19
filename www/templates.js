@@ -37,7 +37,7 @@ function shellChat(acct, route, main, ctx, chId) {
   const chanRow = c => {
     const id = c ? c.id : 'general';
     return h('div', { class: 'chan-row' + (cur === id ? ' active' : '') },
-      h('a', { href: c ? '#/channel/' + c.id : '#/', 'aria-current': cur === id ? 'page' : null, onclick: closeDrawers }, icon('hash'), h('span', {}, c ? c.name : 'general')),
+      h('a', { href: c ? '#/channel/' + c.id : '#/', 'aria-current': cur === id ? 'page' : null, onclick: closeDrawers }, icon(c && c.type === 'forum' ? 'speak' : 'hash'), h('span', {}, c ? c.name : 'general')),
       c ? h('button', { class: 'chan-gear', type: 'button', 'aria-label': `Edit #${c.name}`, title: 'Edit channel', onclick: () => channelEditor(acct, ctx, c) }, icon('settings')) : null);
   };
   const voice = name => h('button', { class: 'chan-row voice', type: 'button', onclick: () => toast('Nobody to talk to. Voice is just you, breathing.') }, icon('speaker'), h('span', {}, name));
@@ -97,10 +97,11 @@ function memberPanel(acct, ctx) {
   return h('aside', { class: 'members', 'aria-label': 'Members' }, h('div', { class: 'members-scroll' }, rows, h('p', { class: 'fine' }, note)));
 }
 
-function chatHome(acct, ctx, chId) {
+function chatHome(acct, ctx, chId, postId) {
   const chans = ctx.apps.chan;
   const ch = chId && chId !== 'general' ? chans.find(c => c.id === chId) : null;
   if (chId && chId !== 'general' && !ch) return [topbar('Channel not found', { back: true }), emptyState('That channel is gone', 'It may have been deleted. Nobody will miss it.')];
+  if (ch && ch.type === 'forum') return Forum.home(acct, ctx, ch, postId);       // a forum channel has its own layout
   const cid = ch ? ch.id : 'general', name = ch ? ch.name : 'general';
   const mine = ctx.posts.filter(p => !p.parentId && TP.inChannel(p, cid));
   const crowdHere = TP.crowdMayPost(cid) && populated();          // only #general ever hears from the generated members
@@ -133,6 +134,8 @@ function chatHome(acct, ctx, chId) {
 
 // Create, rename or delete a channel. Deleting a channel deletes the messages you wrote in it.
 function channelEditor(acct, ctx, ch) {
+  if (ch && ch.type === 'forum') return Forum.settings(acct, ctx, ch);
+  let kind = 'text';
   const isNew = !ch, others = ctx.apps.chan.filter(c => !ch || c.id !== ch.id);
   const name = h('input', { value: ch ? ch.name : '', maxlength: 40, placeholder: 'new-channel', 'aria-label': 'Channel name', autocapitalize: 'none' });
   const topic = h('input', { value: ch ? ch.topic || '' : '', maxlength: 120, placeholder: 'What is this channel about?', 'aria-label': 'Channel topic' });
@@ -141,6 +144,7 @@ function channelEditor(acct, ctx, ch) {
     h('div', { class: 'mh' }, h('button', { class: 'back', 'aria-label': 'Close', onclick: () => close() }, icon('x')), h('b', {}, isNew ? 'Create channel' : 'Edit channel')),
     h('div', { class: 'mp' },
       h('p', { class: 'fine', style: 'padding:0 0 10px' }, 'Only you can post in channels you make. The generated server members only ever talk in #general.'),
+      isNew && h('div', { class: 'field' }, h('span', {}, 'Channel type'), h('div', { class: 'type-pick', role: 'radiogroup', 'aria-label': 'Channel type' }, [['text', 'hash', 'Text', 'Messages in a stream.'], ['forum', 'speak', 'Forum', 'Posts with titles, tags and replies.']].map(([id, ic, label, blurb]) => { const b = h('button', { class: 'type-opt' + (id === kind ? ' on' : ''), type: 'button', role: 'radio', 'aria-checked': String(id === kind), onclick: () => { kind = id; for (const x of b.parentElement.children) { x.classList.toggle('on', x === b); x.setAttribute('aria-checked', String(x === b)); } } }, icon(ic), h('span', {}, h('b', {}, label), h('small', {}, blurb))); return b; }))),
       h('label', { class: 'field' }, h('span', {}, 'Channel name'), name), h('label', { class: 'field' }, h('span', {}, 'Topic (optional)'), topic), err,
       h('div', { class: 'btnrow' }, save, !isNew && h('button', { class: 'btn danger', onclick: async () => {
         if (!confirm(`Delete #${ch.name} and every message you wrote in it? There is no undo.`)) return;
@@ -155,6 +159,7 @@ function channelEditor(acct, ctx, ch) {
     save.disabled = true;
     const rec = ch ? { ...ch } : { id: uid(), accountId: acct.id, kind: 'chan', createdAt: Date.now() };
     Object.assign(rec, { name: TP.channelName(name.value), topic: topic.value.trim().slice(0, 120), updatedAt: Date.now() });
+    if (isNew && kind === 'forum') Object.assign(rec, { type: 'forum', guidelines: '', tags: [], requireTags: false, reaction: '', layout: 'gallery', sort: 'active' });
     if (!(await appSave(acct, rec))) { save.disabled = false; return; }
     close(); go('/channel/' + rec.id);
   });

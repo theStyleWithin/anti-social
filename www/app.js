@@ -790,8 +790,8 @@ function ghostProfileView(acct, ctx, ref) {
 }
 
 /* ---------- views ---------- */
-function homeView(acct, ctx, chId) {
-  if (tplId() === 'chat') return chatHome(acct, ctx, chId);
+function homeView(acct, ctx, chId, postId) {
+  if (tplId() === 'chat') return chatHome(acct, ctx, chId, postId);
   const top = ctx.posts.filter(p => !p.parentId).sort((a, b) => b.createdAt - a.createdAt);
   const pop = populated();
   const head = [
@@ -1661,7 +1661,7 @@ async function render(keepScroll = false) {
     if (all.bad) console.warn(`${all.bad} post(s) could not be decrypted`);
     // Your likes, reposts and follows of generated accounts live beside your posts but are not posts.
     const posts = all.filter(p => !p.kind);                 // real posts only; everything else is a record of some other kind
-    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], srv: [], deco: [], pprof: [], bot: [], aimsg: [], aimode: [], aikey: [], dexmark: [], pkbank: [], pkm: [], agame: [], ach: [], rakey: [], clockcfg: [], sound: [], budget: [], shotgame: [], shot: [], termstate: [], cbinder: [], ccard: [], ebook: [], lang: [], calday: [], calprof: [], pushup: [], mlib: [], mprefs: [] };
+    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], fpost: [], srv: [], deco: [], pprof: [], bot: [], aimsg: [], aimode: [], aikey: [], dexmark: [], pkbank: [], pkm: [], agame: [], ach: [], rakey: [], clockcfg: [], sound: [], budget: [], shotgame: [], shot: [], termstate: [], cbinder: [], ccard: [], ebook: [], lang: [], calday: [], calprof: [], pushup: [], mlib: [], mprefs: [] };
     for (const p of all) if (apps[p.kind]) apps[p.kind].push(p);
     castMap = new Map(all.filter(p => p.kind === 'cast').map(p => [p.ref, p]));
     const reactions = new Map(all.filter(p => p.kind === 'ghost').map(p => [p.target, p]));
@@ -1673,7 +1673,7 @@ async function render(keepScroll = false) {
     const route = { notifications: 'notifications', explore: 'explore', profile: 'profile', settings: 'settings', post: 'post', u: 'u', apps: 'apps', channel: 'home', dm: 'dm', bot: 'bot' }[r] || 'home';
     const chId = r === 'channel' ? arg : '';
     const main = {
-      home: () => homeView(acct, ctx, chId), dm: () => dmView(acct, ctx, arg), bot: () => botPage(acct, ctx, arg), apps: () => appsView(acct, ctx, arg, arg2), explore: () => exploreView(acct, ctx), notifications: notificationsView, u: () => ghostProfileView(acct, ctx, arg),
+      home: () => homeView(acct, ctx, chId, arg2), dm: () => dmView(acct, ctx, arg), bot: () => botPage(acct, ctx, arg), apps: () => appsView(acct, ctx, arg, arg2), explore: () => exploreView(acct, ctx), notifications: notificationsView, u: () => ghostProfileView(acct, ctx, arg),
       profile: () => profileView(acct, ctx), settings: () => { if (arg === 'security' || arg === 'characters' || (arg === 'ai' && tplId() === 'chat')) settingsTab = arg; return settingsView(acct, ctx.apps.bg[0], ctx); }, post: () => postView(acct, ctx, arg),
     }[route]();
     document.title = route === 'home' ? 'Home / Anti-Social' : route[0].toUpperCase() + route.slice(1) + ' / Anti-Social';
