@@ -1701,3 +1701,28 @@ body.pu-lock { overflow: hidden; }
 .theme-av .avatar, .wr-av .avatar { margin: 14px; width: 56px; height: 56px; font-size: 22px; border: 0; } .wr-av .avatar { margin: 18px 18px 14px; }
 .banner.bg-prev { height: 76px; border-radius: 8px; cursor: inherit; pointer-events: none; } .bg-prev.none { height: 76px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--card); color: var(--muted); }
 .banner[data-bg] .bimg { background-position: center 62% !important; }
+
+/* ---------- profile status and Board widgets ---------- */
+.pinfo .top { position: relative; }
+.status-bubble { position: absolute; left: 124px; top: -34px; max-width: calc(100% - 260px); display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 16px 16px 16px 4px; background: var(--card); color: var(--fg); border: 1px solid var(--line); font: inherit; font-size: 13px; text-align: left; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.18); z-index: 3; }
+.status-bubble::before { content: ''; position: absolute; left: -9px; bottom: -3px; width: 9px; height: 9px; border-radius: 50%; background: var(--card); border: 1px solid var(--line); }
+.status-bubble.empty { color: var(--muted); } .status-bubble i { font-style: italic; } .status-bubble:hover { background: var(--hover); }
+.status-bubble.static { position: relative; left: 0; top: 0; max-width: none; margin: 0 0 12px; cursor: default; box-shadow: none; }
+.sb-emo { font-size: 16px; line-height: 1; } .sb-plus { font-weight: 800; color: var(--muted); }
+.status-row { display: flex; gap: 8px; margin-bottom: 8px; } .status-row input { flex: 1; min-width: 0; }
+.emoji-btn { font-size: 20px; padding: 4px 12px; } .emoji-grid { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 10px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; }
+.emoji-grid[hidden] { display: none; } .emoji-grid button { font-size: 20px; width: 38px; height: 38px; border-radius: 10px; border: 0; background: none; cursor: pointer; } .emoji-grid button:hover { background: var(--hover); } .emoji-grid .emoji-none { width: auto; font-size: 13px; padding: 0 10px; color: var(--muted); }
+.board { padding: 12px 16px 24px; } .board-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.pw-card { border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px 14px; margin-bottom: 12px; background: var(--card); }
+.pw-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; } .pw-spacer { flex: 1; }
+.pw-ico { width: 32px; height: 32px; border-radius: 50%; border: 0; background: none; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; } .pw-ico:hover:not(:disabled) { background: var(--hover); color: var(--fg); } .pw-ico:disabled { opacity: .3; cursor: default; } .pw-ico svg { width: 17px; height: 17px; }
+.pw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 12px; } .pw-card.single .pw-grid { grid-template-columns: 150px; }
+.pw-tile { position: relative; min-width: 0; } .pw-cover { aspect-ratio: 3 / 4; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.85); font-size: 30px; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+.pw-name { display: block; margin-top: 6px; font-size: 12px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.pw-x { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(0,0,0,.65); color: #fff; cursor: pointer; display: none; align-items: center; justify-content: center; } .pw-tile:hover .pw-x, .pw-x:focus-visible { display: flex; } .pw-x svg { width: 13px; height: 13px; }
+@media (hover: none) { .pw-x { display: flex; } }
+.pw-empty { margin: 4px 0 0; } .pw-none { text-align: center; padding: 28px 10px; } .pw-none p:first-child { font-size: 18px; font-weight: 800; margin: 0 0 6px; }
+.pw-add { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 8px; } .pw-pick { border: 0; padding: 0; background: none; cursor: pointer; } .pw-prev { width: 90px; background: var(--hover); color: var(--muted); font-size: 30px; }
+.pw-sug { display: flex; flex-wrap: wrap; gap: 10px; } .pw-sug-b { width: 84px; border: 0; padding: 0; background: none; cursor: pointer; color: var(--fg); text-align: left; } .pw-sug-b .pw-cover { font-size: 22px; }
+.pw-choice { display: block; width: 100%; text-align: left; padding: 12px 14px; margin-bottom: 8px; border: 1px solid var(--line); border-radius: 12px; background: none; color: var(--fg); font: inherit; cursor: pointer; } .pw-choice:hover { background: var(--hover); } .pw-choice small { display: block; color: var(--muted); }
+@media (max-width: 700px) { .status-bubble { left: 108px; max-width: calc(100% - 140px); top: -30px; } }

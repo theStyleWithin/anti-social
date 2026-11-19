@@ -919,9 +919,10 @@ function profileView(acct, ctx) {
     posts: mine,
     replies: ctx.posts.filter(p => p.parentId),
     media: ctx.posts.filter(p => p.images?.length),
+    board: [],
   }[profileTab].sort((a, b) => b.createdAt - a.createdAt);
   const joined = new Date(acct.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-  const tabs = h('div', { class: 'tabs', role: 'tablist' }, [['posts', W('tabPosts')], ['replies', W('tabReplies')], ['media', W('tabMedia')]].map(([k, label]) =>
+  const tabs = h('div', { class: 'tabs', role: 'tablist' }, [['posts', W('tabPosts')], ['replies', W('tabReplies')], ['media', W('tabMedia')], ['board', 'Board']].map(([k, label]) =>
     h('button', { role: 'tab', 'aria-selected': String(profileTab === k), class: profileTab === k ? 'active' : '', onclick: () => { profileTab = k; render(true); } }, label)));
   return [
     topbar(acct.name, { back: true, sub: plural(ctx.posts.length, 'post') }),
@@ -931,6 +932,7 @@ function profileView(acct, ctx) {
     h('div', { class: 'pinfo' },
       h('div', { class: 'top' },
         h('button', { class: 'avbtn', 'aria-label': 'Change avatar image', onclick: () => setProfileImage(acct.id, 'avatarImg', 256, 256) }, avatar(acct, 'lg'), h('span', { class: 'cam' }, icon('camera'))),
+        Prof.statusBubble(acct, ctx),
         h('button', { class: 'btn', onclick: () => editProfile(acct) }, W('editProfile'))),
       h('h2', {}, acct.name, tplId() === 'chat' ? Deco.tagEl(Deco.server(ctx)) : null),
       h('div', { class: 'muted' }, '@' + acct.handle),
@@ -938,7 +940,7 @@ function profileView(acct, ctx) {
       h('div', { class: 'meta' }, 'Joined ' + joined + ' · Location: your device'),
       h('div', { class: 'follow' }, h('span', {}, h('b', {}, ctx.following || 0), ' ' + W('following')), h('span', {}, h('b', {}, 0), ' ' + W('followers')))),
     tabs,
-    list.length ? list.map(p => postEl(p, acct, ctx)) : emptyState('Nothing here yet', 'Not that it matters. Nobody is checking.'),
+    profileTab === 'board' ? Prof.board(acct, ctx) : list.length ? list.map(p => postEl(p, acct, ctx)) : emptyState('Nothing here yet', 'Not that it matters. Nobody is checking.'),
   ];
 }
 
@@ -1659,7 +1661,7 @@ async function render(keepScroll = false) {
     if (all.bad) console.warn(`${all.bad} post(s) could not be decrypted`);
     // Your likes, reposts and follows of generated accounts live beside your posts but are not posts.
     const posts = all.filter(p => !p.kind);                 // real posts only; everything else is a record of some other kind
-    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], srv: [], deco: [], bot: [], aimsg: [], aimode: [], aikey: [], dexmark: [], pkbank: [], pkm: [], agame: [], ach: [], rakey: [], clockcfg: [], sound: [], budget: [], shotgame: [], shot: [], termstate: [], cbinder: [], ccard: [], ebook: [], lang: [], calday: [], calprof: [], pushup: [], mlib: [], mprefs: [] };
+    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], srv: [], deco: [], pprof: [], bot: [], aimsg: [], aimode: [], aikey: [], dexmark: [], pkbank: [], pkm: [], agame: [], ach: [], rakey: [], clockcfg: [], sound: [], budget: [], shotgame: [], shot: [], termstate: [], cbinder: [], ccard: [], ebook: [], lang: [], calday: [], calprof: [], pushup: [], mlib: [], mprefs: [] };
     for (const p of all) if (apps[p.kind]) apps[p.kind].push(p);
     castMap = new Map(all.filter(p => p.kind === 'cast').map(p => [p.ref, p]));
     const reactions = new Map(all.filter(p => p.kind === 'ghost').map(p => [p.target, p]));

@@ -43,7 +43,7 @@ function shellChat(acct, route, main, ctx, chId) {
   const voice = name => h('button', { class: 'chan-row voice', type: 'button', onclick: () => toast('Nobody to talk to. Voice is just you, breathing.') }, icon('speaker'), h('span', {}, name));
   const userbar = h('div', { class: 'userbar' },
     h('button', { class: 'who', type: 'button', 'aria-haspopup': 'menu', 'aria-label': 'Accounts', onclick: e => openAccountMenu(e.currentTarget, acct) },
-      h('span', { class: 'av-wrap' }, avatar(acct, 'sm'), h('i', { class: 'dot online' })), h('span', { class: 'names' }, h('b', {}, acct.name), h('small', {}, 'Online'))),
+      h('span', { class: 'av-wrap' }, avatar(acct, 'sm'), h('i', { class: 'dot online' })), h('span', { class: 'names' }, h('b', {}, acct.name), h('small', {}, Prof.statusText(ctx) || 'Online'))),
     [['mic', 'Mute'], ['headset', 'Deafen']].map(([ic, label]) => h('button', { class: 'ub', type: 'button', 'aria-label': label, 'aria-pressed': 'false', title: label, onclick: e => { const b = e.currentTarget; const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(on)); toast(on ? `${label}d. Nobody noticed.` : `${label} off.`); } }, icon(ic))),
     h('a', { class: 'ub', href: '#/settings', 'aria-label': W('navSettings'), title: W('navSettings'), onclick: closeDrawers }, icon('settings')));
   const left = h('div', { class: 'chat-left' }, rail,
@@ -83,8 +83,8 @@ function memberPanel(acct, ctx) {
   const me = Deco.mine(ctx), srv = Deco.server(ctx);
   const row = (who, opts = {}) => h('a', { class: 'member' + (opts.online === false ? ' off' : '') + (Deco.plated(opts.plate) ? ' plated' : ''), href: who.id && !opts.crown ? '#/u/' + who.id : '#/profile', onclick: closeDrawers, ...Deco.plateAttrs(opts.plate, me.animate) },
     h('span', { class: 'av-wrap' }, who.id && !opts.crown ? ghostAvatar(who, 'sm') : avatar(acct, 'sm'), h('i', { class: 'dot ' + (opts.online === false ? 'offline' : 'online') })),
-    h('span', { class: 'names' }, h('b', { class: opts.role ? 'role-' + opts.role.toLowerCase() : '' }, h('span', { class: 'nm' }, who.name), Deco.tagEl(opts.tag), opts.crown ? h('span', { class: 'crown', title: 'Server owner' }, icon('crown')) : null), who.activity ? h('small', {}, who.activity) : null));
-  rows.push(h('div', { class: 'member-cat' }, 'Owner — 1'), row(acct, { crown: true, role: 'Admin', plate: me.plate, tag: srv }), aiMemberRows(acct, ctx));
+    h('span', { class: 'names' }, h('b', { class: opts.role ? 'role-' + opts.role.toLowerCase() : '' }, h('span', { class: 'nm' }, who.name), Deco.tagEl(opts.tag), opts.crown ? h('span', { class: 'crown', title: 'Server owner' }, icon('crown')) : null), (opts.activity || who.activity) ? h('small', {}, opts.activity || who.activity) : null));
+  rows.push(h('div', { class: 'member-cat' }, 'Owner — 1'), row(acct, { crown: true, role: 'Admin', plate: me.plate, tag: srv, activity: Prof.statusText(ctx) }), aiMemberRows(acct, ctx));
   let note;
   if (populated()) {
     const list = Ghost.members(worldSeed(), 80, { ...poolOpts(), now: Date.now() });
