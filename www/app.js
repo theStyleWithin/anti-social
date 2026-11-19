@@ -1428,12 +1428,14 @@ async function deleteAccount(acct) {
   if (!confirm(`Delete @${acct.handle} and every post? This cannot be undone. Nobody can help you.`)) return;
   for (const p of await db.postsOf(acct.id)) await db.del('posts', p.id);
   await db.del('accounts', acct.id);
+  await mpPurgeCopies(acct.id);                      // the song copies this app made for the account; your own files are never touched
   logout();
 }
 
 async function wipeEverything() {
   if (!confirm('Delete ALL accounts and posts on this device? There are no backups. There is no one.')) return;
   await db.clear('posts'); await db.clear('accounts');
+  try { await mdb.clear('f'); await mdb.clear('l'); } catch { /* no copied songs */ }     // only the app's own copies; your files stay where they are
   logout();
 }
 

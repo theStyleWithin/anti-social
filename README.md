@@ -153,6 +153,14 @@ chat are sent there; switch back to "On this device" and nothing is sent. For Re
 Because of this, the Android app carries the internet permission; it is used for nothing else. To play a YouTube video, YouTube sees your internet address and that you opened the video, and its ads are part of its own player (this app does not change them); you can switch it off, or just open the link in your browser. The Android app also asks to install updates you chose to download, to keep a playing video going with the screen off (a small notification shows), and to read a music folder you pick. The Push-Up Counter uses the microphone only if you turn on its voice check. The Sound Meter uses the microphone (Android asks the first time; the desktop app allows audio only), measures the sound on the spot and keeps nothing.
 If your account has a vault passcode, you can also lock the API key with it: it is then stored encrypted inside the vault, readable only while the vault is open, and never included in exported files.
 
+## Your own files stay yours
+
+Anti-Social only opens the files and folders you point it at, and only to do what you asked: play your music, read a book, turn a note file into a note. It never changes, moves or deletes them, and nothing about them is sent anywhere.
+
+- **Music folders** are read in place. Nothing is copied, and the app never writes to the folder.
+- **Notes, books and pictures you import** are read once and kept as the app's own copies. The files you imported are left exactly as they were.
+- **Ejecting or deleting an account** only removes the account's data from this device. Your original files and folders are never touched, so you can keep using them in any other app. Songs the Music Player copied into its own storage stay on this device when you eject (they are still there if you import the account back), and the Eject screen has a box to delete those copies too, off by default. Deleting an account removes its copies.
+
 ## About antivirus warnings
 
 The Windows apps are not code-signed (a certificate costs money), and they bundle an AI engine (llama.cpp) as native
