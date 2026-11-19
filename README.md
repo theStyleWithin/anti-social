@@ -6,7 +6,7 @@
 
 ## Status: fully featured and complete
 
-Anti-Social v0.28.0 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.28.1 is feature complete. It is a finished app, not a work in progress.
 
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (drag-to-reorder, themes, the Bible, Travel Log, Cookbook and the v0.12.0 account features are automated-test verified, awaiting a hand test; the Android file saver in v0.12.0 is new native code and has not yet been run on a real phone); plus automated tests):
 - **Newer apps (v0.20.0 to v0.26.0):** Language Lab, Calorie Counter, Push-Up Counter, Music Player, the viewers, YouTube playback, the desktop layout and Updates are checked by automated tests; the Fireplace, Aquarium, Music Player and YouTube embeds have been tried on a real phone. The console versions, background video playback, the Updates installer and the Music Player folder picker have **not yet been hand tested on real hardware**.
@@ -98,6 +98,7 @@ A new piece earns its place by being something you would use inside the shell, n
 
 ## Version history
 
+- **v0.28.1:** an account you eject now takes your look and settings with it (Chat Rooms stays on, colors and app choices come back), and a check keeps it that way for new features; your own files are only ever read (music folders open read-only); eject and delete stop the music player first so nothing is written afterwards; right-click (or long-press) a profile in the account list for See profile and Hide (not for passcode-locked profiles), and profiles in the list wear their nameplates; the Music Player resumes even if you restart in the first seconds of a song
 - **v0.28.0:** Chat Rooms gets forum channels, custom emoji, stickers and a soundboard, a profile status and Board of widgets, and profile decorations (nameplates, animated backgrounds, avatar wreaths, server tag and banner) in five themes: Kawaii Boba Tea, Lunar New Year and three Anime sets, all filed by collection. A page-sized Music Player style no longer leaks into dialogs
 - **v0.27.3:** desktop app, same app in several columns: the Matrix Viewer now runs in all of them (before, only the last one moved); every Music Player column shows the playing song and its controls on one shared player; Fireplace and Aquarium draw in every column with the sound coming from only one
 - **v0.27.2:** desktop app: the same app can be pinned on both sides of the timeline, no rules
