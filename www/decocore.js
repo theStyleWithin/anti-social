@@ -20,6 +20,8 @@ const DecoCore = (() => {
     { id: 'hexcandy', name: 'Hex Candy', blurb: 'Pastel honeycomb with a little sparkle.', anim: true },
     { id: 'lanternglow', name: 'Lantern Glow', blurb: 'Red silk, gold waves and tiny swaying lanterns.', anim: true },
     { id: 'goldwaves', name: 'Gold Waves', blurb: 'Rolling gold waves on deep red.', anim: true },
+    { id: 'sparkleanime', name: 'Sparkle Streak', blurb: 'A violet glow with a shooting star.', anim: true },
+    { id: 'mangapanel', name: 'Manga Panel', blurb: 'Halftone dots, speed lines and a POW.', anim: true },
   ];
   const TAG_COLORS = [['#5865f2', 'Blurple'], ['#23a55a', 'Green'], ['#f0b232', 'Gold'], ['#f23f43', 'Red'], ['#eb459e', 'Pink'], ['#06b6d4', 'Cyan'], ['#f97316', 'Orange'], ['#7c3aed', 'Violet']];
   const TAG_GLYPHS = [['', 'None'], ['★', 'Star'], ['⚡', 'Bolt'], ['♥', 'Heart'], ['☠', 'Skull'], ['❀', 'Flower'], ['♦', 'Diamond'], ['♛', 'Crown']];
@@ -34,6 +36,7 @@ const DecoCore = (() => {
     { id: 'dots', name: 'Dots', css: 'radial-gradient(circle at 20% 30%,rgba(255,255,255,.25) 0 6px,transparent 7px),radial-gradient(circle at 70% 60%,rgba(255,255,255,.18) 0 10px,transparent 11px),linear-gradient(135deg,#0c4a6e,#1d4ed8)' },
     { id: 'boba', name: 'Boba', css: 'radial-gradient(circle at 22% 70%,#42296b 0 9px,transparent 10px),radial-gradient(circle at 40% 82%,#42296b 0 7px,transparent 8px),radial-gradient(circle at 78% 76%,#42296b 0 10px,transparent 11px),linear-gradient(160deg,#ffe3f1,#ffa6d0 60%,#f27fb6)' },
     { id: 'lunar', name: 'Lunar', css: 'radial-gradient(circle at 80% 30%,rgba(255,214,102,.9) 0 14px,transparent 15px),repeating-radial-gradient(circle at 20% 120%,rgba(255,200,80,.25) 0 6px,transparent 6px 12px),linear-gradient(160deg,#4a0609,#b3121b 60%,#e5412c)' },
+    { id: 'anime', name: 'Anime', css: 'radial-gradient(circle at 78% 30%,rgba(255,255,255,.9) 0 3px,transparent 4px),radial-gradient(circle at 30% 60%,rgba(255,255,255,.7) 0 2px,transparent 3px),linear-gradient(160deg,#1b1250,#6d28d9 55%,#f472b6)' },
     { id: 'stripes', name: 'Stripes', css: 'repeating-linear-gradient(120deg,rgba(255,255,255,.12) 0 14px,transparent 14px 28px),linear-gradient(135deg,#581c87,#db2777)' },
   ];
 
@@ -42,6 +45,7 @@ const DecoCore = (() => {
     { id: 'none', name: 'None', blurb: 'Your own banner picture, or the plain colours.' },
     { id: 'boba', name: 'Bubble Tea Bliss', blurb: 'Pink milk tea, pearls bobbing, sparkles.', anim: true },
     { id: 'lantern', name: 'Lantern Festival Night', blurb: 'Swaying lanterns, fireworks and golden petals.', anim: true },
+    { id: 'animenight', name: 'Anime Night', blurb: 'Starry violet sky, shooting stars and drifting blossoms.', anim: true },
   ];
   const WREATHS = [
     { id: 'none', name: 'None', blurb: 'Just your picture.' },
@@ -55,11 +59,24 @@ const DecoCore = (() => {
     { id: 'firecrackers', name: 'Firecrackers', blurb: 'A string of crackers with popping sparks.', anim: true },
     { id: 'envelopes', name: 'Lucky Envelopes', blurb: 'Red envelopes and spinning gold coins.', anim: true },
     { id: 'dragon', name: 'Dragon\'s Smile', blurb: 'A friendly dragon with swaying whiskers.', anim: true },
+    { id: 'angry', name: 'Angry', blurb: 'Throbbing red lines and a popping vein.', anim: true },
+    { id: 'shy', name: 'Shy', blurb: 'Two bashful hands and floating hearts.', anim: true },
+    { id: 'rumbling', name: 'Rumbling', blurb: 'Shaking speed lines and loud marks.', anim: true },
+    { id: 'magicgirl', name: 'Magical Girl', blurb: 'A swirling ribbon of stars and hearts.', anim: true },
+    { id: 'scholar', name: 'Sakura Scholar', blurb: 'A sailor collar, a red scarf and petals.', anim: true },
+    { id: 'sushi', name: 'Sushi Roll', blurb: 'Rice, seaweed and a slice of salmon.', anim: true },
+    { id: 'ramen', name: 'Ramen Bowl', blurb: 'A steaming bowl with wiggling noodles.', anim: true },
+    { id: 'energy', name: 'Radiating Energy', blurb: 'A purple aura with crackling bolts.', anim: true },
+    { id: 'catonesie', name: 'Cat Onesie', blurb: 'A cosy cat hood with twitching ears.', anim: true },
+    { id: 'nervous', name: 'Nervous', blurb: 'Sweat drops and a confused question mark.', anim: true },
+    { id: 'ghost', name: 'Little Ghost', blurb: 'A shy ghost floating beside you.', anim: true },
+    { id: 'sunburst', name: 'Sunburst', blurb: 'Golden rays pulsing outward.', anim: true },
   ];
   // a theme sets a nameplate, a background and a wreath together
   const THEMES = [
     { id: 'boba', name: 'Kawaii Boba Tea', blurb: 'Pink milk tea, pearls and sparkles.', plate: 'bubbletea', bg: 'boba', wreath: 'bobacup' },
     { id: 'lunar', name: 'Lunar New Year', blurb: 'Red lanterns, gold waves and fireworks.', plate: 'lanternglow', bg: 'lantern', wreath: 'redlantern' },
+    { id: 'anime', name: 'Anime', blurb: 'Sparkles, shooting stars and magical ribbons.', plate: 'sparkleanime', bg: 'animenight', wreath: 'magicgirl' },
   ];
 
   /* ---- the art: drawn here as SVG (with its own tiny animations) and handed to the page as CSS (see deco.js). Everything is original.
@@ -172,7 +189,7 @@ const DecoCore = (() => {
       + `<circle cx="72" cy="72" r="50.4" fill="none" stroke="#ffe6ee" stroke-opacity=".7" stroke-width="1.6"/>` + `<g>${move('translate', '0 0;0 2;0 0', 3.2)}<ellipse cx="42" cy="126" rx="16" ry="5.5" fill="#3aa65a"/><ellipse cx="102" cy="128" rx="14" ry="5" fill="#4fc46b"/><path d="M42 126L52 124M102 128L112 126" stroke="#2c8a49" stroke-width="1.4"/></g>`
       + `<circle cx="72" cy="72" r="64" fill="none" stroke="#9be7ff" stroke-opacity=".4" stroke-width="1.6" stroke-dasharray="3 7">${anim('stroke-opacity', '.1;.5;.1', 3.4)}</circle>` + star(16, 40, 3.4, '#fff', { tw: 2.4 }) + star(128, 38, 3.2, '#ffd75e', { tw: 2.8, begin: 1 }) + star(72, 138, 3, '#fff', { tw: 2.2, begin: .5 }),
       `<linearGradient id="pl1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd6e2"/><stop offset="1" stop-color="#ff9db8"/></linearGradient><linearGradient id="pl2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0f4"/><stop offset="1" stop-color="#ffb3c8"/></linearGradient>`);
-    const koi = (fill, spots) => `<g><path d="M-26 0Q-22 -7 -14 -3L-14 3Q-22 7 -26 0Z" fill="${fill}" fill-opacity=".85"><animate attributeName="d" values="M-26 0Q-22 -7 -14 -3L-14 3Q-22 7 -26 0Z;M-26 -5Q-22 -8 -14 -3L-14 3Q-22 4 -26 -5Z;M-26 0Q-22 -7 -14 -3L-14 3Q-22 7 -26 0Z" dur="1.1s" repeatCount="indefinite"/></path><path d="M-14 0C-8 -8 8 -8 16 0C8 8 -8 8 -14 0Z" fill="${fill}"/><path d="M2 -6Q7 -13 -5 -10Z" fill="${fill}" fill-opacity=".8"/><path d="M2 6Q7 13 -5 10Z" fill="${fill}" fill-opacity=".8"/>${spots}<circle cx="11" cy="-2.4" r="2" fill="#fff"/><circle cx="11.6" cy="-2.4" r="1" fill="#222"/></g>`;
+    const koi = (fill, spots) => `<g><path d="M-26 0Q-22 -7 -14 -3L-14 3Q-22 7 -26 0Z" fill="${fill}" fill-opacity=".85">${A('<animate attributeName="d" values="M-26 0Q-22 -7 -14 -3L-14 3Q-22 7 -26 0Z;M-26 -5Q-22 -8 -14 -3L-14 3Q-22 4 -26 -5Z;M-26 0Q-22 -7 -14 -3L-14 3Q-22 7 -26 0Z" dur="1.1s" repeatCount="indefinite"/>')}</path><path d="M-14 0C-8 -8 8 -8 16 0C8 8 -8 8 -14 0Z" fill="${fill}"/><path d="M2 -6Q7 -13 -5 -10Z" fill="${fill}" fill-opacity=".8"/><path d="M2 6Q7 13 -5 10Z" fill="${fill}" fill-opacity=".8"/>${spots}<circle cx="11" cy="-2.4" r="2" fill="#fff"/><circle cx="11.6" cy="-2.4" r="1" fill="#222"/></g>`;
     wreath.koi = svg(144, 144,
       `<circle cx="72" cy="72" r="56" fill="#0e4a6b" fill-opacity=".35"/><circle cx="72" cy="72" r="58" fill="none" stroke="#9be7ff" stroke-opacity=".5" stroke-width="2.4"/><circle cx="72" cy="72" r="52.6" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="1.2"/>`
       + [[72, 72, 54, 0], [72, 72, 54, 1]].map((c, k) => `<circle cx="72" cy="72" r="${54 - k * 0}" fill="none" stroke="#fff" stroke-opacity="${k ? 0 : .0}"/>`).join('')
@@ -195,7 +212,7 @@ const DecoCore = (() => {
     wreath.dragon = svg(144, 144,
       `<g><g>${move('rotate', '-3;3;-3', 2.8)}<path d="M50 24Q36 6 14 10Q30 14 40 32" fill="none" stroke="${GOLD}" stroke-width="3.6" stroke-linecap="round"/><path d="M96 24Q110 6 130 10Q114 14 104 32" fill="none" stroke="${GOLD}" stroke-width="3.6" stroke-linecap="round"/></g></g>`
       + `<path d="M72 8Q96 8 108 26L100 40Q72 30 44 40L36 26Q48 8 72 8Z" fill="${RED}" stroke="${RED2}" stroke-width="2"/><path d="M52 14Q72 6 92 14" fill="none" stroke="${GOLD}" stroke-width="2.4"/><ellipse cx="72" cy="20" rx="13" ry="8" fill="#ff9fb0"/><circle cx="67" cy="20" r="2.2" fill="#8e0a12"/><circle cx="77" cy="20" r="2.2" fill="#8e0a12"/>`
-      + `<g transform="translate(52 34)"><circle r="6.4" fill="#fff"/><circle cx="1" cy="1" r="3.2" fill="#222"><animate attributeName="r" values="3.2;3.2;.5;3.2;3.2" keyTimes="0;.88;.92;.96;1" dur="4s" repeatCount="indefinite"/></circle></g><g transform="translate(92 34)"><circle r="6.4" fill="#fff"/><circle cx="-1" cy="1" r="3.2" fill="#222"><animate attributeName="r" values="3.2;3.2;.5;3.2;3.2" keyTimes="0;.88;.92;.96;1" dur="4s" repeatCount="indefinite"/></circle></g>`
+      + `<g transform="translate(52 34)"><circle r="6.4" fill="#fff"/><circle cx="1" cy="1" r="3.2" fill="#222">${A('<animate attributeName="r" values="3.2;3.2;.5;3.2;3.2" keyTimes="0;.88;.92;.96;1" dur="4s" repeatCount="indefinite"/>')}</circle></g><g transform="translate(92 34)"><circle r="6.4" fill="#fff"/><circle cx="-1" cy="1" r="3.2" fill="#222">${A('<animate attributeName="r" values="3.2;3.2;.5;3.2;3.2" keyTimes="0;.88;.92;.96;1" dur="4s" repeatCount="indefinite"/>')}</circle></g>`
       + `<path d="M20 70A52 52 0 0 1 20 74Z" fill="none"/><circle cx="72" cy="74" r="53" fill="none" stroke="${RED}" stroke-width="9"/><circle cx="72" cy="74" r="58" fill="none" stroke="${GOLD}" stroke-width="2.4"/><circle cx="72" cy="74" r="48.6" fill="none" stroke="${GOLD}" stroke-opacity=".6" stroke-width="1.4"/>`
       + [-26, -10, 10, 26].map(dx => `<path d="M${72 + dx - 5} 44L${72 + dx} 56L${72 + dx + 5} 44Z" fill="#fff" stroke="#e6d7b0" stroke-width=".8"/>`).join('') + [-34, -14, 14, 34].map(dx => `<path d="M${72 + dx - 5} 130L${72 + dx} 118L${72 + dx + 5} 130Z" fill="#fff" stroke="#e6d7b0" stroke-width=".8"/>`).join('')
       + `<g transform="translate(18 82)"><g>${move('rotate', '-8;8;-8', 2.6, .3)}<path d="M0 0Q-12 8 -6 24Q-14 14 -2 34" fill="none" stroke="${GOLD}" stroke-width="3" stroke-linecap="round"/></g></g><g transform="translate(126 82)"><g>${move('rotate', '8;-8;8', 2.6, 1)}<path d="M0 0Q12 8 6 24Q14 14 2 34" fill="none" stroke="${GOLD}" stroke-width="3" stroke-linecap="round"/></g></g>`
@@ -220,6 +237,87 @@ const DecoCore = (() => {
       `<rect width="240" height="44" fill="#4a0609"/><g>${move('translate', '0 0;-56 0', 18)}${seigaiha(320, 60, GOLD, .55)}</g><g>${move('translate', '-56 0;0 0', 24)}${seigaiha(320, 60, '#ffe9a8', .3)}</g>`
       + `<rect width="240" height="44" fill="url(#vig)"/>` + star(40, 14, 3.4, '#fff', { tw: 2.4 }) + star(150, 30, 3, GOLD, { tw: 2.9, begin: .9 }) + star(214, 12, 3.4, '#fff', { tw: 2.2, begin: 1.5 }),
       `<linearGradient id="vig" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a0306" stop-opacity=".55"/><stop offset=".35" stop-color="#2a0306" stop-opacity="0"/><stop offset=".8" stop-color="#2a0306" stop-opacity="0"/><stop offset="1" stop-color="#2a0306" stop-opacity=".5"/></linearGradient>`);
+
+    /* ===== Anime: manga-style effects, sparkles, magical ribbons, food and cute creatures ===== */
+    const INK = '#241633', PINK = '#ff7eb6', VIOLET = '#8b5cf6';
+    const sparkleBig = (x, y, sz, c, o = {}) => `<g transform="translate(${x} ${y})"><g>${move('scale', '.6;1.15;.6', o.dur || 2.2, o.begin || 0)}${move('rotate', '0;45;0', o.dur || 2.2, o.begin || 0)}<path d="M0 ${-sz}Q${f1(sz * .18)} ${f1(-sz * .18)} ${sz} 0Q${f1(sz * .18)} ${f1(sz * .18)} 0 ${sz}Q${f1(-sz * .18)} ${f1(sz * .18)} ${-sz} 0Q${f1(-sz * .18)} ${f1(-sz * .18)} 0 ${-sz}Z" fill="${c}"/></g></g>`;
+    const bubbleMark = (x, y, r, glyph, dur, begin) => `<g transform="translate(${x} ${y})"><g>${bob(2.4, dur || 2.6, begin || 0)}<circle r="${r}" fill="#fff" stroke="${INK}" stroke-width="1.6"/>${glyph}</g></g>`;
+    const exclaim = r => `<rect x="${f1(-r * .13)}" y="${f1(-r * .6)}" width="${f1(r * .26)}" height="${f1(r * .75)}" rx="1" fill="${INK}"/><circle cy="${f1(r * .45)}" r="${f1(r * .17)}" fill="${INK}"/>`;
+    const veinMark = (x, y, sz, c) => `<g transform="translate(${x} ${y})"><g>${move('scale', '1;1.3;1', .7)}${move('rotate', '-8;8;-8', .5)}${[0, 90, 180, 270].map(a => `<path transform="rotate(${a})" d="M${f1(sz * .22)} ${f1(-sz * .22)}Q${f1(sz * .22)} ${-sz} ${sz} ${-sz}Q${sz} ${f1(-sz * .22)} ${f1(sz * .22)} ${f1(-sz * .22)}Z" fill="${c}" stroke="${INK}" stroke-width="1.2" stroke-linejoin="round"/>`).join('')}</g></g>`;
+    wreath.angry = svg(144, 144,
+      [-1, 1].map(sd => `<path d="M${72 + sd * 50} 46A56 56 0 0 ${sd > 0 ? 1 : 0} ${72 + sd * 50} 98" fill="none" stroke="#e5322d" stroke-width="4.5" stroke-linecap="round">${anim('stroke-opacity', '1;.25;1', .8)}</path><path d="M${72 + sd * 58} 52A62 62 0 0 ${sd > 0 ? 1 : 0} ${72 + sd * 58} 92" fill="none" stroke="#ff7a6a" stroke-width="2.6" stroke-linecap="round">${anim('stroke-opacity', '.2;.9;.2', .8, .4)}</path>`).join('')
+      + veinMark(116, 26, 13, '#e5322d') + veinMark(128, 78, 8, '#ff5a4a') + bubbleMark(20, 118, 9, exclaim(9), 2.2, 0) + bubbleMark(38, 132, 6, exclaim(6), 2.6, .7), '');
+    const hand = (x, y, rot) => `<g transform="translate(${x} ${y}) rotate(${rot})"><ellipse rx="17" ry="8.4" fill="#f7b3c2" stroke="#e58aa0" stroke-width="1.4"/><path d="M-6 -7V-1M0 -8V0M6 -7V-1" stroke="#e58aa0" stroke-width="1.2" stroke-linecap="round"/></g>`;
+    wreath.shy = svg(144, 144,
+      `<g>${move('translate', '0 0;2.2 0;0 0', 2.4)}${hand(55, 128, 16)}</g><g>${move('translate', '0 0;-2.2 0;0 0', 2.4)}${hand(89, 128, -16)}</g>`
+      + [[22, 40, 3.2, 0], [124, 34, 2.8, .9], [12, 90, 2.4, 1.6], [132, 100, 3, 2.2]].map(p => `<g>${move('translate', '0 0;0 -5;0 0', 2.8, p[3])}${heart(p[0], p[1], p[2], '#ff7eb6')}</g>`).join('')
+      + `<ellipse cx="46" cy="104" rx="7" ry="3.6" fill="#ff7eb6" fill-opacity=".45">${anim('fill-opacity', '.25;.6;.25', 2.4)}</ellipse><ellipse cx="98" cy="104" rx="7" ry="3.6" fill="#ff7eb6" fill-opacity=".45">${anim('fill-opacity', '.25;.6;.25', 2.4)}</ellipse>` + star(30, 14, 3.4, '#fff', { tw: 2.4 }) + star(116, 12, 3, '#ffd6e8', { tw: 2.8, begin: 1 }));
+    const sfx = (x, y, rot, sc) => `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${sc})"><path d="M-14 -8L10 -12 6 -2 16 -4 -6 10 -2 0Z" fill="${INK}" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/></g>`;
+    wreath.rumbling = svg(144, 144,
+      `<g>${move('translate', '0 0;1.6 -1.2;-1.6 1.2;0 0', .35)}` + Array.from({ length: 28 }, (_, i) => { const a = i * 360 / 28 * Math.PI / 180, r1 = 55, r2 = 62 + (i % 3) * 4, cl = ['#ff3b30', '#ffb02e', '#fff176'][i % 3]; return `<path d="M${f1(72 + Math.sin(a) * r1)} ${f1(72 - Math.cos(a) * r1)}L${f1(72 + Math.sin(a) * r2)} ${f1(72 - Math.cos(a) * r2)}" stroke="${cl}" stroke-width="2.6" stroke-linecap="round">${anim('stroke-opacity', '1;.3;1', .9, i * .07)}</path>`; }).join('') + `</g>`
+      + `<g>${move('translate', '0 0;1.2 .8;-1.2 -.8;0 0', .25)}${sfx(112, 24, -8, 1.1)}${sfx(110, 40, 6, .9)}${sfx(26, 118, -10, 1.1)}${sfx(36, 132, 8, .9)}</g>`);
+    wreath.magicgirl = svg(144, 144,
+      `<circle cx="72" cy="72" r="56" fill="none" stroke="#c4a1ff" stroke-opacity=".3" stroke-width="8">${anim('stroke-opacity', '.15;.45;.15', 2.8)}</circle><g transform="translate(72 72)"><g>${move('rotate', '0;360', 9)}<g transform="translate(-72 -72)"><path d="M22 72A50 50 0 0 1 72 22A50 50 0 0 1 120 56" fill="none" stroke="url(#rib)" stroke-width="9" stroke-linecap="round"/><path d="M122 84A50 50 0 0 1 72 122A50 50 0 0 1 26 96" fill="none" stroke="url(#rib2)" stroke-width="7" stroke-linecap="round"/>${heart(120, 52, 7, '#ff5fa8')}${heart(24, 100, 5, '#ffb3d6')}${star(72, 20, 5, '#fff')}${star(124, 86, 4, '#ffe58a')}</g></g></g>`
+      + sparkleBig(124, 22, 11, '#fff', { dur: 2.6 }) + sparkleBig(18, 120, 8, '#ffe58a', { dur: 2.2, begin: .8 }) + star(14, 30, 3.4, '#ffd6e8', { tw: 2, begin: .4 }) + star(130, 120, 3.4, '#fff', { tw: 2.6, begin: 1.2 }),
+      `<linearGradient id="rib" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#f472b6"/></linearGradient><linearGradient id="rib2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f472b6"/><stop offset="1" stop-color="#6d28d9"/></linearGradient>`);
+    wreath.scholar = svg(144, 144,
+      `<path d="M26 104Q72 136 118 104L108 122Q72 146 36 122Z" fill="#1f7a5a" stroke="#14553e" stroke-width="2" stroke-linejoin="round"/><path d="M30 112Q72 140 114 112" fill="none" stroke="#fff" stroke-width="2.2"/><path d="M34 119Q72 145 110 119" fill="none" stroke="#fff" stroke-width="1.4"/>`
+      + `<g transform="translate(72 124)"><g>${move('rotate', '-3;3;-3', 3)}<path d="M0 0L-16 14L-8 18L0 8L8 18L16 14Z" fill="#d2181f" stroke="#8e0a12" stroke-width="1.4" stroke-linejoin="round"/><circle r="5.4" fill="#e5322d" stroke="#8e0a12" stroke-width="1.4"/></g></g>`
+      + Array.from({ length: 7 }, (_, i) => `<g transform="translate(${14 + i * 19} 0)"><g>${move('translate', `0 -10;${i % 2 ? 10 : -10} 150`, 6 + (i % 3), i * 1.1)}<g>${A(`<animateTransform attributeName="transform" type="rotate" values="0;360" dur="${3 + i % 3}s" repeatCount="indefinite"/>`)}<path d="M0 -4Q4 -4 4 0Q4 4 0 5Q-4 4 -4 0Q-4 -4 0 -4Z" fill="#ffb3d1" transform="rotate(${i * 30})"/></g></g></g>`).join('')
+      + star(18, 40, 3.2, '#fff', { tw: 2.4 }) + star(128, 50, 3, '#ffd6e8', { tw: 2.8, begin: .8 }));
+    const grains = n => Array.from({ length: n }, (_, i) => { const a = i * 360 / n * Math.PI / 180, r = 60 + (i % 2 ? 1.5 : -1.5); return `<ellipse cx="${f1(72 + Math.sin(a) * r)}" cy="${f1(72 - Math.cos(a) * r)}" rx="3.4" ry="2.2" fill="#f1efe4" stroke="#d8d4c4" stroke-width=".6" transform="rotate(${f1(i * 360 / n)} ${f1(72 + Math.sin(a) * r)} ${f1(72 - Math.cos(a) * r)})"/>`; }).join('');
+    wreath.sushi = svg(144, 144,
+      `<circle cx="72" cy="72" r="60" fill="none" stroke="#fbfaf2" stroke-width="13"/>${grains(26)}<circle cx="72" cy="72" r="53" fill="none" stroke="#1f3a2e" stroke-width="5"/><circle cx="72" cy="72" r="50.6" fill="none" stroke="#2f5a46" stroke-width="1.2" stroke-opacity=".7"/>`
+      + `<g>${bob(1.6, 3.2)}<path d="M26 28Q72 -6 118 28Q122 40 100 38Q72 26 44 38Q22 40 26 28Z" fill="#ff8a4c" stroke="#e8632a" stroke-width="1.6" stroke-linejoin="round"/><path d="M40 26Q72 6 104 26M48 32Q72 16 96 32M58 20Q72 12 86 20" fill="none" stroke="#ffe0cf" stroke-width="2.4" stroke-linecap="round" stroke-opacity=".9"/><path d="M42 18Q60 8 72 8" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2.4" stroke-linecap="round">${anim('stroke-opacity', '.2;.7;.2', 2.6)}</path></g>`
+      + star(14, 120, 3.4, '#fff', { tw: 2.4 }) + star(130, 112, 3, '#ffd75e', { tw: 2.8, begin: 1 }));
+    wreath.ramen = svg(144, 144,
+      `<path d="M14 100H130Q128 138 72 142Q16 138 14 100Z" fill="#d94b3c" stroke="#8e2a20" stroke-width="2"/><path d="M20 124Q72 142 124 124" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="3"/><ellipse cx="72" cy="100" rx="58" ry="8" fill="#f3d78a" stroke="#8e2a20" stroke-width="2"/>`
+      + `<g>${move('translate', '0 0;6 0;0 0', 2.6)}${[-30, -14, 2, 18, 34].map((dx, i) => `<path d="M${72 + dx} 100Q${72 + dx + 6} 94 ${72 + dx + 2} 88Q${72 + dx - 4} 82 ${72 + dx + 2} 78" fill="none" stroke="#ffd96b" stroke-width="3" stroke-linecap="round"/>`).join('')}</g>`
+      + `<g transform="translate(100 98)"><circle r="9" fill="#fff" stroke="#8e2a20" stroke-width="1.6"/><path d="M-5 0Q0 -6 5 0Q0 6 -5 0" fill="none" stroke="#ff7eb6" stroke-width="2.2"/></g>`
+      + `<path d="M18 112L58 92" stroke="#7a4a22" stroke-width="3" stroke-linecap="round"/><path d="M24 118L62 96" stroke="#9a6a38" stroke-width="3" stroke-linecap="round"/>`
+      + [[34, 0], [110, 1.2], [72, 2.2]].map(p => `<g>${move('translate', '0 0;0 -12', 2.6, p[1])}<path d="M${p[0]} 92Q${p[0] + 6} 82 ${p[0]} 72Q${p[0] - 6} 62 ${p[0]} 52" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-opacity="${an ? 0 : .45}">${anim('stroke-opacity', '0;.7;0', 2.6, p[1])}</path></g>`).join('')
+      + star(20, 26, 3.2, '#fff', { tw: 2.4 }) + star(126, 30, 3, '#ffd75e', { tw: 2.8, begin: .9 }));
+    const bolt = (x, y, rot, sc, cl) => `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${sc})"><path d="M0 -14L-6 0H0L-3 14L8 -2H1L5 -14Z" fill="${cl}" stroke="#4c1d95" stroke-width="1" stroke-linejoin="round"/></g>`;
+    wreath.energy = svg(144, 144,
+      `<circle cx="72" cy="72" r="56" fill="none" stroke="#a855f7" stroke-width="7" stroke-opacity=".75">${anim('r', '54;60;54', 1.4)}${anim('stroke-opacity', '.9;.35;.9', 1.4)}</circle><circle cx="72" cy="72" r="62" fill="none" stroke="#7c3aed" stroke-width="3" stroke-opacity=".5">${anim('r', '60;66;60', 1.4, .5)}</circle><circle cx="72" cy="72" r="50.8" fill="none" stroke="#e9d5ff" stroke-width="1.6"/>`
+      + [[16, 26, -30, 1.2, 0], [124, 22, 30, 1.2, .4], [130, 100, 60, 1, .9], [14, 108, -50, 1, 1.3], [72, 8, 0, .9, .2]].map(p => `<g>${anim('opacity', '0;1;0;0;1;0', 1.8, p[4], 'keyTimes="0;.1;.2;.6;.7;.8"')}${bolt(p[0], p[1], p[2], p[3], '#fff176')}</g>`).join('')
+      + star(40, 128, 3.4, '#e9d5ff', { tw: 1.8 }) + star(112, 132, 3, '#e9d5ff', { tw: 2.2, begin: .7 }));
+    wreath.catonesie = svg(144, 144,
+      `<g transform="translate(38 36)"><g>${move('rotate', '0;0;-8;0;0', 4.4, 0, 'keyTimes="0;.7;.76;.84;1"')}<g transform="translate(-38 -36)"><path d="M22 52L22 14 56 32Z" fill="#34384a" stroke="#1d2030" stroke-width="2.4" stroke-linejoin="round"/><path d="M27 42L27 24 45 33Z" fill="#ff9fb8"/></g></g></g><g transform="translate(106 36)"><g>${move('rotate', '0;0;8;0;0', 5.2, 1.6, 'keyTimes="0;.7;.76;.84;1"')}<g transform="translate(-106 -36)"><path d="M122 52L122 14 88 32Z" fill="#34384a" stroke="#1d2030" stroke-width="2.4" stroke-linejoin="round"/><path d="M117 42L117 24 99 33Z" fill="#ff9fb8"/></g></g></g>`
+      + `<circle cx="72" cy="72" r="56" fill="none" stroke="#34384a" stroke-width="13"/><circle cx="72" cy="72" r="62" fill="none" stroke="#1d2030" stroke-width="1.6"/><circle cx="72" cy="72" r="50" fill="none" stroke="#1d2030" stroke-width="1.6"/><path d="M30 38Q36 30 44 28M114 38Q108 30 100 28" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="2.4" stroke-linecap="round"/>`
+      + `<g transform="translate(72 132)"><path d="M-14 -4Q0 6 14 -4" fill="none" stroke="#d2181f" stroke-width="3.4" stroke-linecap="round"/><g>${move('rotate', '-10;10;-10', 2)}<circle cy="4" r="6.6" fill="#ffcf4a" stroke="#e0a21a" stroke-width="1.6"/><path d="M-3 2H3M0 2V8" stroke="#e0a21a" stroke-width="1.2"/></g></g>`
+      + star(18, 24, 3, '#fff', { tw: 2.6 }) + star(128, 26, 3, '#fff', { tw: 3, begin: .9 }));
+    wreath.nervous = svg(144, 144,
+      [-1, 1].map((sd, k) => `<path d="M${72 + sd * 56} 40Q${72 + sd * 62} 56 ${72 + sd * 56} 72Q${72 + sd * 50} 88 ${72 + sd * 56} 104" fill="none" stroke="#5aa8ff" stroke-width="2.6" stroke-linecap="round"><animateTransform attributeName="transform" type="translate" values="0 0;${sd * 2} 0;0 0;${-sd * 2} 0;0 0" dur=".5s" repeatCount="indefinite"/></path>`.replace(/<animateTransform[^>]*\/>/, an ? '$&' : '')).join('')
+      + [[104, 18, 0], [122, 30, .8]].map(p => `<g transform="translate(${p[0]} ${p[1]})"><g>${move('translate', '0 0;0 18', 1.8, p[2])}${anim('opacity', '1;1;0', 1.8, p[2])}<path d="M0 -9Q8 2 0 8Q-8 2 0 -9Z" fill="#6bb6ff" stroke="#2f7fd6" stroke-width="1.4"/><ellipse cx="-2" cy="1" rx="1.6" ry="3" fill="#fff" fill-opacity=".7"/></g></g>`).join('')
+      + bubbleMark(24, 122, 12, `<path d="M-4.4 -3Q-4.4 -7.6 0 -7.6Q4.4 -7.6 4.4 -3Q4.4 -.4 0 1V3.4" fill="none" stroke="${INK}" stroke-width="2.4" stroke-linecap="round"/><circle cy="7" r="1.5" fill="${INK}"/>`, 2.4, 0) + star(126, 100, 3, '#fff', { tw: 2.4 }));
+    wreath.ghost = svg(144, 144,
+      `<circle cx="72" cy="72" r="54" fill="none" stroke="#ffffff" stroke-opacity=".2" stroke-width="3"/><g>${move('translate', '0 0;4 -6;0 0', 3.4)}<path d="M8 40Q8 12 28 12Q48 12 48 40V70Q44 64 40 70Q36 76 32 70Q28 64 24 70Q20 76 16 70Q12 64 8 70Z" fill="#fff" stroke="#cfcfe8" stroke-width="1.6" transform="translate(-2 0)"/><ellipse cx="20" cy="38" rx="3" ry="2.2" fill="#ff9fb8" fill-opacity=".7"/><ellipse cx="38" cy="38" rx="3" ry="2.2" fill="#ff9fb8" fill-opacity=".7"/><path d="M15 32Q18 28 21 32M33 32Q36 28 39 32" fill="none" stroke="#4a3a66" stroke-width="2" stroke-linecap="round"/><path d="M24 40Q28 45 32 40" fill="none" stroke="#4a3a66" stroke-width="1.8" stroke-linecap="round"/><path d="M12 52Q-2 58 4 70" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="3" stroke-linecap="round">${anim('stroke-opacity', '.2;.7;.2', 2)}</path></g>`
+      + star(120, 32, 3.4, '#fff', { tw: 2.4 }) + star(126, 112, 3, '#d8d0ff', { tw: 2.8, begin: .9 }) + star(60, 134, 3, '#fff', { tw: 2.2, begin: 1.4 }));
+    wreath.sunburst = svg(144, 144,
+      `<g transform="translate(72 72)"><g>${move('scale', '.94;1.08;.94', 1.6)}` + Array.from({ length: 36 }, (_, i) => { const a = i * 10 * Math.PI / 180, r1 = 54, r2 = i % 2 ? 62 : 70, cl = i % 3 ? '#ffb02e' : '#fff176'; return `<path d="M${f1(Math.sin(a) * r1)} ${f1(-Math.cos(a) * r1)}L${f1(Math.sin(a) * r2)} ${f1(-Math.cos(a) * r2)}" stroke="${cl}" stroke-width="${i % 2 ? 1.8 : 3}" stroke-linecap="round"/>`; }).join('') + `</g></g><circle cx="72" cy="72" r="51.5" fill="none" stroke="#fff3b0" stroke-width="2.4" stroke-opacity=".8">${anim('stroke-opacity', '.4;1;.4', 1.6)}</circle>` + sparkleBig(124, 24, 8, '#fff', { dur: 1.8 }) + sparkleBig(20, 118, 7, '#fff176', { dur: 2.1, begin: .6 }));
+
+    // the profile background
+    bg.animenight = svg(1200, 200,
+      `<rect width="1200" height="200" fill="url(#an)"/><circle cx="170" cy="52" r="40" fill="#fff8d8" fill-opacity=".92"/><circle cx="188" cy="44" r="36" fill="url(#an)"/>`
+      + Array.from({ length: 46 }, (_, i) => { const x = (i * 197) % 1200, y = (i * 83) % 150; return star(x + 6, y + 6, 1.8 + (i % 3) * .9, i % 4 ? '#fff' : '#ffe58a', { tw: 1.6 + (i % 5) * .5, begin: i * .23 }); }).join('')
+      + [[0, 20, 6.5, 0], [0, 60, 8, 2.4], [0, 100, 7, 4.8]].map(p => `<g transform="translate(0 ${p[1]}) rotate(-24)"><g>${move('translate', '1300 -300;-300 400', p[2], p[3])}<path d="M0 0H160" stroke="url(#shoot)" stroke-width="2.6" stroke-linecap="round"/><circle cx="0" cy="0" r="3.2" fill="#fff"/></g></g>`).join('')
+      + `<path d="M0 14Q120 0 200 30T380 24" fill="none" stroke="#2b1b3a" stroke-width="8" stroke-linecap="round"/>`
+      + [[60, 14], [140, 20], [220, 32], [300, 22], [360, 26]].map((p, i) => `<g>${move('translate', '0 0;3 2;0 0', 3 + i * .4, i * .5)}${flower(p[0], p[1], 9 - (i % 2) * 2, '#ffc2dd', '#ff7eb6', { pulse: 3 + i * .3, begin: i })}</g>`).join('')
+      + Array.from({ length: 22 }, (_, i) => { const x = (i * 59) % 1200; return `<g transform="translate(${x} 0)"><g>${move('translate', `0 ${-10 - (i % 5) * 16};${(i % 2 ? 24 : -24)} 215`, 8 + (i % 4) * 1.6, i * .9)}<path d="M0 -4Q4 -4 4 0Q4 4 0 5Q-4 4 -4 0Q-4 -4 0 -4Z" fill="${i % 3 ? '#ffc2dd' : '#fff'}" transform="rotate(${i * 27})"><animateTransform attributeName="transform" type="rotate" values="${i * 27};${i * 27 + 360}" dur="${3 + i % 4}s" repeatCount="indefinite"/></path></g></g>`.replace(/<animateTransform[^>]*\/>/, an ? '$&' : ''); }).join('')
+      + [[520, 120, 0], [760, 140, 3], [950, 110, 5.5]].map(p => `<g transform="translate(${p[0]} ${p[1]})"><g>${move('translate', '0 0;8 -64', 7, p[2])}${anim('opacity', '0;.95;0', 7, p[2])}${heart(0, 0, 9, '#ff7eb6')}</g></g>`).join('')
+      + `<g transform="translate(1090 78)">${Array.from({ length: 14 }, (_, i) => { const a = i * 360 / 14 * Math.PI / 180; return `<path d="M${f1(Math.sin(a) * 14)} ${f1(-Math.cos(a) * 14)}L${f1(Math.sin(a) * (44 + (i % 2) * 20))} ${f1(-Math.cos(a) * (44 + (i % 2) * 20))}" stroke="#fff" stroke-opacity=".85" stroke-width="2.4" stroke-linecap="round">${anim('stroke-opacity', '.9;.2;.9', 1.8, i * .12)}</path>`; }).join('')}</g>` + sparkleBig(1090, 78, 34, '#fff', { dur: 2.4 }) + sparkleBig(1010, 40, 14, '#ffe58a', { dur: 2.1, begin: .5 }) + sparkleBig(1160, 140, 12, '#ffd6f0', { dur: 2.7, begin: 1 }),
+      `<linearGradient id="an" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#150b3d"/><stop offset=".55" stop-color="#5b21b6"/><stop offset="1" stop-color="#f472b6"/></linearGradient><linearGradient id="shoot" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff"/></linearGradient>`);
+
+    plate.sparkleanime = svg(240, 44,
+      `<rect width="240" height="44" fill="url(#sa)"/><g transform="translate(0 6) rotate(-14)"><g>${move('translate', '-120 30;300 -10', 5.5)}<path d="M0 0H110" stroke="url(#sh2)" stroke-width="3" stroke-linecap="round"/></g></g>`
+      + [[22, 12, 4], [64, 30, 3], [110, 10, 3.6], [160, 28, 4], [206, 14, 3.4], [234, 32, 3]].map((p, i) => star(p[0], p[1], p[2], i % 2 ? '#ffe58a' : '#fff', { tw: 1.8 + i * .3, begin: i * .4, spin: 6 })).join('') + sparkleBig(196, 22, 8, '#fff', { dur: 2.4 }) + heart(130, 22, 3.6, '#ff9ccb'),
+      `<linearGradient id="sa" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a1170"/><stop offset=".55" stop-color="#7c3aed"/><stop offset="1" stop-color="#f472b6"/></linearGradient><linearGradient id="sh2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff"/></linearGradient>`);
+    plate.mangapanel = svg(240, 44,
+      `<rect width="240" height="44" fill="#fbfaf6"/><g>${move('translate', '0 0;-24 0', 6)}${Array.from({ length: 18 }, (_, c) => Array.from({ length: 3 }, (_, r) => `<circle cx="${c * 12 + (r % 2 ? 6 : 0)}" cy="${r * 14 + 6}" r="${f1(Math.max(.6, 3.2 - c * .17))}" fill="#9a9aa6" fill-opacity=".55"/>`).join('')).join('')}</g>`
+      + `<g>${move('translate', '0 0;-30 0', 1.2)}${[6, 14, 24, 33, 40].map((y, i) => `<path d="M${120 + i * 7} ${y}H${230 - i * 6}" stroke="${INK}" stroke-opacity=".5" stroke-width="${i % 2 ? 1 : 1.8}"/>`).join('')}</g>`
+      + `<g transform="translate(206 22)"><g>${move('scale', '.9;1.12;.9', .9)}${move('rotate', '-4;4;-4', .9)}<path d="M0 -20L5 -9 16 -14 11 -4 24 0 11 4 16 14 5 9 0 20-5 9-16 14-11 4-24 0-11-4-16-14-5-9Z" fill="#ffe14d" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><path d="M-9 -3L-3 -5 0 2 4 -5 9 -3 4 5H-4Z" fill="#e5322d"/></g></g>`
+      + `<rect x="1" y="1" width="238" height="42" fill="none" stroke="${INK}" stroke-width="2"/>`);
     return { wreath, bg, plate };
   }
   const has = (list, id) => list.some(x => x.id === id);
