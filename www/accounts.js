@@ -33,12 +33,15 @@ async function saveFile(name, mime, text) {
 }
 
 /* ---------- export ---------- */
+const storageKeys = () => { try { return Object.keys(localStorage); } catch { return []; } };
+const accountPrefKeys = id => AX.accountPrefsIn(storageKeys(), id);
 async function accountExportFile(acct) {
   const posts = await loadPosts(acct, { media: true });
   if (posts.bad) throw new Error('unreadable');
-  const prefs = {};
-  for (const k of AX.prefKeys(acct.id)) { const v = ls(k); if (v) prefs[k] = v; }
-  const text = JSON.stringify(AX.buildExport(acct, Object.assign(posts.filter(p => p.kind !== 'aikey' && p.kind !== 'rakey'), { bad: posts.bad }), prefs));
+  const prefs = {}, look = {};
+  for (const k of accountPrefKeys(acct.id)) { const v = ls(k); if (v) prefs[k] = v; }
+  for (const k of storageKeys()) if (AX.isLookKey(k)) { const v = ls(k); if (v) look[k] = v; }       // your look and app settings travel too
+  const text = JSON.stringify(AX.buildExport(acct, Object.assign(posts.filter(p => p.kind !== 'aikey' && p.kind !== 'rakey'), { bad: posts.bad }), prefs, new Date(), look));
   return { name: AX.fileName(acct.handle), text, bytes: new TextEncoder().encode(text).length };
 }
 const sizeLabel = n => n < 1024 * 1024 ? Math.max(1, Math.round(n / 1024)) + ' KB' : (n / 1024 / 1024).toFixed(1) + ' MB';
@@ -58,6 +61,7 @@ function ejectAccount(acct) {
   const first = () => body.replaceChildren(
     h('p', { style: 'margin-top:0' }, `Eject takes @${acct.handle} off this device. First it saves everything (posts, photos, notes, apps and settings) to a file.`),
     h('p', {}, 'This is not a delete. Import the file on the create-account screen, on this device or another, and the account comes back. Without the file, it cannot.'),
+    h('p', { class: 'fine', style: 'padding:0 0 10px' }, 'Songs you copied into the Music Player are not in the file (they can be very large), so keep your music files too. Your look and settings come back with the account.'),
     acct.vault ? h('p', { class: 'fine', style: 'padding:0 0 10px' }, 'The file is NOT encrypted, so keep it somewhere safe. When you import it you can set a passcode again. Your duress PIN is not saved.') : null,
     h('div', { class: 'btnrow' }, h('button', { class: 'btn primary', onclick: e => run(e.currentTarget) }, 'Save my data'), h('button', { class: 'btn', onclick: () => close() }, 'Cancel')));
   const run = async btn => {
@@ -77,7 +81,7 @@ function ejectAccount(acct) {
       go_.disabled = true; go_.textContent = 'Removing...';
       for (const p of await db.postsOf(acct.id)) await db.del('posts', p.id);
       await db.del('accounts', acct.id);
-      for (const k of AX.prefKeys(acct.id)) ls(k, null);
+      for (const k of accountPrefKeys(acct.id)) ls(k, null);
       postCache.clear(); close(); toast(`@${acct.handle} was ejected. Import ${f.name} to bring it back.`);
       logout();
     });
@@ -145,6 +149,8 @@ async function importAccountFiles(files) {
         ? { ...base, ...(d.account.guest ? { guest: true } : {}), vault: meta, profile: await seal(key, profile, 'profile:' + id) }
         : { ...base, ...profile, salt: null, hash: null, ...(d.account.guest ? { guest: true } : {}) });
       for (const [k, v] of Object.entries(AX.remapPrefs(d.prefs, d.account.id, id))) ls(k, v);
+      for (const [k, v] of Object.entries(d.look || {})) if (ls(k) == null) ls(k, v);        // only where this device has not chosen its own look yet
+      try { applyTheme(); } catch { /* the page repaints anyway */ }
     } catch (e) {
       console.error(e); await undo(); lockVault();
       err.textContent = isQuotaError(e) ? 'Not enough space on this device for that account.' : 'Something went wrong, so nothing was imported.';

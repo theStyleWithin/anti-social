@@ -4,7 +4,20 @@
 const AcctCore = (() => {
   const FORMAT = 2;
   const MAX_FILE = 400 * 1024 * 1024, MAX_RECORDS = 300000, MAX_IMAGE = 8 * 1024 * 1024, MAX_PREF = 20000;
-  const PREF_PREFIXES = ['as.apporder.', 'as.hiddenapps.', 'as.appnames.'];
+  /* Where saved settings travel when an account is exported (and ejected, then imported somewhere else).
+     RULE FOR NEW FEATURES: put your data in account records (appSave / savePost): those always travel, with no list to update.
+     A setting you keep in localStorage must be one of these, and tools/check-export.js fails the build if a new one is not filed:
+       1. named as.<what>.<account id>   -> travels with that account automatically (a per-account setting)
+       2. listed in LOOK_KEYS/LOOK_PREFIXES -> your look and app settings; they come along and are applied on a device that has not set them yet
+       3. listed in DEVICE_ONLY          -> stays on the device on purpose (sessions, locks, keys and anything tied to the device) */
+  const LOOK_KEYS = ['as.template', 'as.skin', 'as.skin.custom', 'as.skin.veil', 'as.theme', 'as.populated', 'as.seed', 'as.cast', 'as.currency', 'as.weekstart', 'as.invview', 'as.worldmap', 'as.reader', 'as.pushup', 'as.lang', 'as.matrix', 'as.fire', 'as.fire.sound', 'as.lava', 'as.aquarium', 'as.aquarium.cfg', 'as.aquarium.sound', 'as.yt', 'as.layout', 'as.deco.view'];
+  const LOOK_PREFIXES = ['as.sound.'];
+  const DEVICE_ONLY = ['as.session', 'as.lockAfter', 'as.ai', 'as.ai.sent', 'as.ai.seen', 'as.ra', 'as.upd.at', 'as.upd.auto', 'as.desk', 'as.capmb'];
+  const MAX_LOOK = 100000;
+  const isLookKey = k => typeof k === 'string' && k.length < 100 && (LOOK_KEYS.includes(k) || LOOK_PREFIXES.some(p => k.startsWith(p) && k.length > p.length));
+  // a per-account setting: as.<what>.<this account's id>
+  const isAccountPref = (k, id) => typeof k === 'string' && typeof id === 'string' && k.length < 100 && /^as\.[\w.-]+$/.test(k.slice(0, -id.length - 1)) && k.endsWith('.' + id) && !DEVICE_ONLY.includes(k);
+  const accountPrefsIn = (keys, id) => [...keys].filter(k => isAccountPref(k, id));
   const ACCOUNT_TEXT = { name: 50, bio: 500 };
   const str = (v, max) => typeof v === 'string' ? v.slice(0, max) : '';
   const validHandle = h => typeof h === 'string' && /^\w{1,15}$/.test(h);
@@ -13,14 +26,13 @@ const AcctCore = (() => {
 
   const stamp = d => d.toISOString().slice(0, 10);
   const fileName = (handle, when = new Date()) => `anti-social-${String(handle).replace(/\W/g, '')}-${stamp(when)}.json`;
-  const prefKeys = id => PREF_PREFIXES.map(p => p + id);
 
   // The file you keep. Only known account fields go in (never the salt, hash, vault or duress slot).
-  const buildExport = (acct, posts, prefs, when = new Date()) => ({
+  const buildExport = (acct, posts, prefs, when = new Date(), look = {}) => ({
     app: 'anti-social', format: FORMAT, exportedAt: when.toISOString(),
     account: { id: acct.id, handle: acct.handle, name: acct.name || '', bio: acct.bio || '', color: acct.color || null, createdAt: acct.createdAt || Date.now(),
       avatarImg: acct.avatarImg || null, bannerImg: acct.bannerImg || null, ...(acct.guest ? { guest: true } : {}) },
-    posts, prefs: prefs || {},
+    posts, prefs: prefs || {}, look: look || {},
   });
 
   // Reads a file's text. Returns {ok:true, data:{account, posts, prefs}} or {ok:false, error}.
@@ -50,16 +62,20 @@ const AcctCore = (() => {
       createdAt: Number.isFinite(a.createdAt) && a.createdAt > 0 && a.createdAt < 4e12 ? a.createdAt : Date.now(),
       avatarImg: dataImage(a.avatarImg), bannerImg: dataImage(a.bannerImg), guest: a.guest === true,
     };
-    const prefs = {};
+    const prefs = {}, look = {};
     if (d.prefs && typeof d.prefs === 'object' && !Array.isArray(d.prefs)) {
-      for (const [k, val] of Object.entries(d.prefs)) if (PREF_PREFIXES.some(p => k.startsWith(p)) && typeof val === 'string' && val.length <= MAX_PREF && k.length < 100) prefs[k] = val;
+      const legacy = ['as.apporder.', 'as.hiddenapps.', 'as.appnames.'];      // an old file with no account id: only the three settings that used to travel
+      for (const [k, val] of Object.entries(d.prefs)) if ((validId(a.id) ? isAccountPref(k, a.id) : legacy.some(p => k.startsWith(p) && k.length < 100)) && typeof val === 'string' && val.length <= MAX_PREF) prefs[k] = val;
     }
-    return { ok: true, data: { account, posts, prefs, exportedAt: typeof d.exportedAt === 'string' ? d.exportedAt.slice(0, 40) : '' } };
+    if (d.look && typeof d.look === 'object' && !Array.isArray(d.look)) {
+      for (const [k, val] of Object.entries(d.look)) if (isLookKey(k) && typeof val === 'string' && val.length <= MAX_LOOK) look[k] = val;
+    }
+    return { ok: true, data: { account, posts, prefs, look, exportedAt: typeof d.exportedAt === 'string' ? d.exportedAt.slice(0, 40) : '' } };
   };
   // Settings saved under another account's id are moved to the new id.
   const remapPrefs = (prefs, oldId, newId) => {
     const out = {};
-    for (const [k, v] of Object.entries(prefs || {})) { const p = PREF_PREFIXES.find(x => k.startsWith(x)); if (p && k === p + oldId) out[p + newId] = v; }
+    for (const [k, v] of Object.entries(prefs || {})) if (isAccountPref(k, oldId)) out[k.slice(0, -oldId.length) + newId] = v;
     return out;
   };
 
@@ -79,6 +95,6 @@ const AcctCore = (() => {
   const listed = list => visible(list).length ? visible(list) : list;
   const flagsOf = raw => ({ ...(raw && raw.hidden ? { hidden: true } : {}), ...(raw && raw.guest ? { guest: true } : {}) });
 
-  return { FORMAT, PREF_PREFIXES, validHandle, validId, fileName, prefKeys, buildExport, parseExport, remapPrefs, guestHandle, isGuest, visible, hidden, canHide, listed, flagsOf };
+  return { FORMAT, LOOK_KEYS, LOOK_PREFIXES, DEVICE_ONLY, isLookKey, isAccountPref, accountPrefsIn, validHandle, validId, fileName, buildExport, parseExport, remapPrefs, guestHandle, isGuest, visible, hidden, canHide, listed, flagsOf };
 })();
 if (typeof module !== 'undefined') module.exports = AcctCore;
