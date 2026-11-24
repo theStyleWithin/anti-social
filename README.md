@@ -5,7 +5,7 @@
 > get offline
 
 
-[![[anti social](https://alternativeto.net/software/anti-social/about/)| AlternativeTo](https://alternativeto.net/static/badges/badge-wide-dark.svg)](https://alternativeto.net/software/your-app/about/?utm_source=badge&utm_medium=referral)
+[![Your app | AlternativeTo](https://alternativeto.net/static/badges/badge-compact-dark.svg)](https://alternativeto.net/software/your-app/about/?utm_source=badge&utm_medium=referral)
 
 ## Status: fully featured and complete
 
