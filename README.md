@@ -4,6 +4,9 @@
 
 > get offline
 
+
+[![Your app | AlternativeTo](https://alternativeto.net/static/badges/badge-wide-dark.svg)](https://alternativeto.net/software/your-app/about/?utm_source=badge&utm_medium=referral)
+
 ## Status: fully featured and complete
 
 Anti-Social v0.28.1 is feature complete. It is a finished app, not a work in progress.
