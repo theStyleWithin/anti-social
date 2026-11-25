@@ -1700,7 +1700,7 @@ body.pu-lock { overflow: hidden; }
 .theme-card small, .bg-pick small, .wr-pick small { display: block; color: var(--muted); font-size: 12px; }
 .theme-av .avatar, .wr-av .avatar { margin: 14px; width: 56px; height: 56px; font-size: 22px; border: 0; } .wr-av .avatar { margin: 18px 18px 14px; }
 .banner.bg-prev { height: 76px; border-radius: 8px; cursor: inherit; pointer-events: none; } .bg-prev.none { height: 76px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--card); color: var(--muted); }
-.banner[data-bg] .bimg { background-position: center 62% !important; }
+.banner[data-bg]:not([data-bg^="cb_"]) .bimg { background-position: center 62% !important; }
 
 /* ---------- profile status and Board widgets ---------- */
 .pinfo .top { position: relative; }
@@ -1806,3 +1806,13 @@ body.pu-lock { overflow: hidden; }
 .pop-row.plated .who b, .pop-row.plated .pop-mark { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.65); } .pop-row.plated .who .muted { color: rgba(255,255,255,.8); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
 .pop-row.plated[data-plate="bubbletea"], .pop-row.plated[data-plate="parchment"] { color: #3a2250; } .pop-row.plated[data-plate="bubbletea"] .who b, .pop-row.plated[data-plate="parchment"] .who b, .pop-row.plated[data-plate="bubbletea"] .pop-mark, .pop-row.plated[data-plate="parchment"] .pop-mark { color: #2d1f0c; text-shadow: none; } .pop-row.plated[data-plate="bubbletea"] .who .muted, .pop-row.plated[data-plate="parchment"] .who .muted { color: #5a4220; text-shadow: none; }
 .acct-ctx { min-width: 220px; padding: 6px 0; } .acct-ctx .pop-row:disabled { opacity: .5; cursor: not-allowed; } .acct-ctx .pop-row .who .muted { font-size: 12px; }
+
+/* ---- your own decorations (decopack.js, deco.js) ---- */
+.dcp-list { display: grid; gap: 8px; margin: 10px 0; max-height: 52vh; overflow: auto; }
+.dcp-row { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 10px; background: var(--hover); cursor: pointer; } .dcp-row.dim { opacity: .55; cursor: default; }
+.dcp-pv { flex: 0 0 150px; display: flex; align-items: center; justify-content: center; min-height: 52px; }
+.dcp-nm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; } .dcp-nm small { color: var(--muted); font-size: 12px; }
+.dcp-plate, .dcp-banner { display: block; width: 150px; border-radius: 6px; background-size: cover; } .dcp-plate { height: 27px; aspect-ratio: 240 / 44; } .dcp-banner { aspect-ratio: 6 / 1; }
+.dcp-wr { position: relative; display: block; width: 44px; height: 44px; margin: 8px; } .dcp-wr .avatar { width: 44px; height: 44px; font-size: 18px; border: 0; }
+.dcp-over { position: absolute; inset: -22%; width: 144%; height: 144%; pointer-events: none; background: no-repeat; }
+.dcp-skip { margin: 8px 0; padding: 8px 12px; border-radius: 10px; background: var(--hover); font-size: 13px; } .dcp-skip ul { margin: 4px 0 0; padding-left: 18px; }

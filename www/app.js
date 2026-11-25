@@ -1397,6 +1397,7 @@ async function openAccountMenu(anchor, acct) {
   const everyone = (await db.all('accounts')).sort((a, b) => a.createdAt - b.createdAt);
   const accounts = AcctCore.listed(everyone);
   if (!accounts.some(a => a.id === acct.id)) accounts.push(acct);
+  Deco.primeAccounts(accounts);                                              // custom nameplates of the other accounts, for the rows below
   const close = () => { pop.remove(); document.removeEventListener('mousedown', outside, true); document.removeEventListener('keydown', esc, true); };
   const outside = e => { if (!pop.contains(e.target) && !anchor.contains(e.target) && !e.target.closest('.acct-ctx')) close(); };
   const esc = e => { if (e.key === 'Escape' && !document.querySelector('.acct-ctx')) close(); };
@@ -1690,7 +1691,7 @@ async function render(keepScroll = false) {
     if (all.bad) console.warn(`${all.bad} post(s) could not be decrypted`);
     // Your likes, reposts and follows of generated accounts live beside your posts but are not posts.
     const posts = all.filter(p => !p.kind);                 // real posts only; everything else is a record of some other kind
-    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], fpost: [], cemoji: [], csticker: [], csound: [], srv: [], deco: [], pprof: [], bot: [], aimsg: [], aimode: [], aikey: [], dexmark: [], pkbank: [], pkm: [], agame: [], ach: [], rakey: [], clockcfg: [], sound: [], budget: [], shotgame: [], shot: [], termstate: [], cbinder: [], ccard: [], ebook: [], lang: [], calday: [], calprof: [], pushup: [], mlib: [], mprefs: [] };
+    const apps = { note: [], diary: [], event: [], txn: [], acct: [], asset: [], groc: [], glist: [], chore: [], done: [], bg: [], bible: [], bstate: [], bbook: [], place: [], recipe: [], cstate: [], chan: [], fpost: [], cemoji: [], csticker: [], csound: [], srv: [], deco: [], cdeco: [], pprof: [], bot: [], aimsg: [], aimode: [], aikey: [], dexmark: [], pkbank: [], pkm: [], agame: [], ach: [], rakey: [], clockcfg: [], sound: [], budget: [], shotgame: [], shot: [], termstate: [], cbinder: [], ccard: [], ebook: [], lang: [], calday: [], calprof: [], pushup: [], mlib: [], mprefs: [] };
     for (const p of all) if (apps[p.kind]) apps[p.kind].push(p);
     castMap = new Map(all.filter(p => p.kind === 'cast').map(p => [p.ref, p]));
     const reactions = new Map(all.filter(p => p.kind === 'ghost').map(p => [p.target, p]));

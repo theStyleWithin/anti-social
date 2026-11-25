@@ -420,6 +420,17 @@ const DecoCore = (() => {
   ];
   const seriesOfTheme = id => ({ boba: 'boba', lunar: 'lunar', anime: 'anime', animehearts: 'anime', animecosmos: 'anime' }[id] || '');
   const has = (list, id) => list.some(x => x.id === id);
+  /* your own decorations (imported from a pack file) are added to the same lists while they are in use: the ones in this
+     account, plus the nameplates of other accounts so the account list can draw them. They are marked custom and never
+     come up in the "other people" the app makes up (the ghosts). */
+  const mine = { own: [], seen: [] };
+  const LISTS = { plate: PLATES, banner: BACKGROUNDS, wreath: WREATHS };
+  function setCustom(which, records) {
+    mine[which] = (records || []).filter(r => r && LISTS[r.dkind] && typeof r.id === 'string');
+    for (const list of Object.values(LISTS)) for (let i = list.length - 1; i >= 0; i--) if (list[i].custom) list.splice(i, 1);
+    for (const r of [...mine.own, ...mine.seen]) { const list = LISTS[r.dkind]; if (!has(list, r.id)) list.push({ id: r.id, name: r.name || 'Mine', blurb: r.blurb || 'Imported from a file.', anim: !!r.moves, custom: true }); }
+  }
+  const builtin = list => list.filter(x => !x.custom);
   const plate = id => PLATES.find(p => p.id === id) || PLATES[0];
   const plateOk = id => !!id && id !== 'none' && has(PLATES, id);
   const banner = id => BANNERS.find(b => b.id === id) || null;
@@ -434,9 +445,9 @@ const DecoCore = (() => {
   const bannerCss = s => (s.bannerImg ? `url("${s.bannerImg}") center / cover` : s.bannerPreset ? banner(s.bannerPreset).css : '');
   // generated members get a nameplate or a tag now and then (scenery, same seed gives the same people)
   const hash = s => { let x = 2166136261; for (const c of String(s)) { x ^= c.charCodeAt(0); x = Math.imul(x, 16777619); } return x >>> 0; };
-  const ghostPlate = id => { const n = hash('plate' + id); return n % 100 < 28 ? PLATES[1 + (n >>> 8) % (PLATES.length - 1)].id : 'none'; };
+  const ghostPlate = id => { const n = hash('plate' + id); return n % 100 < 28 ? builtin(PLATES)[1 + (n >>> 8) % (builtin(PLATES).length - 1)].id : 'none'; };
   const ghostTag = id => { const n = hash('tag' + id); if (n % 100 >= 22) return null; const words = ['MOON', 'FOX', 'KOI', 'ZEN', 'ASH', 'OWL', 'IVY', 'NOVA', 'RAIN', 'JAZZ']; return { tag: words[(n >>> 8) % words.length], tagColor: TAG_COLORS[(n >>> 12) % TAG_COLORS.length][0], tagGlyph: TAG_GLYPHS[(n >>> 16) % TAG_GLYPHS.length][0] }; };
-  const ghostWreath = id => { const n = hash('wreath' + id); return n % 100 < 16 ? WREATHS[1 + (n >>> 8) % (WREATHS.length - 1)].id : ''; };
-  return { SERIES, seriesOfTheme, buildArt, plateOk, uri, BACKGROUNDS, WREATHS, THEMES, ghostWreath, PLATES, TAG_COLORS, TAG_GLYPHS, BANNERS, plate, banner, cleanTag, tagOk, normProfile, normServer, bannerCss, ghostPlate, ghostTag };
+  const ghostWreath = id => { const n = hash('wreath' + id); return n % 100 < 16 ? builtin(WREATHS)[1 + (n >>> 8) % (builtin(WREATHS).length - 1)].id : ''; };
+  return { setCustom, SERIES, seriesOfTheme, buildArt, plateOk, uri, BACKGROUNDS, WREATHS, THEMES, ghostWreath, PLATES, TAG_COLORS, TAG_GLYPHS, BANNERS, plate, banner, cleanTag, tagOk, normProfile, normServer, bannerCss, ghostPlate, ghostTag };
 })();
 if (typeof module !== 'undefined') module.exports = DecoCore;

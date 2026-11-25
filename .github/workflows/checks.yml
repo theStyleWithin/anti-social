@@ -16,3 +16,5 @@ jobs:
       - run: node tools/check-export.js
       # your own files are only ever read: see tools/check-files.js
       - run: node tools/check-files.js
+      # custom decoration packs: good files in, unsafe or wrongly shaped ones out: see tools/check-deco.js
+      - run: node tools/check-deco.js
