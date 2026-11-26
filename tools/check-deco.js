@@ -57,4 +57,23 @@ t('an unknown entity is not let through', (() => { const x = P.cleanSvg(svg(240,
 t('an embedded picture (png data) is allowed', P.cleanSvg(svg(240, 44, '<image href="data:image/png;base64,iVBORw0KGgo=" width="240" height="44"/>'), 'plate').svg.includes('data:image/png;base64'));
 t('a font embedded as data is allowed, other css is not', (() => { const a = P.cleanSvg(svg(240, 44, '<style>@font-face{font-family:A;src:url(data:font/woff2;base64,AAAA)}</style>'), 'plate'), b = P.cleanSvg(svg(240, 44, '<style>rect{fill:red}</style>'), 'plate'); return /@font-face/.test(a.svg) && !/<style/.test(b.svg); })());
 t('far too big a picture is refused', !P.cleanSvg(svg(240, 44, '<text>' + 'x'.repeat(400000) + '</text>'), 'plate').ok);
+
+/* the built-in decorations (www/decocore.js): every one has art in a moving and a still version, at the right shape */
+const D = require('../www/decocore.js'), moving = D.buildArt(true), still = D.buildArt(false);
+const lists = [['plate', D.PLATES, 'plate', 240, 44], ['bg', D.BACKGROUNDS, 'bg', 1200, 200], ['wreath', D.WREATHS, 'wreath', 144, 144]];
+for (const [name, list, key, w, h] of lists) {
+  const classic = new Set(D.SERIES.find(x => x.id === 'classic').groups.flatMap(g => g.plate || []));      // the Classic nameplates are drawn in CSS (style.css), not SVG
+  const ids = list.filter(x => x.id !== 'none' && !x.custom && !classic.has(x.id)).map(x => x.id);
+  const noArt = ids.filter(id => !moving[key][id] || !still[key][id]);
+  const noSize = ids.filter(id => moving[key][id] && !new RegExp(`viewBox="0 0 ${w} ${h}"`).test(moving[key][id]));
+  const moves = ids.filter(id => /<animate/.test(still[key][id] || ''));
+  t(name + ' decorations all have art in both versions (' + ids.length + ')', !noArt.length, noArt.join());
+  t(name + ' decorations are all ' + w + ' × ' + h, !noSize.length, noSize.join());
+  t(name + ' still versions have no animation', !moves.length, moves.join());
+}
+const listed = new Set(D.SERIES.flatMap(se => se.groups.flatMap(g => [...(g.plate || []), ...(g.bg || []), ...(g.wreath || [])])));
+const all = [...D.PLATES, ...D.BACKGROUNDS, ...D.WREATHS].filter(x => x.id !== 'none' && !x.custom).map(x => x.id);
+t('every built-in decoration is in a collection, and every collection entry exists', all.every(id => listed.has(id)) && [...listed].every(id => all.includes(id)), 'missing: ' + all.filter(id => !listed.has(id)).join() + ' unknown: ' + [...listed].filter(id => !all.includes(id)).join());
+t('every theme points at real decorations', D.THEMES.every(th => D.PLATES.some(x => x.id === th.plate) && D.BACKGROUNDS.some(x => x.id === th.bg) && D.WREATHS.some(x => x.id === th.wreath) && D.seriesOfTheme(th.id)));
+t('the Vibrant Pumpkin and Gobble Gobble Turkey sets each have three nameplates, three banners and three avatar decorations', ['vibrantpumpkin', 'gobblegobble'].every(id => { const g = D.SERIES.find(x => x.id === id).groups[0]; return g.plate.length === 3 && g.bg.length === 3 && g.wreath.length === 3; }));
 console.log(bad ? `\n${bad} problem${bad === 1 ? '' : 's'}` : '\nall good'); process.exit(bad ? 1 : 0);
