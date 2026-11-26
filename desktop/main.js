@@ -162,6 +162,28 @@ ipcMain.handle('ra:get', guard(async (_e, call, params) => {
   finally { clearTimeout(timer); }
 }));
 
+/* ---------- a decoration pack handed over by Sudo Make Art ("Send to Anti-Social"), or a .asdeco file opened with the app ----------
+   `Anti-Social --import-decorations my.asdeco`. The file is read here (the page never names a path), checked for type and size,
+   and held until the page is ready; the page then adds it to the account's own decorations. */
+const DECO_MAX = 16 * 1024 * 1024;
+function decoFiles(argv) {
+  const out = [], a = argv.slice(1);
+  for (let i = 0; i < a.length && out.length < 10; i++) {
+    let p = '';
+    if (a[i] === '--import-decorations') p = a[++i] || ''; else if (a[i].startsWith('--import-decorations=')) p = a[i].slice(21); else if (!a[i].startsWith('-') && /\.asdeco$/i.test(a[i])) p = a[i];
+    if (!p || !/\.(asdeco|json|svg)$/i.test(p)) continue;
+    try { const f = path.resolve(p), st = fs.statSync(f); if (st.isFile() && st.size <= DECO_MAX) out.push({ name: path.basename(f), text: fs.readFileSync(f, 'utf8') }); } catch { /* missing or unreadable: skipped */ }
+  }
+  return out;
+}
+let pageWC = null; const waitingDeco = decoFiles(process.argv);
+ipcMain.handle('open:ready', guard(async e => { pageWC = e.sender; return waitingDeco.splice(0); }));
+function handOver(files) { if (!files.length) return; if (pageWC && !pageWC.isDestroyed()) for (const f of files) pageWC.send('open:deco', f); else waitingDeco.push(...files); }
+// a second start (Sudo Make Art pressing its button while the app is open) gives its file to the running window instead of opening another
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) app.quit();
+else app.on('second-instance', (_e, argv) => { handOver(decoFiles(argv)); const w = BrowserWindow.getAllWindows()[0]; if (w) { if (w.isMinimized()) w.restore(); w.show(); w.focus(); } });
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1100,
@@ -188,6 +210,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  if (!gotLock) return;
   // The only permission the app ever uses is the microphone, for the Sound Meter. Nothing else is granted, and it is audio only.
   const { session } = require('electron');
   session.defaultSession.setPermissionRequestHandler((wc, permission, cb, details) => cb(permission === 'media' && (details.mediaTypes || []).every(t => t === 'audio') && String(details.requestingUrl || '').startsWith('file://')));

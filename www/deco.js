@@ -9,7 +9,7 @@ const Deco = (() => {
   // the nameplate is also kept on the account's plain record, so the account list can show it for every account, even one that is locked
   const planted = new Map();
   const rememberPlate = (id, plate) => { if (planted.get(id) === plate) return; planted.set(id, plate); db.get('accounts', id).then(raw => { if (raw && (raw.plate || 'none') !== plate) { const { plate: _p, ...rest } = raw; return db.put('accounts', plate === 'none' ? rest : { ...rest, plate }); } }).catch(() => {}); };
-  const setActive = (acct, ctx) => { loadCustom(acct, ctx); active = { id: acct.id, p: D.normProfile((ctx.apps.deco || [])[0]) }; rememberPlate(acct.id, active.p.plate); cachePlate(acct, active.p.plate); const calm = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); document.documentElement.dataset.decoAnim = active.p.animate && !calm ? 'on' : 'off'; };
+  const setActive = (acct, ctx) => { here = { acct, ctx }; setTimeout(drainOpened, 0); loadCustom(acct, ctx); active = { id: acct.id, p: D.normProfile((ctx.apps.deco || [])[0]) }; rememberPlate(acct.id, active.p.plate); cachePlate(acct, active.p.plate); const calm = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); document.documentElement.dataset.decoAnim = active.p.animate && !calm ? 'on' : 'off'; };
   const wreathOf = a => (a && a.id && a.id === active.id && tplId() === 'chat' ? active.p.wreath : '');
   // the pictures behind the decorations are drawn (and animated) in decocore.js and handed to the page as CSS, once: a moving set and a still set
   (function injectArt() {
@@ -179,6 +179,28 @@ const Deco = (() => {
     });
     document.body.append(inp); inp.click();
   }
+  /* A pack handed over from outside (Sudo Make Art's "Send to Anti-Social"): no questions, it is added to this account's own
+     decorations, which the app remembers. Ones already added are left alone. It waits here until an account is open. */
+  let here = null, opened = [], draining = false;
+  const receiveFiles = list => { for (const f of list || []) if (f && typeof f.name === 'string' && typeof f.text === 'string') opened.push({ name: f.name.slice(0, 120), text: f.text }); setTimeout(drainOpened, 0); };
+  async function drainOpened() {
+    if (draining || !here || !opened.length || !Pk) return; draining = true;
+    const { acct } = here, files = opened.splice(0), found = [], skipped = [];
+    try {
+      for (const f of files) {
+        let r; try { r = Pk.parseFile(f.text, f.name); } catch { r = { ok: false, error: 'It could not be read.' }; }
+        if (r.ok) { found.push(...r.items.map(i => ({ ...i, pack: r.name || '', author: r.author || '', license: r.license || '' }))); skipped.push(...r.skipped); } else skipped.push({ name: f.name, why: r.error });
+      }
+      const uniq = new Map(); for (const it of found) if (!uniq.has(it.id)) uniq.set(it.id, it);
+      const ready = await prepare([...uniq.values()], skipped, () => {}), have = new Set(ownRecs.map(r => r.id));
+      let n = 0, dup = 0;
+      for (const it of ready) { if (have.has(it.id)) { dup++; continue; } if (ownRecs.length + n >= Pk.LIMITS.library) { skipped.push({ name: it.name, why: 'your library is full (' + Pk.LIMITS.library + ')' }); continue; } if (!(await appSave(acct, recOf(acct, it)))) break; n++; }
+      toast(n ? (n === 1 ? 'Added 1 decoration to My decorations (Settings → Profile decorations).' : 'Added ' + n + ' decorations to My decorations (Settings → Profile decorations).') + (skipped.length ? ' ' + skipped.length + ' not added.' : '')
+        : dup ? 'That decoration is already in My decorations.' : skipped[0] ? (skipped[0].name ? skipped[0].name + ': ' : '') + skipped[0].why : 'Nothing to add.');
+      render(true);
+    } catch { toast('That could not be added.'); } finally { draining = false; if (opened.length) setTimeout(drainOpened, 0); }
+  }
+  if (typeof window !== 'undefined' && window.AntiSocialOpen) window.AntiSocialOpen.ready(f => receiveFiles([f]));
   function previewImport(acct, ctx, items, skipped) {
     if (!items.length) { const x = skipped[0]; toast(x ? x.name + ': ' + x.why : 'Nothing to import.'); return; }
     const have = new Set(ownRecs.map(r => r.id)), picks = new Map(items.map(it => [it.id, !have.has(it.id)]));
@@ -295,6 +317,6 @@ const Deco = (() => {
         h('div', { class: 'btnrow' }, save, h('button', { class: 'btn', type: 'button', onclick: () => close() }, 'Cancel')))));
     paint();
   }
-  return { setActive, primeAccounts, wreathOf, mine, server, tagEl, plateAttrs, plated, settingsSection, serverProfileModal, clearName, saveServer };
+  return { receiveFiles, setActive, primeAccounts, wreathOf, mine, server, tagEl, plateAttrs, plated, settingsSection, serverProfileModal, clearName, saveServer };
 })();
 if (typeof module !== 'undefined') module.exports = Deco;
