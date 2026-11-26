@@ -89,4 +89,15 @@ t('every Hanukkah banner shows the right number of lit candles', Array.from({ le
 t('every Hanukkah avatar decoration has a straight hanukkiah with the right number of lit candles (night N: N and the shamash), not a ring of candles', Array.from({ length: 8 }, (_, i) => i + 1).every(n => flames(moving.wreath['hk' + n]) === n + 1 + (n === 7 ? 7 : n === 8 ? 1 : 0)), Array.from({ length: 8 }, (_, i) => flames(moving.wreath['hk' + (i + 1)])).join());
 t('night 6 is "Light in the Window", with a hanukkiah in a window', D.SERIES.find(x => x.id === 'hanukkah').groups[5].name === 'Night 6: Light in the Window' && !/Star of David/.test(JSON.stringify(D.SERIES)));
 t('the Hanukkah dreidels carry the four Hebrew letters', /נ/.test(moving.plate.hk2) && /ג/.test(moving.bg.hk2) && /ה/.test(moving.bg.hk2) && /ש/.test(moving.bg.hk2));
+
+/* the release schedule: Hanukkah night N opens on 3 + N December 2026 (night 1 is Friday the 4th), Christmas a week before the 25th */
+const at = (m, d, h = 0, mi = 0) => new Date(2026, m - 1, d, h, mi).getTime();
+const hkg = D.SERIES.find(x => x.id === 'hanukkah').groups;
+t('Hanukkah night N unlocks on 3 + N December, one night per day (4th to 11th)', hkg.every((g, i) => g.opens === '2026-12-' + String(4 + i).padStart(2, '0')) && D.THEMES.filter(th => /^hanukkah\d$/.test(th.id)).every((th, i) => th.opens === hkg[i].opens), hkg.map(g => g.opens).join());
+t('both Christmas sets unlock on 18 December, a week before Christmas', ['cosychristmas', 'santasparkle'].every(id => D.SERIES.find(x => x.id === id).opens === '2026-12-18' && D.THEMES.find(x => x.id === id).opens === '2026-12-18'));
+t('a set opens at midnight on its day, not before', !D.isOpen('2026-12-04', at(12, 3, 23, 59)) && D.isOpen('2026-12-04', at(12, 4, 0, 0)) && D.isOpen(undefined, at(1, 1)));
+t('one more night opens each day', Array.from({ length: 8 }, (_, i) => hkg.filter(g => D.isOpen(g.opens, at(12, 4 + i, 12))).length).join() === '1,2,3,4,5,6,7,8');
+t('a set that has opened stays open', hkg.every(g => D.isOpen(g.opens, at(12, 30))) && hkg.every(g => D.isOpen(g.opens, new Date(2027, 11, 4).getTime())));
+t('the "next up" line points at the right set on the right days', D.nextOpening(at(11, 26)).opens === '2026-12-04' && /Night 4/.test(D.nextOpening(at(12, 6, 10)).name) && D.nextOpening(at(12, 12)).opens === '2026-12-18' && D.nextOpening(at(12, 19)) === null);
+t('the made-up members never wear a set that is still locked', (() => { const bad = []; for (let i = 0; i < 600; i++) { const id = 'acct' + i, p = D.ghostPlate(id, at(11, 26)), w = D.ghostWreath(id, at(11, 26)); if (D.lockedNow(p, at(11, 26)) || D.lockedNow(w, at(11, 26))) bad.push(id); } return !bad.length; })());
 console.log(bad ? `\n${bad} problem${bad === 1 ? '' : 's'}` : '\nall good'); process.exit(bad ? 1 : 0);

@@ -149,16 +149,16 @@ const DecoCore = (() => {
   const THEMES = [
     { id: 'vibrantpumpkin', name: 'Vibrant Pumpkin', blurb: 'Glossy glowing pumpkins, a pumpkin sunset and a ring of pumpkins.', plate: 'pumpkinglow', bg: 'pumpkinsunset', wreath: 'pumpkinring' },
     { id: 'gobblegobble', name: 'Gobble Gobble Turkey', blurb: 'A parade of turkeys, a tail-feather fan and lots of gobbling.', plate: 'gobbleparade', bg: 'turkeyparade', wreath: 'turkeyfan' },
-    { id: 'cosychristmas', name: 'Cosy Christmas', blurb: 'Fireside glow, a snowy village and a holly wreath.', plate: 'xfireside', bg: 'xvillage', wreath: 'xhollywreath' },
-    { id: 'santasparkle', name: 'Santa & Sparkle', blurb: 'A sleigh over the moon and a ring of candy canes.', plate: 'xsleighplate', bg: 'xsleighflight', wreath: 'xcaneRing' },
-    { id: 'hanukkah1', name: 'Hanukkah, Night 1', blurb: 'One candle and the shamash glow among the stars.', plate: 'hk1', bg: 'hk1', wreath: 'hk1' },
-    { id: 'hanukkah2', name: 'Hanukkah, Night 2', blurb: 'Spinning dreidels (nun, gimel, hey, shin) and two bright candles.', plate: 'hk2', bg: 'hk2', wreath: 'hk2' },
-    { id: 'hanukkah3', name: 'Hanukkah, Night 3', blurb: 'Shining gold gelt and three candles.', plate: 'hk3', bg: 'hk3', wreath: 'hk3' },
-    { id: 'hanukkah4', name: 'Hanukkah, Night 4', blurb: 'Crispy latkes, steam and four candles.', plate: 'hk4', bg: 'hk4', wreath: 'hk4' },
-    { id: 'hanukkah5', name: 'Hanukkah, Night 5', blurb: 'Powdered-sugar sufganiyot and five candles.', plate: 'hk5', bg: 'hk5', wreath: 'hk5' },
-    { id: 'hanukkah6', name: 'Hanukkah, Night 6', blurb: 'A hanukkiah lit in the window for all to see, with six candles.', plate: 'hk6', bg: 'hk6', wreath: 'hk6' },
-    { id: 'hanukkah7', name: 'Hanukkah, Night 7', blurb: 'One day\'s oil lasted eight days: seven candles.', plate: 'hk7', bg: 'hk7', wreath: 'hk7' },
-    { id: 'hanukkah8', name: 'Hanukkah, Night 8', blurb: 'All eight candles and the shamash: the Festival of Lights.', plate: 'hk8', bg: 'hk8', wreath: 'hk8' },
+    { id: 'cosychristmas', name: 'Cosy Christmas', blurb: 'Fireside glow, a snowy village and a holly wreath.', opens: '2026-12-18', plate: 'xfireside', bg: 'xvillage', wreath: 'xhollywreath' },
+    { id: 'santasparkle', name: 'Santa & Sparkle', blurb: 'A sleigh over the moon and a ring of candy canes.', opens: '2026-12-18', plate: 'xsleighplate', bg: 'xsleighflight', wreath: 'xcaneRing' },
+    { id: 'hanukkah1', name: 'Hanukkah, Night 1', blurb: 'One candle and the shamash glow among the stars.', opens: '2026-12-04', plate: 'hk1', bg: 'hk1', wreath: 'hk1' },
+    { id: 'hanukkah2', name: 'Hanukkah, Night 2', blurb: 'Spinning dreidels (nun, gimel, hey, shin) and two bright candles.', opens: '2026-12-05', plate: 'hk2', bg: 'hk2', wreath: 'hk2' },
+    { id: 'hanukkah3', name: 'Hanukkah, Night 3', blurb: 'Shining gold gelt and three candles.', opens: '2026-12-06', plate: 'hk3', bg: 'hk3', wreath: 'hk3' },
+    { id: 'hanukkah4', name: 'Hanukkah, Night 4', blurb: 'Crispy latkes, steam and four candles.', opens: '2026-12-07', plate: 'hk4', bg: 'hk4', wreath: 'hk4' },
+    { id: 'hanukkah5', name: 'Hanukkah, Night 5', blurb: 'Powdered-sugar sufganiyot and five candles.', opens: '2026-12-08', plate: 'hk5', bg: 'hk5', wreath: 'hk5' },
+    { id: 'hanukkah6', name: 'Hanukkah, Night 6', blurb: 'A hanukkiah lit in the window for all to see, with six candles.', opens: '2026-12-09', plate: 'hk6', bg: 'hk6', wreath: 'hk6' },
+    { id: 'hanukkah7', name: 'Hanukkah, Night 7', blurb: 'One day\'s oil lasted eight days: seven candles.', opens: '2026-12-10', plate: 'hk7', bg: 'hk7', wreath: 'hk7' },
+    { id: 'hanukkah8', name: 'Hanukkah, Night 8', blurb: 'All eight candles and the shamash: the Festival of Lights.', opens: '2026-12-11', plate: 'hk8', bg: 'hk8', wreath: 'hk8' },
     { id: 'boba', name: 'Kawaii Boba Tea', blurb: 'Pink milk tea, pearls and sparkles.', plate: 'bubbletea', bg: 'boba', wreath: 'bobacup' },
     { id: 'lunar', name: 'Lunar New Year', blurb: 'Red lanterns, gold waves and fireworks.', plate: 'lanternglow', bg: 'lantern', wreath: 'redlantern' },
     { id: 'anime', name: 'Anime', blurb: 'Sparkles, shooting stars and magical ribbons.', plate: 'sparkleanime', bg: 'animenight', wreath: 'magicgirl' },
@@ -858,17 +858,17 @@ const DecoCore = (() => {
     { id: 'classic', name: 'Classic', blurb: 'Plain, handsome nameplates.', groups: [{ plate: ['embers', 'aurora', 'tide', 'sakura', 'circuit', 'starfield', 'parchment', 'neon', 'slime', 'prism'] }] },
     { id: 'vibrantpumpkin', name: 'Vibrant Pumpkin', blurb: 'Glossy, glowing pumpkins and jack-o\'-lanterns.', groups: [{ plate: ['pumpkinglow', 'jacklantern', 'spiceswirl'], bg: ['pumpkinsunset', 'jacknight', 'vinegarden'], wreath: ['pumpkinring', 'jackcrown', 'candycorn'] }] },
     { id: 'gobblegobble', name: 'Gobble Gobble Turkey', blurb: 'Cute turkeys, jewel-bright tail feathers and a feast.', groups: [{ plate: ['gobbleparade', 'featherfan', 'feastplaid'], bg: ['turkeyparade', 'featherburst', 'feasttable'], wreath: ['turkeyfan', 'feathermandala', 'acorngarland'] }] },
-    { id: 'cosychristmas', name: 'Cosy Christmas', blurb: 'Fireside warmth, snowy villages and holly.', groups: [{ plate: ['xfireside', 'xpine', 'xginger'], bg: ['xvillage', 'xtree', 'xmantel'], wreath: ['xhollywreath', 'xbaubles', 'xgingerring'] }] },
-    { id: 'santasparkle', name: 'Santa & Sparkle', blurb: 'Sleighs, candy canes, snowmen and sparkle.', groups: [{ plate: ['xcandystripe', 'xsleighplate', 'xsnowplate'], bg: ['xsleighflight', 'xcandyland', 'xsnowhill'], wreath: ['xcaneRing', 'xreindeer', 'xcrystal'] }] },
+    { id: 'cosychristmas', name: 'Cosy Christmas', blurb: 'Fireside warmth, snowy villages and holly.', opens: '2026-12-18', groups: [{ plate: ['xfireside', 'xpine', 'xginger'], bg: ['xvillage', 'xtree', 'xmantel'], wreath: ['xhollywreath', 'xbaubles', 'xgingerring'] }] },
+    { id: 'santasparkle', name: 'Santa & Sparkle', blurb: 'Sleighs, candy canes, snowmen and sparkle.', opens: '2026-12-18', groups: [{ plate: ['xcandystripe', 'xsleighplate', 'xsnowplate'], bg: ['xsleighflight', 'xcandyland', 'xsnowhill'], wreath: ['xcaneRing', 'xreindeer', 'xcrystal'] }] },
     { id: 'hanukkah', name: 'Hanukkah', blurb: 'Eight nights of light: each night has its own set, with that night\'s candles lit.', groups: [
-      { name: 'Night 1: First Light', plate: ['hk1'], bg: ['hk1'], wreath: ['hk1'] },
-      { name: 'Night 2: Dreidel Spin', plate: ['hk2'], bg: ['hk2'], wreath: ['hk2'] },
-      { name: 'Night 3: Gold Gelt', plate: ['hk3'], bg: ['hk3'], wreath: ['hk3'] },
-      { name: 'Night 4: Latke Night', plate: ['hk4'], bg: ['hk4'], wreath: ['hk4'] },
-      { name: 'Night 5: Sufganiyot Sparkle', plate: ['hk5'], bg: ['hk5'], wreath: ['hk5'] },
-      { name: 'Night 6: Light in the Window', plate: ['hk6'], bg: ['hk6'], wreath: ['hk6'] },
-      { name: 'Night 7: A Little Oil', plate: ['hk7'], bg: ['hk7'], wreath: ['hk7'] },
-      { name: 'Night 8: Festival of Lights', plate: ['hk8'], bg: ['hk8'], wreath: ['hk8'] },
+      { name: 'Night 1: First Light', opens: '2026-12-04', plate: ['hk1'], bg: ['hk1'], wreath: ['hk1'] },
+      { name: 'Night 2: Dreidel Spin', opens: '2026-12-05', plate: ['hk2'], bg: ['hk2'], wreath: ['hk2'] },
+      { name: 'Night 3: Gold Gelt', opens: '2026-12-06', plate: ['hk3'], bg: ['hk3'], wreath: ['hk3'] },
+      { name: 'Night 4: Latke Night', opens: '2026-12-07', plate: ['hk4'], bg: ['hk4'], wreath: ['hk4'] },
+      { name: 'Night 5: Sufganiyot Sparkle', opens: '2026-12-08', plate: ['hk5'], bg: ['hk5'], wreath: ['hk5'] },
+      { name: 'Night 6: Light in the Window', opens: '2026-12-09', plate: ['hk6'], bg: ['hk6'], wreath: ['hk6'] },
+      { name: 'Night 7: A Little Oil', opens: '2026-12-10', plate: ['hk7'], bg: ['hk7'], wreath: ['hk7'] },
+      { name: 'Night 8: Festival of Lights', opens: '2026-12-11', plate: ['hk8'], bg: ['hk8'], wreath: ['hk8'] },
     ] },
     { id: 'boba', name: 'Kawaii Boba Tea', blurb: 'Pink milk tea, pearls and sparkles.', groups: [{ plate: ['bubbletea', 'hexcandy'], bg: ['boba'], wreath: ['bobacup', 'sprout', 'catphones', 'pearlring'] }] },
     { id: 'lunar', name: 'Lunar New Year', blurb: 'Red lanterns, gold waves, koi and fireworks.', groups: [{ plate: ['lanternglow', 'goldwaves'], bg: ['lantern'], wreath: ['redlantern', 'lotus', 'koi', 'firecrackers', 'envelopes', 'dragon'] }] },
@@ -879,6 +879,19 @@ const DecoCore = (() => {
       { name: 'Style & snacks', wreath: ['sushi', 'ramen', 'scholar', 'catonesie', 'catears'] },
     ] },
   ];
+  /* Release schedule: a collection (or one night of a collection) can have an `opens` date. Until then it is shown as a blurred teaser with
+     its date. The device's own clock decides, so a set appears on its day without a new download, and once a date has passed it stays open. */
+  const dayStart = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3]).getTime() : 0; };
+  const isOpen = (opens, now = Date.now()) => !opens || dayStart(opens) <= now;
+  const opensLabel = opens => new Date(dayStart(opens)).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  const LOCKS = {};
+  for (const se of SERIES) for (const g of se.groups) { const o = g.opens || se.opens; if (o) for (const k of ['plate', 'bg', 'wreath']) for (const id of g[k] || []) LOCKS[id] = o; }
+  const lockedNow = (id, now = Date.now()) => !!LOCKS[id] && !isOpen(LOCKS[id], now);
+  const nextOpening = (now = Date.now()) => {
+    let best = null; const consider = (name, opens) => { if (opens && !isOpen(opens, now) && (!best || dayStart(opens) < dayStart(best.opens))) best = { name, opens }; };
+    for (const se of SERIES) { consider(se.name, se.opens); for (const g of se.groups) if (g.opens) consider(se.name + ', ' + g.name, g.opens); }
+    return best;
+  };
   const seriesOfTheme = id => ({ vibrantpumpkin: 'vibrantpumpkin', gobblegobble: 'gobblegobble', cosychristmas: 'cosychristmas', santasparkle: 'santasparkle', hanukkah1: 'hanukkah', hanukkah2: 'hanukkah', hanukkah3: 'hanukkah', hanukkah4: 'hanukkah', hanukkah5: 'hanukkah', hanukkah6: 'hanukkah', hanukkah7: 'hanukkah', hanukkah8: 'hanukkah', boba: 'boba', lunar: 'lunar', anime: 'anime', animehearts: 'anime', animecosmos: 'anime' }[id] || '');
   const has = (list, id) => list.some(x => x.id === id);
   /* your own decorations (imported from a pack file) are added to the same lists while they are in use: the ones in this
@@ -892,6 +905,7 @@ const DecoCore = (() => {
     for (const r of [...mine.own, ...mine.seen]) { const list = LISTS[r.dkind]; if (!has(list, r.id)) list.push({ id: r.id, name: r.name || 'Mine', blurb: r.blurb || 'Imported from a file.', anim: !!r.moves, custom: true }); }
   }
   const builtin = list => list.filter(x => !x.custom);
+  const ghostPool = (list, now) => builtin(list).filter(x => !lockedNow(x.id, now));
   const plate = id => PLATES.find(p => p.id === id) || PLATES[0];
   const plateOk = id => !!id && id !== 'none' && has(PLATES, id);
   const banner = id => BANNERS.find(b => b.id === id) || null;
@@ -906,9 +920,9 @@ const DecoCore = (() => {
   const bannerCss = s => (s.bannerImg ? `url("${s.bannerImg}") center / cover` : s.bannerPreset ? banner(s.bannerPreset).css : '');
   // generated members get a nameplate or a tag now and then (scenery, same seed gives the same people)
   const hash = s => { let x = 2166136261; for (const c of String(s)) { x ^= c.charCodeAt(0); x = Math.imul(x, 16777619); } return x >>> 0; };
-  const ghostPlate = id => { const n = hash('plate' + id); return n % 100 < 28 ? builtin(PLATES)[1 + (n >>> 8) % (builtin(PLATES).length - 1)].id : 'none'; };
+  const ghostPlate = (id, now) => { const n = hash('plate' + id), pool = ghostPool(PLATES, now); return n % 100 < 28 ? pool[1 + (n >>> 8) % (pool.length - 1)].id : 'none'; };
   const ghostTag = id => { const n = hash('tag' + id); if (n % 100 >= 22) return null; const words = ['MOON', 'FOX', 'KOI', 'ZEN', 'ASH', 'OWL', 'IVY', 'NOVA', 'RAIN', 'JAZZ']; return { tag: words[(n >>> 8) % words.length], tagColor: TAG_COLORS[(n >>> 12) % TAG_COLORS.length][0], tagGlyph: TAG_GLYPHS[(n >>> 16) % TAG_GLYPHS.length][0] }; };
-  const ghostWreath = id => { const n = hash('wreath' + id); return n % 100 < 16 ? builtin(WREATHS)[1 + (n >>> 8) % (builtin(WREATHS).length - 1)].id : ''; };
-  return { setCustom, SERIES, seriesOfTheme, buildArt, plateOk, uri, BACKGROUNDS, WREATHS, THEMES, ghostWreath, PLATES, TAG_COLORS, TAG_GLYPHS, BANNERS, plate, banner, cleanTag, tagOk, normProfile, normServer, bannerCss, ghostPlate, ghostTag };
+  const ghostWreath = (id, now) => { const n = hash('wreath' + id), pool = ghostPool(WREATHS, now); return n % 100 < 16 ? pool[1 + (n >>> 8) % (pool.length - 1)].id : ''; };
+  return { isOpen, opensLabel, nextOpening, lockedNow, LOCKS, setCustom, SERIES, seriesOfTheme, buildArt, plateOk, uri, BACKGROUNDS, WREATHS, THEMES, ghostWreath, PLATES, TAG_COLORS, TAG_GLYPHS, BANNERS, plate, banner, cleanTag, tagOk, normProfile, normServer, bannerCss, ghostPlate, ghostTag };
 })();
 if (typeof module !== 'undefined') module.exports = DecoCore;
