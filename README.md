@@ -11,6 +11,8 @@
 
 Anti-Social v0.30.0 is feature complete. It is a finished app, not a work in progress.
 
+> **Holiday decorations are coming, and they unlock on the calendar.** Eight nights of Hanukkah (a new set every night from Fri 4 Dec), two Christmas sets (from Fri 18 Dec), and more every year. [Here is what is coming](#holiday-decorations-they-unlock-on-the-calendar).
+
 **Tested by the developer** (Android and Linux by hand through v0.7.0, including all the Apps (drag-to-reorder, themes, the Bible, Travel Log, Cookbook and the v0.12.0 account features are automated-test verified, awaiting a hand test; the Android file saver in v0.12.0 is new native code and has not yet been run on a real phone); plus automated tests):
 - **Newer apps (v0.20.0 to v0.26.0):** Language Lab, Calorie Counter, Push-Up Counter, Music Player, the viewers, YouTube playback, the desktop layout and Updates are checked by automated tests; the Fireplace, Aquarium, Music Player and YouTube embeds have been tried on a real phone. The console versions, background video playback, the Updates installer and the Music Player folder picker have **not yet been hand tested on real hardware**.
 - **Android:** installed and used on a real phone, including account switching, Populated mode, Characters, the storage limit and the Apps.
@@ -99,6 +101,35 @@ A new piece earns its place by being something you would use inside the shell, n
 - Light, dark or auto theme
 - Export your data as JSON, or delete it all
 - Native apps for Windows, Linux and Android, plus experimental Switch, Wii U and 3DS versions. Works offline. Obviously.
+
+## Holiday decorations: they unlock on the calendar
+
+Some profile decorations only open at the right time of year. It is all automatic: no update to download, nothing to do except open **Settings, Profile decorations** on the day. Until then each set waits in the list as a blurred teaser with the date it opens, and a **Next up** line counts down to the next one.
+
+**Coming up in 2026**
+
+| When | What opens |
+|---|---|
+| Thanksgiving, 19 Nov to 3 Dec | **Vibrant Pumpkin** and **Gobble Gobble Turkey**: glossy glowing pumpkins and jack-o'-lanterns, and a parade of cute turkeys with jewel-bright tail feathers |
+| **Fri 4 Dec** | Hanukkah night 1: **First Light** |
+| Sat 5 Dec | Night 2: **Dreidel Spin** |
+| Sun 6 Dec | Night 3: **Gold Gelt** |
+| Mon 7 Dec | Night 4: **Latke Night** |
+| Tue 8 Dec | Night 5: **Sufganiyot Sparkle** |
+| Wed 9 Dec | Night 6: **Light in the Window** |
+| Thu 10 Dec | Night 7: **A Little Oil** |
+| **Fri 11 Dec** | Night 8: **Festival of Lights** |
+| **Fri 18 Dec to 6 Jan** | Christmas: **Cosy Christmas** (fireside glow, a snowy village, a twinkling tree) and **Santa & Sparkle** (a sleigh over the moon, candy canes, snowmen) |
+
+**Hanukkah gets a set for every night.** Each night has its own nameplate, profile banner, avatar decoration and a theme that wears them together, and the hanukkiah in each one has that night's candles lit: the shamash set apart, the lights in a straight row, added from the right. Come back every day to see the next one.
+
+**How it works**
+
+- Each set opens at midnight on its first day, on your device's clock, and closes again a week after its holiday (Christmas stays open until 6 January).
+- It comes back every year. Hanukkah moves around the calendar, so the app works its dates out from the Hebrew calendar: the first night is 4 December in 2026, 24 December in 2027, 12 December in 2028.
+- What you are already wearing stays on after its season ends. The calendar only decides what you can pick.
+- Nothing is sent anywhere. The calendar is worked out on your device, like everything else in Anti-Social, and changing your phone's date would just show a set early.
+- Want your own? You can [make your own decorations](docs/asdeco-format.md) in Sudo Make Art and add them under Settings, Profile decorations. The calendar rules are written up in [docs/holiday-calendar.md](docs/holiday-calendar.md).
 
 ## Version history
 
