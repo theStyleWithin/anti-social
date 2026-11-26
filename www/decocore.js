@@ -33,12 +33,12 @@ const DecoCore = (() => {
     { id: 'xsleighplate', name: 'Sleigh Ride', blurb: 'Santa\'s sleigh sweeps over a moonlit town.', anim: true },
     { id: 'xsnowplate', name: 'Snowman Party', blurb: 'Three bobbing snowmen in the snow.', anim: true },
     { id: 'hk1', name: 'Night 1: First Light', blurb: 'One candle and the shamash glow among the stars.', anim: true },
-    { id: 'hk2', name: 'Night 2: Dreidel Spin', blurb: 'Spinning dreidels around two bright candles.', anim: true },
+    { id: 'hk2', name: 'Night 2: Dreidel Spin', blurb: 'Spinning dreidels (nun, gimel, hey, shin) and two bright candles.', anim: true },
     { id: 'hk3', name: 'Night 3: Gold Gelt', blurb: 'Shining gold gelt and three candles.', anim: true },
     { id: 'hk4', name: 'Night 4: Latke Night', blurb: 'Crispy latkes, steam and four candles.', anim: true },
     { id: 'hk5', name: 'Night 5: Sufganiyot Sparkle', blurb: 'Powdered-sugar sufganiyot and five candles.', anim: true },
-    { id: 'hk6', name: 'Night 6: Star of David', blurb: 'Silver and gold stars of David and six candles.', anim: true },
-    { id: 'hk7', name: 'Night 7: A Little Oil', blurb: 'A little oil, a lot of light: seven candles.', anim: true },
+    { id: 'hk6', name: 'Night 6: Light in the Window', blurb: 'A hanukkiah lit in the window for all to see, with six candles.', anim: true },
+    { id: 'hk7', name: 'Night 7: A Little Oil', blurb: 'One day\'s oil lasted eight days: seven candles.', anim: true },
     { id: 'hk8', name: 'Night 8: Festival of Lights', blurb: 'All eight candles and the shamash: the Festival of Lights.', anim: true },
     { id: 'sparkleanime', name: 'Sparkle Streak', blurb: 'A violet glow with a shooting star.', anim: true },
     { id: 'mangapanel', name: 'Manga Panel', blurb: 'Halftone dots, speed lines and a POW.', anim: true },
@@ -82,12 +82,12 @@ const DecoCore = (() => {
     { id: 'xcandyland', name: 'Candy Land', blurb: 'Lollipops, giant candy canes and dancing gingerbread.', anim: true },
     { id: 'xsnowhill', name: 'Snowman Hill', blurb: 'Snowmen on a hill under the northern lights.', anim: true },
     { id: 'hk1', name: 'Night 1: First Light', blurb: 'One candle and the shamash glow among the stars.', anim: true },
-    { id: 'hk2', name: 'Night 2: Dreidel Spin', blurb: 'Spinning dreidels around two bright candles.', anim: true },
+    { id: 'hk2', name: 'Night 2: Dreidel Spin', blurb: 'Spinning dreidels (nun, gimel, hey, shin) and two bright candles.', anim: true },
     { id: 'hk3', name: 'Night 3: Gold Gelt', blurb: 'Shining gold gelt and three candles.', anim: true },
     { id: 'hk4', name: 'Night 4: Latke Night', blurb: 'Crispy latkes, steam and four candles.', anim: true },
     { id: 'hk5', name: 'Night 5: Sufganiyot Sparkle', blurb: 'Powdered-sugar sufganiyot and five candles.', anim: true },
-    { id: 'hk6', name: 'Night 6: Star of David', blurb: 'Silver and gold stars of David and six candles.', anim: true },
-    { id: 'hk7', name: 'Night 7: A Little Oil', blurb: 'A little oil, a lot of light: seven candles.', anim: true },
+    { id: 'hk6', name: 'Night 6: Light in the Window', blurb: 'A hanukkiah lit in the window for all to see, with six candles.', anim: true },
+    { id: 'hk7', name: 'Night 7: A Little Oil', blurb: 'One day\'s oil lasted eight days: seven candles.', anim: true },
     { id: 'hk8', name: 'Night 8: Festival of Lights', blurb: 'All eight candles and the shamash: the Festival of Lights.', anim: true },
     { id: 'cometnight', name: 'Comet Night', blurb: 'A blue night with a comet sweeping past.', anim: true },
     { id: 'goldendust', name: 'Golden Dust', blurb: 'Warm light with drifting golden sparks.', anim: true },
@@ -108,12 +108,12 @@ const DecoCore = (() => {
     { id: 'xreindeer', name: 'Reindeer Antlers', blurb: 'Antlers, bells and a glowing red nose.', anim: true },
     { id: 'xcrystal', name: 'Snowflake Crystal Ring', blurb: 'Eight icy snowflakes turning around you.', anim: true },
     { id: 'hk1', name: 'Night 1: First Light', blurb: 'One candle and the shamash glow among the stars.', anim: true },
-    { id: 'hk2', name: 'Night 2: Dreidel Spin', blurb: 'Spinning dreidels around two bright candles.', anim: true },
+    { id: 'hk2', name: 'Night 2: Dreidel Spin', blurb: 'Spinning dreidels (nun, gimel, hey, shin) and two bright candles.', anim: true },
     { id: 'hk3', name: 'Night 3: Gold Gelt', blurb: 'Shining gold gelt and three candles.', anim: true },
     { id: 'hk4', name: 'Night 4: Latke Night', blurb: 'Crispy latkes, steam and four candles.', anim: true },
     { id: 'hk5', name: 'Night 5: Sufganiyot Sparkle', blurb: 'Powdered-sugar sufganiyot and five candles.', anim: true },
-    { id: 'hk6', name: 'Night 6: Star of David', blurb: 'Silver and gold stars of David and six candles.', anim: true },
-    { id: 'hk7', name: 'Night 7: A Little Oil', blurb: 'A little oil, a lot of light: seven candles.', anim: true },
+    { id: 'hk6', name: 'Night 6: Light in the Window', blurb: 'A hanukkiah lit in the window for all to see, with six candles.', anim: true },
+    { id: 'hk7', name: 'Night 7: A Little Oil', blurb: 'One day\'s oil lasted eight days: seven candles.', anim: true },
     { id: 'hk8', name: 'Night 8: Festival of Lights', blurb: 'All eight candles and the shamash: the Festival of Lights.', anim: true },
     { id: 'sprout', name: 'Sprout', blurb: 'A little seedling growing on top.', anim: true },
     { id: 'catphones', name: 'Cat-ear Headphones', blurb: 'Pink cat ears and a tiny microphone.', anim: true },
@@ -152,12 +152,12 @@ const DecoCore = (() => {
     { id: 'cosychristmas', name: 'Cosy Christmas', blurb: 'Fireside glow, a snowy village and a holly wreath.', plate: 'xfireside', bg: 'xvillage', wreath: 'xhollywreath' },
     { id: 'santasparkle', name: 'Santa & Sparkle', blurb: 'A sleigh over the moon and a ring of candy canes.', plate: 'xsleighplate', bg: 'xsleighflight', wreath: 'xcaneRing' },
     { id: 'hanukkah1', name: 'Hanukkah, Night 1', blurb: 'One candle and the shamash glow among the stars.', plate: 'hk1', bg: 'hk1', wreath: 'hk1' },
-    { id: 'hanukkah2', name: 'Hanukkah, Night 2', blurb: 'Spinning dreidels around two bright candles.', plate: 'hk2', bg: 'hk2', wreath: 'hk2' },
+    { id: 'hanukkah2', name: 'Hanukkah, Night 2', blurb: 'Spinning dreidels (nun, gimel, hey, shin) and two bright candles.', plate: 'hk2', bg: 'hk2', wreath: 'hk2' },
     { id: 'hanukkah3', name: 'Hanukkah, Night 3', blurb: 'Shining gold gelt and three candles.', plate: 'hk3', bg: 'hk3', wreath: 'hk3' },
     { id: 'hanukkah4', name: 'Hanukkah, Night 4', blurb: 'Crispy latkes, steam and four candles.', plate: 'hk4', bg: 'hk4', wreath: 'hk4' },
     { id: 'hanukkah5', name: 'Hanukkah, Night 5', blurb: 'Powdered-sugar sufganiyot and five candles.', plate: 'hk5', bg: 'hk5', wreath: 'hk5' },
-    { id: 'hanukkah6', name: 'Hanukkah, Night 6', blurb: 'Silver and gold stars of David and six candles.', plate: 'hk6', bg: 'hk6', wreath: 'hk6' },
-    { id: 'hanukkah7', name: 'Hanukkah, Night 7', blurb: 'A little oil, a lot of light: seven candles.', plate: 'hk7', bg: 'hk7', wreath: 'hk7' },
+    { id: 'hanukkah6', name: 'Hanukkah, Night 6', blurb: 'A hanukkiah lit in the window for all to see, with six candles.', plate: 'hk6', bg: 'hk6', wreath: 'hk6' },
+    { id: 'hanukkah7', name: 'Hanukkah, Night 7', blurb: 'One day\'s oil lasted eight days: seven candles.', plate: 'hk7', bg: 'hk7', wreath: 'hk7' },
     { id: 'hanukkah8', name: 'Hanukkah, Night 8', blurb: 'All eight candles and the shamash: the Festival of Lights.', plate: 'hk8', bg: 'hk8', wreath: 'hk8' },
     { id: 'boba', name: 'Kawaii Boba Tea', blurb: 'Pink milk tea, pearls and sparkles.', plate: 'bubbletea', bg: 'boba', wreath: 'bobacup' },
     { id: 'lunar', name: 'Lunar New Year', blurb: 'Red lanterns, gold waves and fireworks.', plate: 'lanternglow', bg: 'lantern', wreath: 'redlantern' },
@@ -816,11 +816,11 @@ const DecoCore = (() => {
 
     /* ===== Hanukkah: eight nights, each with its own nameplate, banner and avatar decoration. Night N shows N candles plus the shamash, lit as tradition has it ===== */
     const HK_LIT = [8, 7, 6, 5, 3, 2, 1, 0];       // candles are added from the right, so night 1 is the right-most branch
-    const HKNAMES = ['First Light', 'Dreidel Spin', 'Gold Gelt', 'Latke Night', 'Sufganiyot Sparkle', 'Star of David', 'A Little Oil', 'Festival of Lights'];
+    const HKNAMES = ['First Light', 'Dreidel Spin', 'Gold Gelt', 'Latke Night', 'Sufganiyot Sparkle', 'Light in the Window', 'A Little Oil', 'Festival of Lights'];
     const HKBG = [['#0a1840', '#1b3a8c'], ['#14104a', '#3b2f9c'], ['#06303e', '#1b6a8a'], ['#1a1450', '#5b3fb0'], ['#0b2a6a', '#2f6fd0'], ['#13283f', '#5f86b8'], ['#04283a', '#1f7f86'], ['#0a0f2e', '#27407f']];
     // the hanukkiah: eight branches in a row and a raised shamash in the middle; n candles are placed and lit
-    const hanukkiah = (cx, cy, s, n, o = {}) => { const used = new Set(HK_LIT.slice(0, n)); let c = ''; for (let i = 0; i < 9; i++) { const x = (i - 4) * 14, y = i === 4 ? -16 : 0, isSh = i === 4; c += `<path d="M${x - 5} ${y}h10l-2 7h-6z" fill="url(#gd)"/>`; if (isSh || used.has(i)) { const h = isSh ? 24 : 20; c += `<rect x="${x - 3}" y="${y - h}" width="6" height="${h}" rx="1.4" fill="url(#cb)"/><path d="M${x - 3} ${y - h * .7}l6 -3M${x - 3} ${y - h * .4}l6 -3M${x - 3} ${y - h * .1}l6 -3" stroke="#fff" stroke-opacity=".5" stroke-width="1.2"/><path d="M${x} ${y - h}v-2" stroke="#3a2a1a" stroke-width=".8"/>` + flame(x, y - h - 2, isSh ? 1.1 : 1, i * .21); } }
-      return `<g transform="translate(${f1(cx)} ${f1(cy)}) scale(${s})"><circle cx="0" cy="-22" r="${o.glow || 64}" fill="url(#fg)" fill-opacity=".6">${anim('opacity', '.5;.8;.5', 2.6)}</circle><rect x="-70" y="6" width="140" height="7" rx="3.5" fill="url(#gd)"/><rect x="-2.6" y="-16" width="5.2" height="22" fill="url(#gd)"/><path d="M-22 22L22 22L10 13H-10Z" fill="url(#gd)"/><rect x="-70" y="6" width="140" height="2.4" rx="1.2" fill="#fff" fill-opacity=".5"/>${c}</g>`; };
+    const hanukkiah = (cx, cy, s, n, o = {}) => { const R = o.raise == null ? 16 : o.raise, used = new Set(HK_LIT.slice(0, n)); let c = ''; for (let i = 0; i < 9; i++) { const x = (i - 4) * 14, y = i === 4 ? -R : 0, isSh = i === 4; c += `<path d="M${x - 5} ${y}h10l-2 7h-6z" fill="url(#gd)"/>`; if (isSh || used.has(i)) { const h = isSh ? 24 : 20; c += `<rect x="${x - 3}" y="${y - h}" width="6" height="${h}" rx="1.4" fill="url(#cb)"/><path d="M${x - 3} ${y - h * .7}l6 -3M${x - 3} ${y - h * .4}l6 -3M${x - 3} ${y - h * .1}l6 -3" stroke="#fff" stroke-opacity=".5" stroke-width="1.2"/><path d="M${x} ${y - h}v-2" stroke="#3a2a1a" stroke-width=".8"/>` + flame(x, y - h - 2, isSh ? 1.1 : 1, i * .21); } }
+      return `<g transform="translate(${f1(cx)} ${f1(cy)}) scale(${s})"><circle cx="0" cy="-22" r="${o.glow || 64}" fill="url(#fg)" fill-opacity=".6">${anim('opacity', '.5;.8;.5', 2.6)}</circle><rect x="-70" y="6" width="140" height="7" rx="3.5" fill="url(#gd)"/><rect x="-2.6" y="${-R}" width="5.2" height="${6 + R}" fill="url(#gd)"/><path d="M-22 22L22 22L10 13H-10Z" fill="url(#gd)"/><rect x="-70" y="6" width="140" height="2.4" rx="1.2" fill="#fff" fill-opacity=".5"/>${c}</g>`; };
     const star6 = (x, y, r, fill = 'url(#sv)', o = {}) => `<g transform="translate(${f1(x)} ${f1(y)})"><g>${o.spin ? move('rotate', '0;360', o.spin, o.begin || 0) : ''}<polygon points="0,${-r} ${f1(r * .866)},${f1(r * .5)} ${f1(-r * .866)},${f1(r * .5)}" fill="none" stroke="${fill}" stroke-width="${f1(Math.max(1.1, r * .2))}" stroke-linejoin="round"/><polygon points="0,${r} ${f1(r * .866)},${f1(-r * .5)} ${f1(-r * .866)},${f1(-r * .5)}" fill="none" stroke="${fill}" stroke-width="${f1(Math.max(1.1, r * .2))}" stroke-linejoin="round"/></g></g>`;
     const LETTERS = ['נ', 'ג', 'ה', 'ש'];
     const dreidel = (x, y, s, i = 0) => `<g transform="translate(${f1(x)} ${f1(y)}) scale(${s})"><g>${bob(2, 1.6 + (i % 3) * .3, i * .3)}<g>${A(`<animateTransform attributeName="transform" type="scale" values="1 1;.12 1;-1 1;.12 1;1 1" dur="${2 + (i % 3) * .4}s" begin="${-i * .5}s" repeatCount="indefinite"/>`)}<rect x="-1.6" y="-24" width="3.2" height="9" rx="1.2" fill="url(#sv)"/><path d="M-11 -14h22v13l-11 15l-11 -15Z" fill="#2f6fd0"/><path d="M-11 -14h22v13l-11 15l-11 -15Z" fill="url(#bx)"/><path d="M-11 -14h22v13l-11 15l-11 -15Z" fill="none" stroke="url(#sv)" stroke-width="1.6" stroke-linejoin="round"/><text x="0" y="-1.4" font-family="Arial,'Noto Sans Hebrew','DejaVu Sans',sans-serif" font-weight="700" font-size="13" text-anchor="middle" fill="#fff6c8">${LETTERS[i % 4]}</text></g></g></g>`;
@@ -828,9 +828,11 @@ const DecoCore = (() => {
     const latke = (x, y, r, i = 0) => `<g transform="translate(${f1(x)} ${f1(y)})"><ellipse cx="0" cy="${f1(r * .5)}" rx="${f1(r * 1.2)}" ry="${f1(r * .38)}" fill="#fff" fill-opacity=".9"/><g>${bob(1.2, 2.6 + (i % 3) * .3, i * .3)}<ellipse rx="${f1(r)}" ry="${f1(r * .8)}" fill="#c8802a"/><ellipse rx="${f1(r * .86)}" ry="${f1(r * .66)}" fill="#e0a040"/>${[[-.4, -.2], [.3, -.3], [0, .25], [-.15, 0], [.45, .2], [-.5, .25]].map(([a, b]) => `<ellipse cx="${f1(r * a)}" cy="${f1(r * b)}" rx="${f1(r * .16)}" ry="${f1(r * .1)}" fill="#8a5a1a" fill-opacity=".6"/>`).join('')}<ellipse cx="${f1(-r * .3)}" cy="${f1(-r * .4)}" rx="${f1(r * .3)}" ry="${f1(r * .12)}" fill="#fff" fill-opacity=".35"/><circle cx="${f1(r * .1)}" cy="${f1(-r * .05)}" r="${f1(r * .3)}" fill="#fff3e0"/><circle cx="${f1(r * .1)}" cy="${f1(-r * .05)}" r="${f1(r * .16)}" fill="#e87a5a"/></g><path d="M${f1(-r * .3)} ${f1(-r * .9)}q-2 -3 0 -6t0 -6" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1.2" stroke-linecap="round">${A(`<animate attributeName="stroke-opacity" values="0;.6;0" dur="2.6s" begin="${-i * .7}s" repeatCount="indefinite"/>`)}${move('translate', '0 4;0 -4', 2.6, i * .7)}</path></g>`;
     const donut = (x, y, r, i = 0) => `<g transform="translate(${f1(x)} ${f1(y)})"><g>${bob(1.6, 2.4 + (i % 3) * .3, i * .35)}<ellipse cy="${f1(r * .62)}" rx="${f1(r * .9)}" ry="${f1(r * .22)}" fill="#000" fill-opacity=".18"/><ellipse rx="${f1(r)}" ry="${f1(r * .82)}" fill="url(#dn)"/><path d="M${f1(-r * .96)} ${f1(-r * .06)}q${f1(r * .12)} ${f1(-r * .62)} ${f1(r * .56)} ${f1(-r * .72)}q${f1(r * .52)} ${f1(-r * .1)} ${f1(r * .78)} ${f1(r * .26)}q${f1(r * .5)} ${f1(r * .1)} ${f1(r * .62)} ${f1(r * .42)}q${f1(-r * .2)} ${f1(r * .16)} ${f1(-r * .3)} ${f1(-r * .02)}q${f1(-r * .2)} ${f1(r * .22)} ${f1(-r * .44)} ${f1(-r * .04)}q${f1(-r * .24)} ${f1(r * .22)} ${f1(-r * .5)} ${f1(-r * .02)}q${f1(-r * .24)} ${f1(r * .2)} ${f1(-r * .48)} ${f1(-r * .02)}q${f1(-r * .24)} ${f1(r * .18)} ${f1(-r * .24)} ${f1(-r * .12)}Z" fill="#fff"/>${[[-.5, -.4], [-.1, -.55], [.3, -.42], [-.3, -.18], [.1, -.22], [.5, -.12]].map(([a, b]) => `<circle cx="${f1(r * a)}" cy="${f1(r * b)}" r="${f1(r * .05)}" fill="#e6dccb"/>`).join('')}<ellipse cx="${f1(-r * .3)}" cy="${f1(-r * .46)}" rx="${f1(r * .26)}" ry="${f1(r * .09)}" fill="#fff" fill-opacity=".8"/><path d="M${f1(r * .12)} ${f1(r * .1)}q${f1(r * .1)} ${f1(r * .34)} ${f1(r * .04)} ${f1(r * .58)}q${f1(-r * .18)} 0 ${f1(-r * .14)} ${f1(-r * .3)}Z" fill="#c8102a"/><circle cx="${f1(r * .14)}" cy="${f1(r * .12)}" r="${f1(r * .13)}" fill="#e8283c"/><circle cx="${f1(r * .1)}" cy="${f1(r * .08)}" r="${f1(r * .04)}" fill="#fff" fill-opacity=".8"/></g></g>`;
     const oiljar = (x, y, s, i = 0) => `<g transform="translate(${f1(x)} ${f1(y)}) scale(${s})"><g>${bob(1.4, 2.6, i * .4)}<path d="M-3 -16h6v4q9 3 9 12q0 9 -12 11q-12 -2 -12 -11q0 -9 9 -12Z" fill="#c8702a"/><path d="M-3 -16h6v4q9 3 9 12q0 9 -12 11q-12 -2 -12 -11q0 -9 9 -12Z" fill="url(#bx)"/><path d="M-9 -2h18" stroke="#f2c14e" stroke-width="1.6"/><path d="M-8 3h16" stroke="#f2c14e" stroke-width="1.2"/><path d="M-3 -16Q0 -20 3 -16" fill="#e8a850"/><path d="M0 -18v-3" stroke="#3a2a1a" stroke-width="1"/>${flame(0, -21, .9, i * .3)}<path d="M7 -22q3 -1 3 1.4" stroke="#6a8a2a" stroke-width="1.2" fill="none" stroke-linecap="round"/></g></g>`;
-    const motif = (m, x, y, s, i = 0) => ({ star: () => `<g transform="translate(${f1(x)} ${f1(y)})">${sparkle(0, 0, 9 * s, '#e8f4ff', 1.6 + (i % 3) * .3, i * .35)}${star6(0, 0, 6 * s, 'url(#sv)', { spin: 14 + i, begin: i })}</g>`, dreidel: () => dreidel(x, y, s * .8, i), gelt: () => gelt(x, y, 9 * s, i), latke: () => latke(x, y, 9 * s, i), donut: () => donut(x, y, 9 * s, i), magen: () => star6(x, y, 9 * s, i % 2 ? 'url(#gd)' : 'url(#sv)', { spin: 18 + i, begin: i }), oil: () => oiljar(x, y + 4 * s, s * .8, i) }[m] || (() => ''))();
-    const MOT = ['star', 'dreidel', 'gelt', 'latke', 'donut', 'magen', 'oil', 'all'];
-    const mix = (m, i) => m === 'all' ? ['dreidel', 'gelt', 'magen', 'donut', 'latke', 'oil'][i % 6] : m;
+    // a window with a hanukkiah glowing inside: it is the custom to put the lit lights where passers-by can see them
+    const windowM = (x, y, s, i = 0) => `<g transform="translate(${f1(x)} ${f1(y)}) scale(${s})"><g>${bob(1, 3 + (i % 3) * .3, i * .4)}<path d="M-10 13V-3a10 10 0 0 1 20 0V13Z" fill="#14265a"/><path d="M-10 13V-3a10 10 0 0 1 20 0V13Z" fill="url(#fg)" fill-opacity=".9">${anim('opacity', '.7;1;.7', 2.4, i * .4)}</path><path d="M-5 9h10M-3.4 9v-5M-1.2 9v-6M1.2 9v-6M3.4 9v-5" stroke="#f2c14e" stroke-width="1.1" stroke-linecap="round"/><circle cx="-3.4" cy="2.4" r="1" fill="#ffe9a8"/><circle cx="-1.2" cy="1.4" r="1" fill="#ffe9a8"/><circle cx="1.2" cy="1.4" r="1" fill="#ffe9a8"/><circle cx="3.4" cy="2.4" r="1" fill="#ffe9a8"/><path d="M-10 13V-3a10 10 0 0 1 20 0V13Z" fill="none" stroke="url(#sv)" stroke-width="1.8"/><path d="M0 -13V13M-10 3H10" stroke="url(#sv)" stroke-width="1.2" stroke-opacity=".8"/><rect x="-12.4" y="12.6" width="24.8" height="3" rx="1.4" fill="url(#sv)"/></g></g>`;
+    const motif = (m, x, y, s, i = 0) => ({ star: () => `<g transform="translate(${f1(x)} ${f1(y)})">${sparkle(0, 0, 9 * s, '#e8f4ff', 1.6 + (i % 3) * .3, i * .35)}${star6(0, 0, 6 * s, 'url(#sv)', { spin: 14 + i, begin: i })}</g>`, dreidel: () => dreidel(x, y, s * .8, i), gelt: () => gelt(x, y, 9 * s, i), latke: () => latke(x, y, 9 * s, i), donut: () => donut(x, y, 9 * s, i), window: () => windowM(x, y, s * .86, i), magen: () => star6(x, y, 9 * s, i % 2 ? 'url(#gd)' : 'url(#sv)', { spin: 18 + i, begin: i }), oil: () => oiljar(x, y + 4 * s, s * .8, i) }[m] || (() => ''))();
+    const MOT = ['star', 'dreidel', 'gelt', 'latke', 'donut', 'window', 'oil', 'all'];
+    const mix = (m, i) => m === 'all' ? ['dreidel', 'gelt', 'window', 'donut', 'latke', 'oil'][i % 6] : m;
     for (let n = 1; n <= 8; n++) {
       const m = MOT[n - 1], [c0, c1] = HKBG[n - 1], D = XDEFS + `<linearGradient id="b" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${c0}"/><stop offset="1" stop-color="${c1}"/></linearGradient><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c0}"/><stop offset="1" stop-color="${c1}"/></linearGradient>`;
       plate['hk' + n] = svg(240, 44,
@@ -846,7 +848,7 @@ const DecoCore = (() => {
         + snowfall(24, 1200, 200, 6, '#e8f4ff') + Array.from({ length: 16 }, (_, i) => sparkle((i * 223 + 40) % 1180, 14 + (i * 43) % 140, 2.4 + (i % 3) * .8, i % 2 ? '#f2c14e' : '#e8f4ff', 1.6 + (i % 5) * .4, i * .33)).join(''), D);
       wreath['hk' + n] = svg(144, 144,
         `<circle cx="72" cy="72" r="57" fill="none" stroke="url(#sv)" stroke-width="2.4"/><circle cx="72" cy="72" r="60" fill="none" stroke="#2f6fd0" stroke-opacity=".5" stroke-width="1.4"/>`
-        + ring(8, 61, (x, y, i, rot) => i < n ? `<g transform="translate(${x} ${y})"><rect x="-2.6" y="-1" width="5.2" height="11" rx="1.2" fill="url(#cb)"/>${flame(0, -2, .9, i * .27)}</g>` : motif(mix(m, i), x, y + 1, .86, i), 72, 72, -90)
+        + ring(8, 61, (x, y, i) => (i === 4 ? '' : motif(mix(m, i), x, y + 1, .86, i)), 72, 72, -90) + hanukkiah(72, 136, .38, n, { glow: 36, raise: 8 })
         + ring(8, 61, (x, y, i) => sparkle(x, y, 2.2, '#e8f4ff', 1.6 + i * .2, i * .3), 72, 72, -67.5) + sparks([[14, 18, 2.4], [130, 18, 2.4], [14, 126, 2.4], [130, 126, 2.4]], '#f2c14e'), D);
     }
     return { wreath, bg, plate };
@@ -864,7 +866,7 @@ const DecoCore = (() => {
       { name: 'Night 3: Gold Gelt', plate: ['hk3'], bg: ['hk3'], wreath: ['hk3'] },
       { name: 'Night 4: Latke Night', plate: ['hk4'], bg: ['hk4'], wreath: ['hk4'] },
       { name: 'Night 5: Sufganiyot Sparkle', plate: ['hk5'], bg: ['hk5'], wreath: ['hk5'] },
-      { name: 'Night 6: Star of David', plate: ['hk6'], bg: ['hk6'], wreath: ['hk6'] },
+      { name: 'Night 6: Light in the Window', plate: ['hk6'], bg: ['hk6'], wreath: ['hk6'] },
       { name: 'Night 7: A Little Oil', plate: ['hk7'], bg: ['hk7'], wreath: ['hk7'] },
       { name: 'Night 8: Festival of Lights', plate: ['hk8'], bg: ['hk8'], wreath: ['hk8'] },
     ] },

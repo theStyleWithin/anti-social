@@ -86,5 +86,7 @@ t('each night has its own theme', Array.from({ length: 8 }, (_, i) => D.THEMES.f
 const flames = svg => (svg.match(/fill="#fffbe0"/g) || []).length;
 t('every nameplate shows the right number of lit candles (night N: N and the shamash)', Array.from({ length: 8 }, (_, i) => i + 1).every(n => flames(moving.plate['hk' + n]) === n + 1 + (n === 7 ? 3 : 0)), Array.from({ length: 8 }, (_, i) => flames(moving.plate['hk' + (i + 1)])).join());
 t('every Hanukkah banner shows the right number of lit candles', Array.from({ length: 8 }, (_, i) => i + 1).every(n => flames(moving.bg['hk' + n]) >= n + 1), Array.from({ length: 8 }, (_, i) => flames(moving.bg['hk' + (i + 1)])).join());
+t('every Hanukkah avatar decoration has a straight hanukkiah with the right number of lit candles (night N: N and the shamash), not a ring of candles', Array.from({ length: 8 }, (_, i) => i + 1).every(n => flames(moving.wreath['hk' + n]) === n + 1 + (n === 7 ? 7 : n === 8 ? 1 : 0)), Array.from({ length: 8 }, (_, i) => flames(moving.wreath['hk' + (i + 1)])).join());
+t('night 6 is "Light in the Window", with a hanukkiah in a window', D.SERIES.find(x => x.id === 'hanukkah').groups[5].name === 'Night 6: Light in the Window' && !/Star of David/.test(JSON.stringify(D.SERIES)));
 t('the Hanukkah dreidels carry the four Hebrew letters', /נ/.test(moving.plate.hk2) && /ג/.test(moving.bg.hk2) && /ה/.test(moving.bg.hk2) && /ש/.test(moving.bg.hk2));
 console.log(bad ? `\n${bad} problem${bad === 1 ? '' : 's'}` : '\nall good'); process.exit(bad ? 1 : 0);
