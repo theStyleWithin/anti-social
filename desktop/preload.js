@@ -43,3 +43,9 @@ contextBridge.exposeInMainWorld('AntiSocialUpd', {
   info: (() => ({ os: process.platform === 'win32' ? 'windows' : process.platform === 'linux' ? 'linux' : process.platform === 'darwin' ? 'mac' : '', portable: !!process.env.PORTABLE_EXECUTABLE_DIR, appimage: !!process.env.APPIMAGE }))(),
   download: (url, name, sha256) => ipcRenderer.invoke('upd:download', String(url), String(name), String(sha256 || '')),
 });
+
+// Files handed to the app from outside (Sudo Make Art's "Send to Anti-Social"): read by the app itself, never a path.
+contextBridge.exposeInMainWorld('AntiSocialOpen', {
+  kind: 'desktop',
+  ready: async cb => { ipcRenderer.on('open:deco', (_e, f) => cb(f)); for (const f of await ipcRenderer.invoke('open:ready')) cb(f); },
+});
