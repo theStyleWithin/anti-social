@@ -76,4 +76,15 @@ const all = [...D.PLATES, ...D.BACKGROUNDS, ...D.WREATHS].filter(x => x.id !== '
 t('every built-in decoration is in a collection, and every collection entry exists', all.every(id => listed.has(id)) && [...listed].every(id => all.includes(id)), 'missing: ' + all.filter(id => !listed.has(id)).join() + ' unknown: ' + [...listed].filter(id => !all.includes(id)).join());
 t('every theme points at real decorations', D.THEMES.every(th => D.PLATES.some(x => x.id === th.plate) && D.BACKGROUNDS.some(x => x.id === th.bg) && D.WREATHS.some(x => x.id === th.wreath) && D.seriesOfTheme(th.id)));
 t('the Vibrant Pumpkin and Gobble Gobble Turkey sets each have three nameplates, three banners and three avatar decorations', ['vibrantpumpkin', 'gobblegobble'].every(id => { const g = D.SERIES.find(x => x.id === id).groups[0]; return g.plate.length === 3 && g.bg.length === 3 && g.wreath.length === 3; }));
+
+/* the holiday sets: two Christmas sets of 3/3/3, and eight nights of Hanukkah, each with its own nameplate, banner and avatar decoration */
+t('the two Christmas sets each have three nameplates, three banners and three avatar decorations', ['cosychristmas', 'santasparkle'].every(id => { const g = D.SERIES.find(x => x.id === id).groups[0]; return g.plate.length === 3 && g.bg.length === 3 && g.wreath.length === 3; }));
+const hk = D.SERIES.find(x => x.id === 'hanukkah');
+t('Hanukkah has eight nights, each with one nameplate, one banner and one avatar decoration', hk.groups.length === 8 && hk.groups.every((g, i) => g.plate.join() === 'hk' + (i + 1) && g.bg.join() === 'hk' + (i + 1) && g.wreath.join() === 'hk' + (i + 1)));
+t('each night has its own theme', Array.from({ length: 8 }, (_, i) => D.THEMES.find(x => x.id === 'hanukkah' + (i + 1))).every((th, i) => th && th.plate === 'hk' + (i + 1) && th.bg === 'hk' + (i + 1) && th.wreath === 'hk' + (i + 1) && D.seriesOfTheme(th.id) === 'hanukkah'));
+// night N lights N candles plus the shamash (the inner flame colour #fffbe0 appears once per flame; night 7 also has three oil-jar flames)
+const flames = svg => (svg.match(/fill="#fffbe0"/g) || []).length;
+t('every nameplate shows the right number of lit candles (night N: N and the shamash)', Array.from({ length: 8 }, (_, i) => i + 1).every(n => flames(moving.plate['hk' + n]) === n + 1 + (n === 7 ? 3 : 0)), Array.from({ length: 8 }, (_, i) => flames(moving.plate['hk' + (i + 1)])).join());
+t('every Hanukkah banner shows the right number of lit candles', Array.from({ length: 8 }, (_, i) => i + 1).every(n => flames(moving.bg['hk' + n]) >= n + 1), Array.from({ length: 8 }, (_, i) => flames(moving.bg['hk' + (i + 1)])).join());
+t('the Hanukkah dreidels carry the four Hebrew letters', /נ/.test(moving.plate.hk2) && /ג/.test(moving.bg.hk2) && /ה/.test(moving.bg.hk2) && /ש/.test(moving.bg.hk2));
 console.log(bad ? `\n${bad} problem${bad === 1 ? '' : 's'}` : '\nall good'); process.exit(bad ? 1 : 0);
