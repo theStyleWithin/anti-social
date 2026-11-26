@@ -9,7 +9,7 @@
 
 ## Status: fully featured and complete
 
-Anti-Social v0.30.0 is feature complete. It is a finished app, not a work in progress.
+Anti-Social v0.30.1 is feature complete. It is a finished app, not a work in progress.
 
 > **Holiday decorations are coming, and they unlock on the calendar.** Eight nights of Hanukkah (a new set every night from Fri 4 Dec), two Christmas sets (from Fri 18 Dec), and more every year. [Here is what is coming](#holiday-decorations-they-unlock-on-the-calendar).
 
@@ -133,6 +133,7 @@ Some profile decorations only open at the right time of year. It is all automati
 
 ## Version history
 
+- **v0.30.1:** Sudo Make Art can open Anti-Social and add a decoration pack for you (its **Send to Anti-Social** and **Import to Anti-Social** buttons). The computer app now runs one window at a time: starting it again brings the open window forward, and hands it the pack if there is one. The decorations land in My decorations and are remembered.
 - **v0.30.0:** holiday decorations that open by the calendar, every year: two Christmas sets (Cosy Christmas and Santa & Sparkle), and Hanukkah with a set for each of the eight nights (the menorah lights that night's candles, with dreidels, gelt, latkes, sufganiyot, a light in the window and the oil story), each with three or one nameplate, banner and avatar decoration and a theme; sets open on their day (Hanukkah is worked out from the Hebrew calendar), show as blurred teasers with their date until then, and a Next up line counts down; Thanksgiving's two sets join the same calendar; what you wear stays on when its season ends (see docs/holiday-calendar.md)
 - **v0.29.1:** Happy Thanksgiving: two new decoration sets, Vibrant Pumpkin (glossy pumpkins, jack-o'-lanterns and candy corn) and Gobble Gobble Turkey (cute turkeys, jewel-bright tail feathers and a feast), each with three nameplates, three profile banners and three avatar decorations plus a one-click theme that wears a set together; all are original, animated, and have a still version for when animation is off
 - **v0.29.0:** bring your own profile decorations: nameplates, profile banners and avatar decorations made in Sudo Make Art (New design → Profile decorations) or any tool, saved as a `.asdeco` pack (a drawing, PNG, GIF or a short MP4/WebM clip) and added under Settings → Profile decorations; they are checked and rebuilt on import so nothing in a file can run, they travel with your account when you eject, and the format is written up in docs/asdeco-format.md
