@@ -19,8 +19,8 @@
     "dist:win": "npm run prepare-assets && electron-builder --win --publish never"
   },
   "devDependencies": {
-    "electron": "33.4.11",
-    "electron-builder": "25.1.8"
+    "electron": "42.11.16",
+    "electron-builder": "26.18.0"
   },
   "build": {
     "appId": "com.antisocial.app",
