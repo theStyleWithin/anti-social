@@ -226,8 +226,8 @@ const Deco = (() => {
     const cur = mine(ctx), srv = server(ctx), set = async patch => { if (await saveProfile(acct, ctx, patch)) render(true); };
     const byId = list => Object.fromEntries(list.map(x => [x.id, x])), PL = byId(D.PLATES), BG = byId(D.BACKGROUNDS), WR = byId(D.WREATHS);
     const wreathAvatar = id => { const a = avatar(acct, 'lg'); if (id && id !== 'none') a.dataset.wreath = id; else delete a.dataset.wreath; return a; };
-    const theme = t => { const lock = !D.isOpen(t.opens); return h('button', { class: 'theme-card' + (lock ? ' locked' : '') + (cur.plate === t.plate && cur.bg === t.bg && cur.wreath === t.wreath ? ' on' : ''), type: 'button', 'aria-disabled': String(lock), onclick: () => (lock ? toast('Unlocks ' + D.opensLabel(t.opens) + '.') : set({ plate: t.plate, bg: t.bg, wreath: t.wreath })) },
-      h('span', { class: 'theme-av' }, wreathAvatar(t.wreath)), h('span', {}, h('b', {}, t.name), h('small', {}, lock ? '\u{1F512} Unlocks ' + D.opensLabel(t.opens) : t.blurb))); };
+    const theme = t => { const lock = !D.isOpen(t.season); return h('button', { class: 'theme-card' + (lock ? ' locked' : '') + (cur.plate === t.plate && cur.bg === t.bg && cur.wreath === t.wreath ? ' on' : ''), type: 'button', 'aria-disabled': String(lock), onclick: () => (lock ? toast('Unlocks ' + D.opensLabel(t.season) + '.') : set({ plate: t.plate, bg: t.bg, wreath: t.wreath })) },
+      h('span', { class: 'theme-av' }, wreathAvatar(t.wreath)), h('span', {}, h('b', {}, t.name), h('small', {}, lock ? '\u{1F512} Unlocks ' + D.opensLabel(t.season) : t.blurb))); };
     const plate = p => h('button', { class: 'member plate-pick' + (D.plateOk(p.id) ? ' plated' : '') + (cur.plate === p.id ? ' on' : ''), type: 'button', 'aria-pressed': String(cur.plate === p.id), ...plateAttrs(p.id, cur.animate), onclick: () => set({ plate: p.id }) },
       h('span', { class: 'av-wrap' }, avatar(acct, 'sm'), h('i', { class: 'dot online' })), h('span', { class: 'names' }, h('b', {}, h('span', { class: 'nm' }, acct.name), tagEl(srv)), h('small', {}, p.name + ' · ' + p.blurb)));
     const bgPick = b => h('button', { class: 'bg-pick' + ((cur.bg || 'none') === b.id ? ' on' : ''), type: 'button', 'aria-pressed': String((cur.bg || 'none') === b.id), onclick: () => set({ bg: b.id === 'none' ? '' : b.id }) },
@@ -247,17 +247,17 @@ const Deco = (() => {
       const kinds = g => KINDS.filter(([k]) => want(k) && (g[k] || []).length).map(([k, label, cls, build, map]) => h('div', { class: 'dc-kind' }, h('h6', {}, label), h('div', { class: cls, role: 'group', 'aria-label': label }, g[k].map(id => build(map[id])))));
       const body = se.groups.map(g => {
         const ks = kinds(g); if (!ks.length) return null;
-        const opens = g.opens || se.opens, lock = !D.isOpen(opens), inner = h('div', { class: 'dc-kinds' + (lock ? ' dc-teaser' : '') }, ks);
+        const season = g.season || se.season, lock = !D.isOpen(season), inner = h('div', { class: 'dc-kinds' + (lock ? ' dc-teaser' : '') }, ks);
         if (lock) { inner.inert = true; inner.setAttribute('aria-hidden', 'true'); }      // a teaser: you can see the colours, not use it yet
-        return h('div', { class: 'dc-group' + (lock ? ' locked' : '') }, g.name || lock ? h('h5', {}, g.name || '', lock ? h('span', { class: 'dc-unlock' }, '\u{1F512} Unlocks ' + D.opensLabel(opens)) : null) : null, inner);
+        return h('div', { class: 'dc-group' + (lock ? ' locked' : '') }, g.name || lock ? h('h5', {}, g.name || '', lock ? h('span', { class: 'dc-unlock' }, '\u{1F512} Unlocks ' + D.opensLabel(season)) : g.season ? h('span', { class: 'dc-until' }, 'Open until ' + D.untilLabel(season)) : null) : null, inner);
       }).filter(Boolean);
       if (!body.length && !(view.kind === 'all' && themes.length)) return null;
-      return h('section', { class: 'dc-series', 'aria-label': se.name }, h('h4', {}, se.name, h('small', {}, se.blurb), !D.isOpen(se.opens) ? h('span', { class: 'dc-unlock' }, '\u{1F512} Unlocks ' + D.opensLabel(se.opens)) : null), view.kind === 'all' && themes.length ? h('div', { class: 'theme-grid' }, themes.map(theme)) : null, body);
+      return h('section', { class: 'dc-series', 'aria-label': se.name }, h('h4', {}, se.name, h('small', {}, se.blurb), !D.isOpen(se.season) ? h('span', { class: 'dc-unlock' }, '\u{1F512} Unlocks ' + D.opensLabel(se.season)) : se.season ? h('span', { class: 'dc-until' }, 'Open until ' + D.untilLabel(se.season)) : null), view.kind === 'all' && themes.length ? h('div', { class: 'theme-grid' }, themes.map(theme)) : null, body);
     };
     const shown = allSeries.filter(se => vs === 'all' || vs === se.id).map(seriesBlock).filter(Boolean);
     return h('section', {}, h('h3', {}, 'Profile decorations'),
       h('p', {}, 'Dress up your profile. Nobody else will see any of it, but you will, and so will anyone you show your phone to. Everything is filed by collection and kind, so pick a filter to narrow the list.'),
-      (() => { const nx = D.nextOpening(); return nx ? h('p', { class: 'dc-next' }, '\u2728 Next up: ' + nx.name + ' \u00b7 ' + D.opensLabel(nx.opens)) : null; })(),
+      (() => { const nx = D.nextOpening(); return nx ? h('p', { class: 'dc-next' }, '\u2728 Next up: ' + nx.name + ' \u00b7 ' + D.opensLabel(nx.season)) : null; })(),
       h('div', { class: 'dc-wear' }, h('span', {}, wearing.length ? 'Wearing: ' + wearing.join(' · ') : 'Wearing: nothing yet'), wearing.length ? h('button', { class: 'btn', type: 'button', onclick: () => set({ plate: 'none', bg: '', wreath: '' }) }, 'Take it all off') : null),
       h('div', { class: 'dc-filters', role: 'group', 'aria-label': 'Collection' }, chip('All collections', vs === 'all', () => setView({ series: 'all' })), allSeries.map(se => chip(se.name, vs === se.id, () => setView({ series: se.id })))),
       h('div', { class: 'dc-filters', role: 'group', 'aria-label': 'Kind' }, chip('Everything', view.kind === 'all', () => setView({ kind: 'all' })), KINDS.map(([k, label]) => chip(label, view.kind === k, () => setView({ kind: k })))),

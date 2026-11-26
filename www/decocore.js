@@ -147,18 +147,18 @@ const DecoCore = (() => {
   ];
   // a theme sets a nameplate, a background and a wreath together
   const THEMES = [
-    { id: 'vibrantpumpkin', name: 'Vibrant Pumpkin', blurb: 'Glossy glowing pumpkins, a pumpkin sunset and a ring of pumpkins.', plate: 'pumpkinglow', bg: 'pumpkinsunset', wreath: 'pumpkinring' },
-    { id: 'gobblegobble', name: 'Gobble Gobble Turkey', blurb: 'A parade of turkeys, a tail-feather fan and lots of gobbling.', plate: 'gobbleparade', bg: 'turkeyparade', wreath: 'turkeyfan' },
-    { id: 'cosychristmas', name: 'Cosy Christmas', blurb: 'Fireside glow, a snowy village and a holly wreath.', opens: '2026-12-18', plate: 'xfireside', bg: 'xvillage', wreath: 'xhollywreath' },
-    { id: 'santasparkle', name: 'Santa & Sparkle', blurb: 'A sleigh over the moon and a ring of candy canes.', opens: '2026-12-18', plate: 'xsleighplate', bg: 'xsleighflight', wreath: 'xcaneRing' },
-    { id: 'hanukkah1', name: 'Hanukkah, Night 1', blurb: 'One candle and the shamash glow among the stars.', opens: '2026-12-04', plate: 'hk1', bg: 'hk1', wreath: 'hk1' },
-    { id: 'hanukkah2', name: 'Hanukkah, Night 2', blurb: 'Spinning dreidels (nun, gimel, hey, shin) and two bright candles.', opens: '2026-12-05', plate: 'hk2', bg: 'hk2', wreath: 'hk2' },
-    { id: 'hanukkah3', name: 'Hanukkah, Night 3', blurb: 'Shining gold gelt and three candles.', opens: '2026-12-06', plate: 'hk3', bg: 'hk3', wreath: 'hk3' },
-    { id: 'hanukkah4', name: 'Hanukkah, Night 4', blurb: 'Crispy latkes, steam and four candles.', opens: '2026-12-07', plate: 'hk4', bg: 'hk4', wreath: 'hk4' },
-    { id: 'hanukkah5', name: 'Hanukkah, Night 5', blurb: 'Powdered-sugar sufganiyot and five candles.', opens: '2026-12-08', plate: 'hk5', bg: 'hk5', wreath: 'hk5' },
-    { id: 'hanukkah6', name: 'Hanukkah, Night 6', blurb: 'A hanukkiah lit in the window for all to see, with six candles.', opens: '2026-12-09', plate: 'hk6', bg: 'hk6', wreath: 'hk6' },
-    { id: 'hanukkah7', name: 'Hanukkah, Night 7', blurb: 'One day\'s oil lasted eight days: seven candles.', opens: '2026-12-10', plate: 'hk7', bg: 'hk7', wreath: 'hk7' },
-    { id: 'hanukkah8', name: 'Hanukkah, Night 8', blurb: 'All eight candles and the shamash: the Festival of Lights.', opens: '2026-12-11', plate: 'hk8', bg: 'hk8', wreath: 'hk8' },
+    { id: 'vibrantpumpkin', name: 'Vibrant Pumpkin', blurb: 'Glossy glowing pumpkins, a pumpkin sunset and a ring of pumpkins.', season: 'thanksgiving', plate: 'pumpkinglow', bg: 'pumpkinsunset', wreath: 'pumpkinring' },
+    { id: 'gobblegobble', name: 'Gobble Gobble Turkey', blurb: 'A parade of turkeys, a tail-feather fan and lots of gobbling.', season: 'thanksgiving', plate: 'gobbleparade', bg: 'turkeyparade', wreath: 'turkeyfan' },
+    { id: 'cosychristmas', name: 'Cosy Christmas', blurb: 'Fireside glow, a snowy village and a holly wreath.', season: 'christmas', plate: 'xfireside', bg: 'xvillage', wreath: 'xhollywreath' },
+    { id: 'santasparkle', name: 'Santa & Sparkle', blurb: 'A sleigh over the moon and a ring of candy canes.', season: 'christmas', plate: 'xsleighplate', bg: 'xsleighflight', wreath: 'xcaneRing' },
+    { id: 'hanukkah1', name: 'Hanukkah, Night 1', blurb: 'One candle and the shamash glow among the stars.', season: 'hanukkah:1', plate: 'hk1', bg: 'hk1', wreath: 'hk1' },
+    { id: 'hanukkah2', name: 'Hanukkah, Night 2', blurb: 'Spinning dreidels (nun, gimel, hey, shin) and two bright candles.', season: 'hanukkah:2', plate: 'hk2', bg: 'hk2', wreath: 'hk2' },
+    { id: 'hanukkah3', name: 'Hanukkah, Night 3', blurb: 'Shining gold gelt and three candles.', season: 'hanukkah:3', plate: 'hk3', bg: 'hk3', wreath: 'hk3' },
+    { id: 'hanukkah4', name: 'Hanukkah, Night 4', blurb: 'Crispy latkes, steam and four candles.', season: 'hanukkah:4', plate: 'hk4', bg: 'hk4', wreath: 'hk4' },
+    { id: 'hanukkah5', name: 'Hanukkah, Night 5', blurb: 'Powdered-sugar sufganiyot and five candles.', season: 'hanukkah:5', plate: 'hk5', bg: 'hk5', wreath: 'hk5' },
+    { id: 'hanukkah6', name: 'Hanukkah, Night 6', blurb: 'A hanukkiah lit in the window for all to see, with six candles.', season: 'hanukkah:6', plate: 'hk6', bg: 'hk6', wreath: 'hk6' },
+    { id: 'hanukkah7', name: 'Hanukkah, Night 7', blurb: 'One day\'s oil lasted eight days: seven candles.', season: 'hanukkah:7', plate: 'hk7', bg: 'hk7', wreath: 'hk7' },
+    { id: 'hanukkah8', name: 'Hanukkah, Night 8', blurb: 'All eight candles and the shamash: the Festival of Lights.', season: 'hanukkah:8', plate: 'hk8', bg: 'hk8', wreath: 'hk8' },
     { id: 'boba', name: 'Kawaii Boba Tea', blurb: 'Pink milk tea, pearls and sparkles.', plate: 'bubbletea', bg: 'boba', wreath: 'bobacup' },
     { id: 'lunar', name: 'Lunar New Year', blurb: 'Red lanterns, gold waves and fireworks.', plate: 'lanternglow', bg: 'lantern', wreath: 'redlantern' },
     { id: 'anime', name: 'Anime', blurb: 'Sparkles, shooting stars and magical ribbons.', plate: 'sparkleanime', bg: 'animenight', wreath: 'magicgirl' },
@@ -856,19 +856,19 @@ const DecoCore = (() => {
   // the collections the decorations are filed under, so you can find one without scrolling through everything
   const SERIES = [
     { id: 'classic', name: 'Classic', blurb: 'Plain, handsome nameplates.', groups: [{ plate: ['embers', 'aurora', 'tide', 'sakura', 'circuit', 'starfield', 'parchment', 'neon', 'slime', 'prism'] }] },
-    { id: 'vibrantpumpkin', name: 'Vibrant Pumpkin', blurb: 'Glossy, glowing pumpkins and jack-o\'-lanterns.', groups: [{ plate: ['pumpkinglow', 'jacklantern', 'spiceswirl'], bg: ['pumpkinsunset', 'jacknight', 'vinegarden'], wreath: ['pumpkinring', 'jackcrown', 'candycorn'] }] },
-    { id: 'gobblegobble', name: 'Gobble Gobble Turkey', blurb: 'Cute turkeys, jewel-bright tail feathers and a feast.', groups: [{ plate: ['gobbleparade', 'featherfan', 'feastplaid'], bg: ['turkeyparade', 'featherburst', 'feasttable'], wreath: ['turkeyfan', 'feathermandala', 'acorngarland'] }] },
-    { id: 'cosychristmas', name: 'Cosy Christmas', blurb: 'Fireside warmth, snowy villages and holly.', opens: '2026-12-18', groups: [{ plate: ['xfireside', 'xpine', 'xginger'], bg: ['xvillage', 'xtree', 'xmantel'], wreath: ['xhollywreath', 'xbaubles', 'xgingerring'] }] },
-    { id: 'santasparkle', name: 'Santa & Sparkle', blurb: 'Sleighs, candy canes, snowmen and sparkle.', opens: '2026-12-18', groups: [{ plate: ['xcandystripe', 'xsleighplate', 'xsnowplate'], bg: ['xsleighflight', 'xcandyland', 'xsnowhill'], wreath: ['xcaneRing', 'xreindeer', 'xcrystal'] }] },
+    { id: 'vibrantpumpkin', name: 'Vibrant Pumpkin', blurb: 'Glossy, glowing pumpkins and jack-o\'-lanterns.', season: 'thanksgiving', groups: [{ plate: ['pumpkinglow', 'jacklantern', 'spiceswirl'], bg: ['pumpkinsunset', 'jacknight', 'vinegarden'], wreath: ['pumpkinring', 'jackcrown', 'candycorn'] }] },
+    { id: 'gobblegobble', name: 'Gobble Gobble Turkey', blurb: 'Cute turkeys, jewel-bright tail feathers and a feast.', season: 'thanksgiving', groups: [{ plate: ['gobbleparade', 'featherfan', 'feastplaid'], bg: ['turkeyparade', 'featherburst', 'feasttable'], wreath: ['turkeyfan', 'feathermandala', 'acorngarland'] }] },
+    { id: 'cosychristmas', name: 'Cosy Christmas', blurb: 'Fireside warmth, snowy villages and holly.', season: 'christmas', groups: [{ plate: ['xfireside', 'xpine', 'xginger'], bg: ['xvillage', 'xtree', 'xmantel'], wreath: ['xhollywreath', 'xbaubles', 'xgingerring'] }] },
+    { id: 'santasparkle', name: 'Santa & Sparkle', blurb: 'Sleighs, candy canes, snowmen and sparkle.', season: 'christmas', groups: [{ plate: ['xcandystripe', 'xsleighplate', 'xsnowplate'], bg: ['xsleighflight', 'xcandyland', 'xsnowhill'], wreath: ['xcaneRing', 'xreindeer', 'xcrystal'] }] },
     { id: 'hanukkah', name: 'Hanukkah', blurb: 'Eight nights of light: each night has its own set, with that night\'s candles lit.', groups: [
-      { name: 'Night 1: First Light', opens: '2026-12-04', plate: ['hk1'], bg: ['hk1'], wreath: ['hk1'] },
-      { name: 'Night 2: Dreidel Spin', opens: '2026-12-05', plate: ['hk2'], bg: ['hk2'], wreath: ['hk2'] },
-      { name: 'Night 3: Gold Gelt', opens: '2026-12-06', plate: ['hk3'], bg: ['hk3'], wreath: ['hk3'] },
-      { name: 'Night 4: Latke Night', opens: '2026-12-07', plate: ['hk4'], bg: ['hk4'], wreath: ['hk4'] },
-      { name: 'Night 5: Sufganiyot Sparkle', opens: '2026-12-08', plate: ['hk5'], bg: ['hk5'], wreath: ['hk5'] },
-      { name: 'Night 6: Light in the Window', opens: '2026-12-09', plate: ['hk6'], bg: ['hk6'], wreath: ['hk6'] },
-      { name: 'Night 7: A Little Oil', opens: '2026-12-10', plate: ['hk7'], bg: ['hk7'], wreath: ['hk7'] },
-      { name: 'Night 8: Festival of Lights', opens: '2026-12-11', plate: ['hk8'], bg: ['hk8'], wreath: ['hk8'] },
+      { name: 'Night 1: First Light', season: 'hanukkah:1', plate: ['hk1'], bg: ['hk1'], wreath: ['hk1'] },
+      { name: 'Night 2: Dreidel Spin', season: 'hanukkah:2', plate: ['hk2'], bg: ['hk2'], wreath: ['hk2'] },
+      { name: 'Night 3: Gold Gelt', season: 'hanukkah:3', plate: ['hk3'], bg: ['hk3'], wreath: ['hk3'] },
+      { name: 'Night 4: Latke Night', season: 'hanukkah:4', plate: ['hk4'], bg: ['hk4'], wreath: ['hk4'] },
+      { name: 'Night 5: Sufganiyot Sparkle', season: 'hanukkah:5', plate: ['hk5'], bg: ['hk5'], wreath: ['hk5'] },
+      { name: 'Night 6: Light in the Window', season: 'hanukkah:6', plate: ['hk6'], bg: ['hk6'], wreath: ['hk6'] },
+      { name: 'Night 7: A Little Oil', season: 'hanukkah:7', plate: ['hk7'], bg: ['hk7'], wreath: ['hk7'] },
+      { name: 'Night 8: Festival of Lights', season: 'hanukkah:8', plate: ['hk8'], bg: ['hk8'], wreath: ['hk8'] },
     ] },
     { id: 'boba', name: 'Kawaii Boba Tea', blurb: 'Pink milk tea, pearls and sparkles.', groups: [{ plate: ['bubbletea', 'hexcandy'], bg: ['boba'], wreath: ['bobacup', 'sprout', 'catphones', 'pearlring'] }] },
     { id: 'lunar', name: 'Lunar New Year', blurb: 'Red lanterns, gold waves, koi and fireworks.', groups: [{ plate: ['lanternglow', 'goldwaves'], bg: ['lantern'], wreath: ['redlantern', 'lotus', 'koi', 'firecrackers', 'envelopes', 'dragon'] }] },
@@ -879,17 +879,51 @@ const DecoCore = (() => {
       { name: 'Style & snacks', wreath: ['sushi', 'ramen', 'scholar', 'catonesie', 'catears'] },
     ] },
   ];
-  /* Release schedule: a collection (or one night of a collection) can have an `opens` date. Until then it is shown as a blurred teaser with
-     its date. The device's own clock decides, so a set appears on its day without a new download, and once a date has passed it stays open. */
-  const dayStart = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3]).getTime() : 0; };
-  const isOpen = (opens, now = Date.now()) => !opens || dayStart(opens) <= now;
-  const opensLabel = opens => new Date(dayStart(opens)).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  /* Holiday calendar: every seasonal set is open in a window that comes round each year. The windows are worked out from the calendar (Hanukkah from the
+     Hebrew calendar, because its dates move), so nothing is downloaded and nothing has to be updated. Outside its window a set is a blurred teaser with the
+     date it next opens. What you are already wearing stays on; the window only decides what you can pick. */
+  const DAY = 864e5;
+  const plus = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+  // the Hebrew calendar (Reingold and Dershowitz, Calendrical Calculations): the civil date of 25 Kislev, the day after the first night of Hanukkah
+  const heb = (() => {
+    const elapsed = y => { const me = Math.floor((235 * y - 234) / 19), pe = 12084 + 13753 * me, d = 29 * me + Math.floor(pe / 25920); return (3 * (d + 1)) % 7 < 3 ? d + 1 : d; };
+    const delay = y => { const a = elapsed(y - 1), b = elapsed(y), c = elapsed(y + 1); return c - b === 356 ? 2 : b - a === 382 ? 1 : 0; };
+    const newYear = y => -1373427 + elapsed(y) + delay(y);
+    const longHeshvan = y => { const n = newYear(y + 1) - newYear(y); return n === 355 || n === 385; };
+    const fromRD = rd => { const t = new Date((rd - 719163) * DAY); return new Date(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate()); };
+    return { kislev25: y => fromRD(newYear(y) + 30 + (longHeshvan(y) ? 30 : 29) + 24) };
+  })();
+  const hanukkahNight1 = y => plus(heb.kislev25(y + 3761), -1);        // the evening the first candle is lit (Gregorian year y)
+  const nth = (y, month, weekday, n) => { const first = new Date(y, month, 1); return new Date(y, month, 1 + (7 + weekday - first.getDay()) % 7 + 7 * (n - 1)); };
+  // [first day, last day] of each season in year y; Hanukkah night N opens on its night and all nights stay open for a week after the festival ends
+  const WINDOW = {
+    thanksgiving: y => { const t = nth(y, 10, 4, 4); return [plus(t, -7), plus(t, 7)]; },
+    christmas: y => [new Date(y, 11, 18), new Date(y + 1, 0, 6)],
+    hanukkah: (y, n) => { const d = hanukkahNight1(y); return [plus(d, n - 1), plus(d, 14)]; },
+  };
+  const windowOf = (season, y) => { const [k, n] = String(season).split(':'), f = WINDOW[k]; return f ? f(y, +n || 1).map(d => d.getTime()) : null; };
+  // is it open now? if not, when does it next open?
+  const status = (season, now = Date.now()) => {
+    if (!season) return { open: true };
+    const y = new Date(now).getFullYear(); let next = null;
+    for (let yy = y - 1; yy <= y + 1; yy++) {
+      const w = windowOf(season, yy); if (!w) return { open: true };
+      if (now >= w[0] && now < w[1] + DAY) return { open: true, from: w[0], to: w[1] };
+      if (w[0] > now && (!next || w[0] < next[0])) next = w;
+    }
+    return { open: false, from: next[0], to: next[1] };
+  };
+  const isOpen = (season, now = Date.now()) => status(season, now).open;
+  const fmtDay = (t, now) => { const o = { weekday: 'short', month: 'short', day: 'numeric' }; if (new Date(t).getFullYear() !== new Date(now).getFullYear()) o.year = 'numeric'; return new Date(t).toLocaleDateString(undefined, o); };
+  const opensLabel = (season, now = Date.now()) => { const st = status(season, now); return st.from ? fmtDay(st.from, now) : ''; };
+  const untilLabel = (season, now = Date.now()) => { const st = status(season, now); return st.open && st.to ? fmtDay(st.to, now) : ''; };
   const LOCKS = {};
-  for (const se of SERIES) for (const g of se.groups) { const o = g.opens || se.opens; if (o) for (const k of ['plate', 'bg', 'wreath']) for (const id of g[k] || []) LOCKS[id] = o; }
+  for (const se of SERIES) for (const g of se.groups) { const o = g.season || se.season; if (o) for (const k of ['plate', 'bg', 'wreath']) for (const id of g[k] || []) LOCKS[id] = o; }
   const lockedNow = (id, now = Date.now()) => !!LOCKS[id] && !isOpen(LOCKS[id], now);
+  // the next set to open within six weeks (for the "Next up" line)
   const nextOpening = (now = Date.now()) => {
-    let best = null; const consider = (name, opens) => { if (opens && !isOpen(opens, now) && (!best || dayStart(opens) < dayStart(best.opens))) best = { name, opens }; };
-    for (const se of SERIES) { consider(se.name, se.opens); for (const g of se.groups) if (g.opens) consider(se.name + ', ' + g.name, g.opens); }
+    let best = null; const consider = (name, season) => { if (!season) return; const st = status(season, now); if (!st.open && st.from - now <= 45 * DAY && (!best || st.from < best.from)) best = { name, season, from: st.from }; };
+    for (const se of SERIES) { consider(se.name, se.season); for (const g of se.groups) if (g.season) consider(se.name + ', ' + g.name, g.season); }
     return best;
   };
   const seriesOfTheme = id => ({ vibrantpumpkin: 'vibrantpumpkin', gobblegobble: 'gobblegobble', cosychristmas: 'cosychristmas', santasparkle: 'santasparkle', hanukkah1: 'hanukkah', hanukkah2: 'hanukkah', hanukkah3: 'hanukkah', hanukkah4: 'hanukkah', hanukkah5: 'hanukkah', hanukkah6: 'hanukkah', hanukkah7: 'hanukkah', hanukkah8: 'hanukkah', boba: 'boba', lunar: 'lunar', anime: 'anime', animehearts: 'anime', animecosmos: 'anime' }[id] || '');
@@ -923,6 +957,6 @@ const DecoCore = (() => {
   const ghostPlate = (id, now) => { const n = hash('plate' + id), pool = ghostPool(PLATES, now); return n % 100 < 28 ? pool[1 + (n >>> 8) % (pool.length - 1)].id : 'none'; };
   const ghostTag = id => { const n = hash('tag' + id); if (n % 100 >= 22) return null; const words = ['MOON', 'FOX', 'KOI', 'ZEN', 'ASH', 'OWL', 'IVY', 'NOVA', 'RAIN', 'JAZZ']; return { tag: words[(n >>> 8) % words.length], tagColor: TAG_COLORS[(n >>> 12) % TAG_COLORS.length][0], tagGlyph: TAG_GLYPHS[(n >>> 16) % TAG_GLYPHS.length][0] }; };
   const ghostWreath = (id, now) => { const n = hash('wreath' + id), pool = ghostPool(WREATHS, now); return n % 100 < 16 ? pool[1 + (n >>> 8) % (pool.length - 1)].id : ''; };
-  return { isOpen, opensLabel, nextOpening, lockedNow, LOCKS, setCustom, SERIES, seriesOfTheme, buildArt, plateOk, uri, BACKGROUNDS, WREATHS, THEMES, ghostWreath, PLATES, TAG_COLORS, TAG_GLYPHS, BANNERS, plate, banner, cleanTag, tagOk, normProfile, normServer, bannerCss, ghostPlate, ghostTag };
+  return { isOpen, status, opensLabel, untilLabel, nextOpening, lockedNow, hanukkahNight1, LOCKS, setCustom, SERIES, seriesOfTheme, buildArt, plateOk, uri, BACKGROUNDS, WREATHS, THEMES, ghostWreath, PLATES, TAG_COLORS, TAG_GLYPHS, BANNERS, plate, banner, cleanTag, tagOk, normProfile, normServer, bannerCss, ghostPlate, ghostTag };
 })();
 if (typeof module !== 'undefined') module.exports = DecoCore;
